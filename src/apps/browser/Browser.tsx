@@ -28,7 +28,7 @@ export default function Browser({ windowId, url }: BrowserProps) {
     console.log('[Browser] ✅ MOUNTED', {
       currentUrl,
       url,
-      isSameOrigin: currentUrl.startsWith('/') || currentUrl === 'about:blank',
+      isSameOrigin: (currentUrl.startsWith('/') && !currentUrl.startsWith('//')) || currentUrl === 'about:blank',
       timestamp: new Date().toISOString(),
     });
     return () => {
@@ -40,7 +40,8 @@ export default function Browser({ windowId, url }: BrowserProps) {
   }, [windowId, currentUrl, url]);
 
   // Check if URL is same-origin (safe to embed)
-  const isSameOrigin = currentUrl.startsWith('/') || currentUrl === 'about:blank';
+  // Prevent protocol-relative URLs (e.g. //evil.com) from bypassing the check
+  const isSameOrigin = (currentUrl.startsWith('/') && !currentUrl.startsWith('//')) || currentUrl === 'about:blank';
 
   useEffect(() => {
     if (url && url !== currentUrl) {
@@ -61,7 +62,11 @@ export default function Browser({ windowId, url }: BrowserProps) {
         </p>
         <button
           className="browser-fallback__button"
-          onClick={() => window.open(currentUrl, '_blank', 'noopener,noreferrer')}
+          onClick={() => {
+            if (!currentUrl.toLowerCase().trim().startsWith('javascript:')) {
+              window.open(currentUrl, '_blank', 'noopener,noreferrer');
+            }
+          }}
         >
           Open in New Tab →
         </button>
