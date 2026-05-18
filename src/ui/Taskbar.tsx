@@ -80,7 +80,7 @@ export default function Taskbar() {
       <div className="taskbar__tray">
         <button
           className="taskbar__privacy"
-          onClick={() => window.open('/privacy.html', '_blank')}
+          onClick={() => window.open('/privacy.html', '_blank', 'noopener,noreferrer')}
           title="Privacy Policy"
           aria-label="Privacy Policy"
         >
