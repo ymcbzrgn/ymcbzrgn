@@ -40,7 +40,8 @@ export default function Browser({ windowId, url }: BrowserProps) {
   }, [windowId, currentUrl, url]);
 
   // Check if URL is same-origin (safe to embed)
-  const isSameOrigin = currentUrl.startsWith('/') || currentUrl === 'about:blank';
+  // Prevent protocol-relative URLs like //evil.com
+  const isSameOrigin = (currentUrl.startsWith('/') && !currentUrl.startsWith('//')) || currentUrl === 'about:blank';
 
   useEffect(() => {
     if (url && url !== currentUrl) {

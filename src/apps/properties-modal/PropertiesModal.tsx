@@ -212,7 +212,7 @@ export default function PropertiesModal({ windowId, nodeId }: PropertiesModalPro
               <div className="properties-row">
                 <span className="properties-label">Target:</span>
                 <a
-                  href={node.targetUrl}
+                  href={node.targetUrl.trim().toLowerCase().startsWith('javascript:') ? '#' : node.targetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="properties-link"
