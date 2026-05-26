@@ -58,6 +58,14 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         gfm: true, // GitHub Flavored Markdown
       });
 
+      // Add hook to prevent reverse tabnabbing on external links
+      DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+        // Only modify anchor tags that are opening in a new tab
+        if (node.tagName && node.tagName.toLowerCase() === 'a' && node.getAttribute('target') === '_blank') {
+          node.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+
       // Sanitize HTML to prevent XSS
       const sanitized = DOMPurify.sanitize(rawHtml as string, {
         ALLOWED_TAGS: [
@@ -91,6 +99,9 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
         ALLOW_DATA_ATTR: false,
       });
+
+      // Remove hook after sanitization to prevent memory leaks and unintended side-effects
+      DOMPurify.removeHook('afterSanitizeAttributes');
 
       return sanitized;
     } catch (error) {
