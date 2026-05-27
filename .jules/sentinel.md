@@ -1,0 +1,4 @@
+## 2024-05-18 - [Fix reverse tabnabbing vulnerability in Markdown rendering]
+**Vulnerability:** Markdown links generated in `MarkdownViewer.tsx` lacked the `rel="noopener noreferrer"` attribute when targeting external frames or new tabs. This allowed potential reverse tabnabbing (where the newly opened page can manipulate the original window via `window.opener`).
+**Learning:** `DOMPurify.addHook` was needed to dynamically inject `target="_blank"` and `rel="noopener noreferrer"` into `<a>` elements after sanitization. However, using `DOMPurify.addHook` dynamically inside a React component can lead to memory leaks and unintended global side-effects if the hook isn't cleaned up immediately after use.
+**Prevention:** Always pair `DOMPurify.addHook` with `DOMPurify.removeHook` when sanitizing dynamically to ensure hooks are locally scoped to the current render cycle.

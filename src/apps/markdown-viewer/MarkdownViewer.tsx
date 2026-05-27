@@ -58,6 +58,14 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         gfm: true, // GitHub Flavored Markdown
       });
 
+      // Ensure all links open in a new tab securely to prevent reverse tabnabbing
+      DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+        if (node.tagName === 'A') {
+          node.setAttribute('target', '_blank');
+          node.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+
       // Sanitize HTML to prevent XSS
       const sanitized = DOMPurify.sanitize(rawHtml as string, {
         ALLOWED_TAGS: [
@@ -91,6 +99,9 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
         ALLOW_DATA_ATTR: false,
       });
+
+      // Clean up the hook to prevent memory leaks and global side effects
+      DOMPurify.removeHook('afterSanitizeAttributes');
 
       return sanitized;
     } catch (error) {
