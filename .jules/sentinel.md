@@ -1,0 +1,4 @@
+## 2025-05-30 - Fix reverse tabnabbing and prevent DOMPurify memory leaks
+**Vulnerability:** External links created in Markdown files lacked `target="_blank"` and `rel="noopener noreferrer"` attributes, leading to reverse tabnabbing vulnerability where the new tab could manipulate `window.opener`. In addition, using `DOMPurify.addHook` globally without cleanup could lead to memory leaks and cross-component pollution.
+**Learning:** React re-renders components continuously, and dynamically adding global hooks like `DOMPurify.addHook` inside a React rendering cycle without calling `removeHook` will eventually exhaust application memory and inadvertently affect all `DOMPurify` calls app-wide.
+**Prevention:** Always pair `DOMPurify.addHook` with `DOMPurify.removeHook` when sanitizing HTML within a React component's execution context to ensure sandbox isolation and avoid memory leaks. Always add `rel="noopener noreferrer"` for `<a target="_blank">` tags.
