@@ -1,0 +1,4 @@
+## 2024-05-31 - [Secure Link Targets in DOMPurify]
+**Vulnerability:** External links rendered via Markdown lacked `target="_blank"` and `rel="noopener noreferrer"`, exposing a potential reverse tabnabbing vulnerability. Simply adding a global DOMPurify hook to append these attributes can cause memory leaks and unintended global side-effects if the hook isn't removed.
+**Learning:** When using `DOMPurify.addHook` dynamically inside a React component (like `MarkdownViewer`), it affects the global `DOMPurify` instance. Ensure that only external links are modified (e.g., checking `href` for `http://` or `https://`) to avoid breaking internal application links.
+**Prevention:** Always pair `DOMPurify.addHook` with `DOMPurify.removeHook` immediately after the `.sanitize()` call, preferably in a `finally` block.
