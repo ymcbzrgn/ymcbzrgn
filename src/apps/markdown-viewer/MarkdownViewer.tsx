@@ -58,9 +58,22 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         gfm: true, // GitHub Flavored Markdown
       });
 
-      // Sanitize HTML to prevent XSS
-      const sanitized = DOMPurify.sanitize(rawHtml as string, {
-        ALLOWED_TAGS: [
+      // Add a hook to make all external links open in a new tab securely
+      DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+        if ('target' in node) {
+          const href = node.getAttribute('href');
+          if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+            node.setAttribute('target', '_blank');
+            node.setAttribute('rel', 'noopener noreferrer');
+          }
+        }
+      });
+
+      let sanitized: string;
+      try {
+        // Sanitize HTML to prevent XSS
+        sanitized = DOMPurify.sanitize(rawHtml as string, {
+          ALLOWED_TAGS: [
           'p',
           'a',
           'ul',
@@ -87,10 +100,14 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
           'td',
           'del',
           'ins',
-        ],
-        ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
-        ALLOW_DATA_ATTR: false,
-      });
+          ],
+          ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+          ALLOW_DATA_ATTR: false,
+        });
+      } finally {
+        // Must remove the hook immediately after sanitization to prevent memory leaks and global side-effects
+        DOMPurify.removeHook('afterSanitizeAttributes');
+      }
 
       return sanitized;
     } catch (error) {
