@@ -58,6 +58,18 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         gfm: true, // GitHub Flavored Markdown
       });
 
+      // Add hook to securely handle external links
+      DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+        if ('target' in node) {
+          const href = node.getAttribute('href');
+          // Only force target="_blank" and rel="noopener noreferrer" on external links
+          if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+            node.setAttribute('target', '_blank');
+            node.setAttribute('rel', 'noopener noreferrer');
+          }
+        }
+      });
+
       // Sanitize HTML to prevent XSS
       const sanitized = DOMPurify.sanitize(rawHtml as string, {
         ALLOWED_TAGS: [
@@ -96,6 +108,9 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     } catch (error) {
       console.error('Failed to render markdown:', error);
       return '<p><strong>Error:</strong> Failed to render markdown</p>';
+    } finally {
+      // Remove hook immediately to prevent memory leaks and global side-effects
+      DOMPurify.removeHook('afterSanitizeAttributes');
     }
   }, [markdownContent]);
 
@@ -108,10 +123,7 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
       </div>
 
       {/* Content */}
-      <div
-        className="markdown-viewer__content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className="markdown-viewer__content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );
 }
