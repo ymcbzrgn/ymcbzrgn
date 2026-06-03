@@ -58,39 +58,57 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
         gfm: true, // GitHub Flavored Markdown
       });
 
-      // Sanitize HTML to prevent XSS
-      const sanitized = DOMPurify.sanitize(rawHtml as string, {
-        ALLOWED_TAGS: [
-          'p',
-          'a',
-          'ul',
-          'ol',
-          'li',
-          'code',
-          'pre',
-          'strong',
-          'em',
-          'h1',
-          'h2',
-          'h3',
-          'h4',
-          'h5',
-          'h6',
-          'blockquote',
-          'br',
-          'hr',
-          'table',
-          'thead',
-          'tbody',
-          'tr',
-          'th',
-          'td',
-          'del',
-          'ins',
-        ],
-        ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
-        ALLOW_DATA_ATTR: false,
+      // Add a hook to ensure all external links have target="_blank" and rel="noopener noreferrer"
+      // This prevents Reverse Tabnabbing attacks.
+      DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+        if ('target' in node) {
+          const href = node.getAttribute('href');
+          if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+            node.setAttribute('target', '_blank');
+            node.setAttribute('rel', 'noopener noreferrer');
+          }
+        }
       });
+
+      let sanitized = '';
+      try {
+        // Sanitize HTML to prevent XSS
+        sanitized = DOMPurify.sanitize(rawHtml as string, {
+          ALLOWED_TAGS: [
+            'p',
+            'a',
+            'ul',
+            'ol',
+            'li',
+            'code',
+            'pre',
+            'strong',
+            'em',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'blockquote',
+            'br',
+            'hr',
+            'table',
+            'thead',
+            'tbody',
+            'tr',
+            'th',
+            'td',
+            'del',
+            'ins',
+          ],
+          ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+          ALLOW_DATA_ATTR: false,
+        });
+      } finally {
+        // Always remove the hook to prevent global side-effects
+        DOMPurify.removeHook('afterSanitizeAttributes');
+      }
 
       return sanitized;
     } catch (error) {
