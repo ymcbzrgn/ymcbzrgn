@@ -52,8 +52,23 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Set up custom renderer to ensure external links are secure
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+      renderer.link = (href, title, text) => {
+        let html = originalLink(href, title, text);
+        // Check for external links including http(s) and protocol-relative URLs
+        if (href && (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//'))) {
+          // marked might return <a href="...">...</a>
+          // inject target="_blank" rel="noopener noreferrer"
+          html = html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+        return html;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
+        renderer,
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
       });
@@ -88,7 +103,7 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
           'del',
           'ins',
         ],
-        ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+        ALLOWED_ATTR: ['href', 'class', 'target', 'rel', 'title'],
         ALLOW_DATA_ATTR: false,
       });
 
