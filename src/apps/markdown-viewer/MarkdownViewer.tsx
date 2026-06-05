@@ -52,10 +52,30 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Configure marked renderer for secure external links
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+
+      renderer.link = (href, title, text) => {
+        const linkHtml = originalLink(href, title, text);
+        let isExternal = false;
+
+        if (typeof href === 'string') {
+          const lowerHref = href.toLowerCase();
+          isExternal = lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('//');
+        }
+
+        if (isExternal) {
+          return linkHtml.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+        return linkHtml;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
+        renderer,
       });
 
       // Sanitize HTML to prevent XSS
