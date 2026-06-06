@@ -1,0 +1,4 @@
+## 2024-05-18 - [Markdown Viewer: External Link Security]
+**Vulnerability:** Markdown links rendered by default could be susceptible to Reverse Tabnabbing. If links pointing to untrusted external sites are opened in a new tab via `target="_blank"` without `rel="noopener noreferrer"`, the new tab gains reference to `window.opener` and can manipulate the original application.
+**Learning:** Overriding the global `marked.Renderer` localized to a specific component is the safest way to enforce `rel="noopener noreferrer"` attributes on external links specifically. Global hooks via `DOMPurify.addHook` are dangerous as they can lead to race conditions and loss of other registered hooks.
+**Prevention:** Use a localized custom `marked.Renderer()` instance and specifically evaluate `href.toLowerCase()` for external protocols (`http://`, `https://`, `//`) before appending target="_blank" and rel="noopener noreferrer" to anchors.
