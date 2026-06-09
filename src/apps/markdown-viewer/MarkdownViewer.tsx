@@ -52,10 +52,32 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Create a customized marked renderer to securely handle external links
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+
+      renderer.link = (href, title, text) => {
+        // Call the original renderer first to ensure inputs are HTML-escaped safely
+        const html = originalLink(href, title, text);
+
+        if (
+          href &&
+          (href.toLowerCase().startsWith('http://') ||
+            href.toLowerCase().startsWith('https://') ||
+            href.startsWith('//'))
+        ) {
+          // Inject secure target and rel attributes for external links
+          return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+
+        return html;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
+        renderer,
       });
 
       // Sanitize HTML to prevent XSS
@@ -108,10 +130,7 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
       </div>
 
       {/* Content */}
-      <div
-        className="markdown-viewer__content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className="markdown-viewer__content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );
 }
