@@ -52,8 +52,26 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Create custom renderer to secure external links against reverse tabnabbing
+      // and prevent DOMPurify hooks race conditions in React
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+      renderer.link = (href, title, text) => {
+        const isExternal =
+          href.toLowerCase().startsWith('http://') ||
+          href.toLowerCase().startsWith('https://') ||
+          href.startsWith('//');
+
+        let html = originalLink(href, title, text);
+        if (isExternal) {
+          html = html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+        return html;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
+        renderer,
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
       });
@@ -108,10 +126,7 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
       </div>
 
       {/* Content */}
-      <div
-        className="markdown-viewer__content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className="markdown-viewer__content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );
 }
