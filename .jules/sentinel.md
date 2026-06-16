@@ -1,0 +1,4 @@
+## 2024-06-16 - Prevent Global DOMPurify Hook Mutations
+**Vulnerability:** Adding security attributes (like `target="_blank"`) to external links by mutating the global `DOMPurify` singleton (`DOMPurify.addHook`) inside a React component's lifecycle or render phase.
+**Learning:** React functional components render unpredictably and can cause race conditions or unmounts that conflict with global state. Registering hooks globally per component permanently alters other HTML rendering features and can overwrite or break previously registered hooks, leading to incomplete sanitization elsewhere in the app.
+**Prevention:** Always scope HTML transformations, such as appending security attributes, to a localized parser or renderer (like `marked.Renderer`) instead of mutating global singletons for the entire application.
