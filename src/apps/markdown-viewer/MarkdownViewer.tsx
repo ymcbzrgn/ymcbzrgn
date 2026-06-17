@@ -52,10 +52,36 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Configure marked with a secure renderer
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+
+      renderer.link = function(href: string | { href: string }, title: string | null | undefined, text: string) {
+        // Handle object token format (marked v11+)
+        if (typeof href === 'object' && href !== null) {
+          const token = href as { href: string, title?: string, text: string };
+          let html = originalLink(token as any, null, '');
+          const url = token.href;
+          if (url && (url.toLowerCase().startsWith('http://') || url.toLowerCase().startsWith('https://') || url.startsWith('//'))) {
+            html = html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+          }
+          return html;
+        }
+
+        // Handle string format (older versions or explicit string calls)
+        const urlString = href as string;
+        let html = originalLink(urlString, title, text);
+        if (urlString && (urlString.toLowerCase().startsWith('http://') || urlString.toLowerCase().startsWith('https://') || urlString.startsWith('//'))) {
+          html = html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+        return html;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
+        renderer,
       });
 
       // Sanitize HTML to prevent XSS
