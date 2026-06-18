@@ -52,10 +52,50 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
     if (!markdownContent) return '<p>No content</p>';
 
     try {
+      // Configure custom renderer for secure links
+      const renderer = new marked.Renderer();
+      const originalLink = renderer.link.bind(renderer);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      renderer.link = function (href: any, title?: string, text?: string) {
+        const linkHref = typeof href === 'object' ? href.href : href;
+        const linkTitle = typeof href === 'object' ? href.title : title;
+        const linkText = typeof href === 'object' ? href.text : text;
+
+        if (
+          typeof linkHref === 'string' &&
+          linkHref.toLowerCase().trim().startsWith('javascript:')
+        ) {
+          const textContent =
+            typeof href === 'object' ? href.text || 'javascript:' : text || 'javascript:';
+          return `[Blocked Link: ${textContent}]`;
+        }
+
+        let html =
+          typeof href === 'object'
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (originalLink as any)(href)
+            : originalLink(href, linkTitle || '', linkText || '');
+
+        if (typeof linkHref === 'string') {
+          const lowerHref = linkHref.toLowerCase();
+          if (
+            lowerHref.startsWith('http://') ||
+            lowerHref.startsWith('https://') ||
+            lowerHref.startsWith('//')
+          ) {
+            html = html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+          }
+        }
+
+        return html;
+      };
+
       // Parse markdown to HTML
       const rawHtml = marked(markdownContent, {
         breaks: true,
         gfm: true, // GitHub Flavored Markdown
+        renderer,
       });
 
       // Sanitize HTML to prevent XSS
@@ -108,10 +148,7 @@ export default function MarkdownViewer({ nodeId }: MarkdownViewerProps) {
       </div>
 
       {/* Content */}
-      <div
-        className="markdown-viewer__content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className="markdown-viewer__content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );
 }
