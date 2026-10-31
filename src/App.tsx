@@ -6,12 +6,15 @@
  * - Desktop (>= 768px): Desktop (windows, taskbar, wallpaper)
  */
 
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
 import Desktop from './ui/Desktop';
-import MobileOS from './ui/mobile/MobileOS';
 import { useIsMobile } from './os/hooks/useDeviceType';
 import { useThemeManager } from './os/hooks/useThemeManager';
+
+// Mobile UI (and framer-motion with it) is only needed on small screens,
+// so keep it out of the bundle every desktop visitor downloads.
+const MobileOS = lazy(() => import('./ui/mobile/MobileOS'));
 
 function App() {
   const isMobile = useIsMobile();
@@ -38,7 +41,13 @@ function App() {
   return (
     <div className="app">
       {/* Adaptive UI: Mobile OS or Desktop OS */}
-      {isMobile ? <MobileOS /> : <Desktop />}
+      {isMobile ? (
+        <Suspense fallback={null}>
+          <MobileOS />
+        </Suspense>
+      ) : (
+        <Desktop />
+      )}
     </div>
   );
 }

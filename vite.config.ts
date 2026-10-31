@@ -28,7 +28,7 @@ export default defineConfig({
         // Manual chunk splitting for optimal caching
         manualChunks: {
           // Vendor chunks - rarely change
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-react': ['react', 'react-dom'],
           'vendor-state': ['zustand', 'immer'],
           'vendor-storage': ['idb', 'uuid'],
 

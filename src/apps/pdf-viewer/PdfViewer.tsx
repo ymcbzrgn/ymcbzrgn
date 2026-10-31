@@ -7,14 +7,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { PdfViewerProps } from '../types';
+import { loadPdfJs } from './loadPdfJs';
 import './PdfViewer.css';
-
-// TypeScript declaration for PDF.js global
-declare global {
-  interface Window {
-    pdfjsLib: any;
-  }
-}
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3.0;
@@ -56,12 +50,6 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
   // Load PDF document
   useEffect(() => {
     const loadPdf = async () => {
-      if (!window.pdfjsLib) {
-        setError('PDF.js library not loaded. Please refresh the page.');
-        setLoading(false);
-        return;
-      }
-
       // Validate fileUrl
       if (!fileUrl || fileUrl.trim() === '') {
         setError('No PDF file provided. Please select a PDF file.');
@@ -73,7 +61,9 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
         setLoading(true);
         setError(null);
 
-        const loadingTask = window.pdfjsLib.getDocument(fileUrl);
+        // PDF.js is loaded on demand (first PDF opened), not with the page
+        const pdfjsLib = await loadPdfJs();
+        const loadingTask = pdfjsLib.getDocument(fileUrl);
         const pdfDocument = await loadingTask.promise;
 
         setPdf(pdfDocument);
