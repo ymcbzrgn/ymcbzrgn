@@ -5,7 +5,7 @@
  * Draws the character from ASCII bitmaps (character.mjs), composes animation frames
  * (frames.mjs) and writes:
  *   mascot.png        sprite sheet: one row per animation, one column per frame
- *   mascot-bust.png   24x24 head-and-shoulders crop for avatars
+ *   mascot-bust.png   head-and-shoulders crop for avatars (size in SPRITE_BUST)
  *   mascot.meta.ts    generated frame metadata for the app (do not edit)
  *   mascot.behaviors.ts  generated behaviour table for the assistant engine (from behaviors.mjs)
  *
@@ -37,16 +37,34 @@ const names = Object.keys(ANIMS);
 const cols = Math.max(...names.map((n) => ANIMS[n].length));
 const rows = names.length;
 
-for (const n of names) for (const f of ANIMS[n]) if (f.w !== FW || f.h !== FH) throw new Error(`${n}: bad frame size`);
+if (FW > 44 || FH > 52) throw new Error(`frame ${FW}x${FH} is larger than the layouts allow (44x52)`);
+for (const n of names) {
+  if (!ANIMS[n].length) throw new Error(`${n}: no frames`);
+  if (!(FPS[n] > 0)) throw new Error(`${n}: missing FPS`);
+  for (const f of ANIMS[n]) if (f.w !== FW || f.h !== FH) throw new Error(`${n}: bad frame size`);
+}
 
 /* ---- sprite sheet ---- */
 const sheet = new Bmp(cols * FW, rows * FH);
 names.forEach((n, r) => ANIMS[n].forEach((f, c) => sheet.paste(f, c * FW, r * FH)));
 
-/* ---- bust (head + shoulders) ---- */
-const bust = new Bmp(24, 24);
+/* ---- bust (head + shoulders), framed on the head of the first idle frame ---- */
+const BUST_SIZE = 26;
 const idle0 = ANIMS.idle[0];
-for (let y = 0; y < 24; y++) for (let x = 0; x < 24; x++) bust.set(x, y, idle0.get(x + 2, y + 2));
+let hx0 = FW;
+let hx1 = 0;
+let hy0 = FH;
+for (let y = 0; y < FH; y++)
+  for (let x = 0; x < FW; x++)
+    if (idle0.alpha(x, y) && y < FH / 2 + 4) {
+      hx0 = Math.min(hx0, x);
+      hx1 = Math.max(hx1, x);
+      hy0 = Math.min(hy0, y);
+    }
+const bx = Math.round((hx0 + hx1 + 1) / 2 - BUST_SIZE / 2);
+const by = hy0 - 1;
+const bust = new Bmp(BUST_SIZE, BUST_SIZE);
+for (let y = 0; y < BUST_SIZE; y++) for (let x = 0; x < BUST_SIZE; x++) if (idle0.alpha(x + bx, y + by)) bust.set(x, y, idle0.get(x + bx, y + by));
 
 /* ---- metadata ---- */
 // Empty rows under the shoes in the standing pose: the app uses it to put the feet exactly on the taskbar edge.
@@ -124,7 +142,9 @@ export interface Behavior {
   lines?: BehaviorLines;
 }
 
-export const BEHAVIORS: readonly Behavior[] = ${JSON.stringify(BEHAVIORS, null, 2)};
+export const BEHAVIORS: readonly Behavior[] = [
+${BEHAVIORS.map((b) => `  ${JSON.stringify(b)},`).join('\n')}
+];
 `;
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -132,7 +152,8 @@ fs.writeFileSync(path.join(OUT_DIR, 'mascot.png'), encodePNG(sheet));
 fs.writeFileSync(path.join(OUT_DIR, 'mascot-bust.png'), encodePNG(bust));
 fs.writeFileSync(path.join(OUT_DIR, 'mascot.meta.ts'), meta);
 fs.writeFileSync(path.join(OUT_DIR, 'mascot.behaviors.ts'), behaviorsTs);
-console.log(`wrote ${path.relative(process.cwd(), OUT_DIR)}: mascot.png ${sheet.w}x${sheet.h}, mascot-bust.png, mascot.meta.ts (${rows} animations), mascot.behaviors.ts (${BEHAVIORS.length} behaviours)`);
+const sizes = ['mascot.png', 'mascot-bust.png', 'mascot.behaviors.ts'].map((f) => `${f} ${fs.statSync(path.join(OUT_DIR, f)).size} B`).join(', ');
+console.log(`wrote ${path.relative(process.cwd(), OUT_DIR) || '.'}: mascot.png ${sheet.w}x${sheet.h} (${rows} animations, ${names.reduce((n, k) => n + ANIMS[k].length, 0)} frames), ${BEHAVIORS.length} behaviours; ${sizes}`);
 
 /* ---- optional contact sheet ---- */
 if (PREVIEW) {

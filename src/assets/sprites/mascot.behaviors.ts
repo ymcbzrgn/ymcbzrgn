@@ -27,197 +27,76 @@ export interface Behavior {
 }
 
 export const BEHAVIORS: readonly Behavior[] = [
-  {
-    "id": "idle",
-    "anim": "idle",
-    "weight": [
-      24,
-      4,
-      8
-    ],
-    "duration": [
-      2500,
-      6000
-    ],
-    "lines": {
-      "chance": 0.4,
-      "when": "bored",
-      "en": [
-        "Anyone there?"
-      ],
-      "tr": [
-        "Kimse yok mu?"
-      ]
-    }
-  },
-  {
-    "id": "look",
-    "anim": "look",
-    "weight": [
-      12,
-      8,
-      6
-    ],
-    "duration": [
-      1800,
-      2600
-    ]
-  },
-  {
-    "id": "walk",
-    "anim": "walk",
-    "weight": [
-      28,
-      16,
-      0
-    ],
-    "duration": [
-      0,
-      0
-    ],
-    "move": "walk"
-  },
-  {
-    "id": "run",
-    "anim": "run",
-    "weight": [
-      5,
-      10,
-      0
-    ],
-    "duration": [
-      0,
-      0
-    ],
-    "move": "run"
-  },
-  {
-    "id": "sit",
-    "anim": "sit",
-    "weight": [
-      8,
-      12,
-      20
-    ],
-    "duration": [
-      4000,
-      9000
-    ]
-  },
-  {
-    "id": "coffee",
-    "anim": "coffee",
-    "weight": [
-      6,
-      10,
-      0
-    ],
-    "duration": [
-      5500,
-      8000
-    ],
-    "lines": {
-      "chance": 0.4,
-      "en": [
-        "I could use a coffee."
-      ],
-      "tr": [
-        "Bir kahveye ihtiyacım var."
-      ]
-    }
-  },
-  {
-    "id": "read",
-    "anim": "read",
-    "weight": [
-      4,
-      12,
-      0
-    ],
-    "duration": [
-      6000,
-      10000
-    ],
-    "lines": {
-      "chance": 0.4,
-      "en": [
-        "Reading docs. Again."
-      ],
-      "tr": [
-        "Yine dokümantasyon okuyorum."
-      ]
-    }
-  },
-  {
-    "id": "type",
-    "anim": "type",
-    "weight": [
-      4,
-      12,
-      0
-    ],
-    "duration": [
-      6000,
-      10000
-    ],
-    "lines": {
-      "chance": 0.4,
-      "en": [
-        "git commit -m \"one more fix\""
-      ],
-      "tr": [
-        "git commit -m \"bir düzeltme daha\""
-      ]
-    }
-  },
-  {
-    "id": "jump",
-    "anim": "jump",
-    "weight": [
-      6,
-      8,
-      0
-    ],
-    "duration": [
-      900,
-      900
-    ],
-    "fx": "hop",
-    "lines": {
-      "chance": 0.5,
-      "en": [
-        "Wheee!"
-      ],
-      "tr": [
-        "Yaşasın!"
-      ]
-    }
-  },
-  {
-    "id": "stretch",
-    "anim": "stretch",
-    "weight": [
-      3,
-      8,
-      6
-    ],
-    "duration": [
-      2800,
-      2800
-    ]
-  },
-  {
-    "id": "sleep",
-    "anim": "sleep",
-    "weight": [
-      0,
-      0,
-      60
-    ],
-    "duration": [
-      0,
-      0
-    ],
-    "until": "activity"
-  }
+  {"id":"idle","anim":"idle","weight":[8,3,6],"duration":[2500,5000],"lines":{"chance":0.4,"when":"bored","en":["Anyone there?","Still here. Still pixelated.","I'm Yamaç's pixel twin. He's a bit taller."],"tr":["Kimse yok mu?","Hâlâ buradayım. Hâlâ pikselim.","Yamaç'ın piksel ikiziyim. O biraz daha uzun."]}},
+  {"id":"look","anim":"look","weight":[5,3,4],"duration":[1800,2600],"lines":{"chance":0.2,"en":["Did something just move?"],"tr":["Bir şey mi kıpırdadı?"]}},
+  {"id":"walk","anim":"walk","weight":[10,6,0],"duration":[0,0],"move":"walk"},
+  {"id":"run","anim":"run","weight":[3,4,0],"duration":[0,0],"move":"run","lines":{"chance":0.3,"en":["Can't stop, I'm late for standup!"],"tr":["Duramam, daily toplantısına geç kaldım!"]}},
+  {"id":"curious","anim":"walk","arrive":"stare","weight":[3,3,0],"duration":[2000,3500],"move":"toCursor","lines":{"chance":0.35,"en":["Nice cursor. Is it new?","Ooh, what are you clicking?"],"tr":["Güzel imleç. Yeni mi?","Ooo, neye tıklıyorsun?"]}},
+  {"id":"stare","anim":"stare","weight":[2,2,0],"duration":[2000,3500],"face":"random","lines":{"chance":0.3,"en":["I see you."],"tr":["Seni görüyorum."]}},
+  {"id":"sit","anim":"sit","weight":[4,4,8],"duration":[4000,8000],"face":"random","lines":{"chance":0.3,"en":["Just sitting here. Like a well-cached value."],"tr":["Öylece oturuyorum. İyi önbelleklenmiş bir değer gibi."]}},
+  {"id":"coffee","anim":"coffee","weight":[4,3,2],"duration":[4000,6500],"lines":{"chance":0.4,"en":["I could use a coffee.","Coffee in, code out."],"tr":["Bir kahveye ihtiyacım var.","Kahve girer, kod çıkar."]}},
+  {"id":"cay","anim":"cay","weight":[4,3,2],"duration":[4000,6500],"lines":{"chance":0.45,"en":["Tea break! Çay and simit.","Simit + çay = the best debugger."],"tr":["Çay molası! Yanında da simit.","Simit + çay = en iyi debugger."]}},
+  {"id":"read","anim":"read","weight":[3,3,6],"duration":[5000,9000],"lines":{"chance":0.4,"en":["Reading docs. Again.","Chapter 7: Why did it work yesterday?"],"tr":["Yine dokümantasyon okuyorum.","7. Bölüm: Dün neden çalışıyordu?"]}},
+  {"id":"type","anim":"type","weight":[3,3,0],"duration":[5000,8000],"lines":{"chance":0.45,"en":["git commit -m \"one more fix\"","Just a quick refactor… famous last words.","Writing TypeScript. The types are writing back."],"tr":["git commit -m \"bir düzeltme daha\"","Ufak bir refactor… meşhur son sözler.","TypeScript yazıyorum. Tipler de bana yazıyor."]}},
+  {"id":"phone","anim":"phone","weight":[3,3,1],"duration":[3500,6000],"lines":{"chance":0.35,"en":["Checking if prod is still up…","Reading memes. For research."],"tr":["Prod hâlâ ayakta mı, bakıyorum…","Mim okuyorum. Araştırma amaçlı."]}},
+  {"id":"watch","anim":"watch","weight":[3,2,0],"duration":[2500,4000],"lines":{"chance":0.45,"en":["Is it Friday yet?","Deploy o'clock already?"],"tr":["Cuma oldu mu?","Deploy saati geldi mi?"]}},
+  {"id":"think","anim":"think","weight":[3,3,0],"duration":[3000,5000],"lines":{"chance":0.4,"en":["Hmm… tabs or spaces?","Big head, big thoughts."],"tr":["Hmm… tab mı, boşluk mu?","Büyük kafa, büyük fikirler."]}},
+  {"id":"whistle","anim":"whistle","weight":[3,3,0],"duration":[3000,5000],"lines":{"chance":0.3,"en":["Nothing to see here. Just a normal pixel."],"tr":["Burada görülecek bir şey yok. Sıradan bir piksel."]}},
+  {"id":"duck","anim":"duck","weight":[3,3,0],"duration":[3500,5500],"lines":{"chance":0.5,"en":["The duck says the bug is on line 42.","Rubber duck debugging. Works every time."],"tr":["Ördek, bug'ın 42. satırda olduğunu söylüyor.","Lastik ördekle debug. Her seferinde işe yarıyor."]}},
+  {"id":"pizza","anim":"pizza","weight":[3,3,0],"duration":[3000,4500],"lines":{"chance":0.45,"en":["Pizza-driven development."],"tr":["Pizza odaklı geliştirme."]}},
+  {"id":"hairfix","anim":"hairfix","weight":[3,3,0],"duration":[2500,4000],"lines":{"chance":0.5,"en":["The hair has to be perfect. It is in the spec.","Hair v2.0: now 100% cooler."],"tr":["Saç kusursuz olmalı. Gereksinimlerde yazıyor.","Saç v2.0: artık %100 daha havalı."]}},
+  {"id":"tiptoe","anim":"tiptoe","weight":[3,3,0],"duration":[0,0],"move":"walk","lines":{"chance":0.35,"en":["Shh… the bugs are sleeping."],"tr":["Şşş… bug'lar uyuyor."]}},
+  {"id":"skip","anim":"skip","weight":[3,4,0],"duration":[0,0],"move":"walk","lines":{"chance":0.3,"en":["La la la, a good day to ship."],"tr":["Lalala, yayına almak için güzel bir gün."]}},
+  {"id":"headphones","anim":"headphones","weight":[3,4,0],"duration":[4000,7000],"lines":{"chance":0.35,"en":["Lo-fi beats to debug to."],"tr":["Debug yaparken lo-fi."]}},
+  {"id":"heart","anim":"heart","weight":[2,2,0],"duration":[2500,3500],"lines":{"chance":0.5,"en":["Thanks for stopping by!"],"tr":["Uğradığın için teşekkürler!"]}},
+  {"id":"stretch","anim":"stretch","weight":[2,3,6],"duration":[2800,2800]},
+  {"id":"pushup","anim":"pushup","weight":[3,6,0],"duration":[3500,6000],"face":"random","lines":{"chance":0.5,"en":["Out of nowhere: push-ups!","Pushing to main. Get it?"],"tr":["Birden bire: şınav!","Şınav çekiyorum. Main'e de push."]}},
+  {"id":"sneeze","anim":"sneeze","weight":[3,3,1],"duration":[2700,2700],"lines":{"chance":0.4,"en":["Achoo! Sorry, allergic to legacy code."],"tr":["Hapşu! Pardon, legacy koda alerjim var."]}},
+  {"id":"hiccup","anim":"hiccup","weight":[2,3,0],"duration":[2500,4000],"lines":{"chance":0.4,"en":["Hic! Too much JSON."],"tr":["Hık! Fazla JSON yedim."]}},
+  {"id":"hiccup-hop","anim":"hiccup","weight":[2,2,0],"duration":[1000,1000],"fx":"hop"},
+  {"id":"trip","anim":"trip","weight":[3,4,0],"duration":[2400,2400],"face":"random","lines":{"chance":0.5,"en":["I meant to do that.","Tripped over a null pointer."],"tr":["Bilerek yaptım.","Bir null pointer'a takıldım."]}},
+  {"id":"facepalm","anim":"facepalm","weight":[2,3,0],"duration":[2500,4000],"lines":{"chance":0.45,"en":["Forgot the semicolon. Again.","It was a typo. It is always a typo."],"tr":["Yine noktalı virgülü unuttum.","Yazım hatasıymış. Hep yazım hatasıdır."]}},
+  {"id":"shrug","anim":"shrug","weight":[2,3,0],"duration":[2500,3500],"lines":{"chance":0.55,"en":["Works on my machine."],"tr":["Benim makinemde çalışıyor."]}},
+  {"id":"jump","anim":"jump","weight":[2,3,0],"duration":[900,900],"fx":"hop","lines":{"chance":0.4,"en":["Wheee!"],"tr":["Yaşasın!"]}},
+  {"id":"bug","anim":"bug","weight":[2,3,0],"duration":[2000,3000],"lines":{"chance":0.5,"en":["Found a bug. Fixed it."],"tr":["Bir bug buldum. Düzelttim."]}},
+  {"id":"jacks","anim":"jacks","weight":[2,5,0],"duration":[3000,5000],"lines":{"chance":0.35,"en":["Daily exercise: done. Daily standup: next."],"tr":["Günlük egzersiz tamam. Sırada günlük toplantı."]}},
+  {"id":"juggle","anim":"juggle","weight":[2,4,0],"duration":[3500,6000],"lines":{"chance":0.4,"en":["Juggling three side projects."],"tr":["Üç yan projeyi aynı anda çeviriyorum."]}},
+  {"id":"balance","anim":"balance","weight":[2,4,0],"duration":[3500,5500],"fx":"wobble","lines":{"chance":0.4,"en":["Work-life balance. Plus a book."],"tr":["İş-yaşam dengesi. Bir de kitap dengesi."]}},
+  {"id":"guitar","anim":"guitar","weight":[2,4,0],"duration":[3000,5000],"lines":{"chance":0.35,"en":["Air guitar solo!"],"tr":["Hava gitarı solosu!"]}},
+  {"id":"drums","anim":"drums","weight":[2,4,0],"duration":[3000,4500],"lines":{"chance":0.35,"en":["Ba-dum-tss!"],"tr":["Ba-dum-tıss!"]}},
+  {"id":"conduct","anim":"conduct","weight":[2,3,0],"duration":[3500,5500],"lines":{"chance":0.35,"en":["And now: the microservice symphony."],"tr":["Şimdi de mikroservis senfonisi."]}},
+  {"id":"disco","anim":"disco","weight":[2,4,0],"duration":[3000,5000],"lines":{"chance":0.3,"en":["Staying alive, staying deployed!"],"tr":["Disko zamanı! Deploy da ayakta."]}},
+  {"id":"headbang","anim":"headbang","weight":[2,3,0],"duration":[2500,4000],"lines":{"chance":0.3,"en":["Metal! I mean, bare metal."],"tr":["Metal! Yani bare metal sunucu."]}},
+  {"id":"dance","anim":"dance","weight":[2,4,0],"duration":[3000,5000],"lines":{"chance":0.4,"en":["Me when the build passes on the first try."],"tr":["Build ilk denemede geçince ben:"]}},
+  {"id":"caffeine","anim":"caffeine","weight":[2,3,0],"duration":[2500,4000],"fx":"shake","lines":{"chance":0.5,"en":["Fourth coffee. I can hear colours."],"tr":["Dördüncü kahve. Renkleri duyabiliyorum."]}},
+  {"id":"celebrate","anim":"celebrate","weight":[2,3,0],"duration":[2500,4000],"fx":"bounce","lines":{"chance":0.5,"en":["All tests passed!","Green CI! Party time!"],"tr":["Bütün testler geçti!","CI yeşil! Parti zamanı!"]}},
+  {"id":"flex","anim":"flex","weight":[2,3,0],"duration":[2500,4000],"lines":{"chance":0.4,"en":["Strong typing. Get it?"],"tr":["Güçlü tipleme. Anladın mı?"]}},
+  {"id":"angry","anim":"angry","weight":[2,3,0],"duration":[2500,3500],"fx":"shake","lines":{"chance":0.5,"en":["Why won't you compile?!"],"tr":["Neden derlenmiyorsun?!"]}},
+  {"id":"dizzy","anim":"dizzy","weight":[2,3,0],"duration":[2500,4000],"fx":"wobble","lines":{"chance":0.4,"en":["Too many tabs open…"],"tr":["Çok fazla sekme açık…"]}},
+  {"id":"bubblegum","anim":"bubblegum","weight":[2,3,1],"duration":[4000,4000],"lines":{"chance":0.4,"en":["Bubble sort? No, bubble gum."],"tr":["Bubble sort mu? Hayır, balonlu sakız."]}},
+  {"id":"yoyo","anim":"yoyo","weight":[2,3,0],"duration":[3000,5000],"lines":{"chance":0.35,"en":["Up, down, up… like my test coverage."],"tr":["Aşağı, yukarı… tıpkı test kapsamım gibi."]}},
+  {"id":"hula","anim":"hula","weight":[2,3,0],"duration":[3000,5000],"lines":{"chance":0.4,"en":["Infinite loop!"],"tr":["Sonsuz döngü!"]}},
+  {"id":"selfie","anim":"selfie","weight":[2,3,0],"duration":[2500,4000],"lines":{"chance":0.45,"en":["Pixel-perfect selfie."],"tr":["Piksel piksel kusursuz bir selfie."]}},
+  {"id":"meditate","anim":"meditate","weight":[2,3,5],"duration":[5000,9000],"fx":"float","lines":{"chance":0.4,"en":["Inner peace… no merge conflicts."],"tr":["İç huzur… merge conflict yok."]}},
+  {"id":"backflip","anim":"tuck","weight":[2,4,0],"duration":[1800,1800],"fx":"backflip","lines":{"chance":0.45,"en":["Backflip! Don't try this in production."],"tr":["Ters takla! Bunu production'da denemeyin."]}},
+  {"id":"headstand","anim":"headstand","weight":[2,4,0],"duration":[3000,5000],"lines":{"chance":0.45,"en":["Debugging from a new angle."],"tr":["Bug'a farklı bir açıdan bakıyorum."]}},
+  {"id":"headspin","anim":"headspin","weight":[2,4,0],"duration":[2400,3200],"fx":"spin","lines":{"chance":0.4,"en":["A truly head-spinning feature."],"tr":["Gerçekten baş döndürücü bir özellik."]}},
+  {"id":"pirouette","anim":"ballet","weight":[2,4,0],"duration":[2400,3200],"fx":"spin","lines":{"chance":0.4,"en":["Spinning up a new server!"],"tr":["Yeni bir sunucu ayağa kaldırıyorum!"]}},
+  {"id":"cartwheel","anim":"cartwheel","weight":[2,4,0],"duration":[0,0],"move":"run","lines":{"chance":0.35,"en":["Cartwheeling to the next task!"],"tr":["Bir sonraki göreve takla atarak!"]}},
+  {"id":"zoomies","anim":"zoomies","weight":[2,4,0],"duration":[0,0],"move":"dash","lines":{"chance":0.4,"en":["ZOOMIES!","Running in O(1)!"],"tr":["Turbo mod!","O(1) hızında koşuyorum!"]}},
+  {"id":"robot","anim":"robot","weight":[2,3,0],"duration":[0,0],"move":"walk","lines":{"chance":0.45,"en":["Beep boop. I am a totally normal human."],"tr":["Bip bop. Ben tamamen normal bir insanım."]}},
+  {"id":"crawl","anim":"crawl","weight":[2,3,0],"duration":[0,0],"move":"walk","lines":{"chance":0.4,"en":["Crawling… like my old laptop."],"tr":["Emekliyorum… eski laptopum gibi."]}},
+  {"id":"moonwalk","anim":"moonwalk","arrive":"peek","weight":[3,4,0],"duration":[2500,4000],"move":"toEdge"},
+  {"id":"sneak","anim":"sneak","arrive":"stare","weight":[2,4,0],"duration":[1800,3000],"move":"toCursor","lines":{"chance":0.4,"en":["Sneaking up on your cursor…"],"tr":["İmlecine sinsice yaklaşıyorum…"]}},
+  {"id":"flee","anim":"flee","arrive":"look","weight":[2,3,0],"duration":[1500,2500],"move":"fromCursor","lines":{"chance":0.5,"en":["Not the cursor! Anything but the cursor!"],"tr":["İmleç geliyor! Herkes kaçsın!"]}},
+  {"id":"greet-cursor","anim":"run","arrive":"wave","weight":[2,2,0],"duration":[2000,3000],"move":"toCursor","lines":{"chance":0.4,"en":["Hi, cursor! Long time no see."],"tr":["Selam imleç! Görüşmeyeli nasılsın?"]}},
+  {"id":"karate","anim":"karate","weight":[2,3,0],"duration":[2500,4000],"face":"random","lines":{"chance":0.4,"en":["Hi-yah! Code review incoming!"],"tr":["Hiyaa! Code review geliyor!"]}},
+  {"id":"box","anim":"box","weight":[2,3,0],"duration":[2500,4000],"face":"random","lines":{"chance":0.4,"en":["Boxing with a race condition."],"tr":["Bir race condition ile boks yapıyorum."]}},
+  {"id":"fish","anim":"fish","weight":[1,3,3],"duration":[6000,10000],"face":"random","lines":{"chance":0.45,"en":["Fishing for bugs.","Caught one! It is a feature now."],"tr":["Bug avına çıktım.","Yakaladım! Artık bir özellik."]}},
+  {"id":"lie","anim":"lie","weight":[1,3,6],"duration":[5000,9000],"face":"random","lines":{"chance":0.4,"en":["Brain RAM full. Lying down for garbage collection."],"tr":["Beyin RAM'i doldu. Çöp toplama için uzanıyorum."]}},
+  {"id":"gravity","anim":"drag","weight":[1,2,0],"duration":[2500,3500],"fx":"upsideDown","lines":{"chance":0.55,"en":["Gravity.exe has stopped working."],"tr":["Yerçekimi.exe yanıt vermiyor."]}},
+  {"id":"upside-think","anim":"think","weight":[1,2,0],"duration":[2500,3500],"fx":"upsideDown","lines":{"chance":0.5,"en":["Thinking outside the box. And upside down."],"tr":["Kutunun dışında düşünüyorum. Bir de baş aşağı."]}},
+  {"id":"pixel-pride","anim":"flex","weight":[1,1,0],"duration":[2500,3500],"lines":{"chance":0.6,"en":["He builds AI platforms at Arketic AI. I build… pixels.","Python, TypeScript, React, Node.js. I speak them all, in pixels."],"tr":["O, Arketic AI'da yapay zeka platformları geliştiriyor. Ben de… piksel.","Python, TypeScript, React, Node.js. Hepsini piksel piksel konuşurum."]}},
+  {"id":"sleep","anim":"sleep","weight":[0,0,90],"duration":[0,0],"until":"activity"},
+  {"id":"float-nap","anim":"sleep","weight":[0,0,20],"duration":[0,0],"fx":"float","until":"activity"},
 ];
