@@ -11,6 +11,7 @@
     "build:legacy": "cd old && npm install && npm run build",
     "postbuild:legacy": "node scripts/copy-legacy.cjs",
     "build:new": "vite build",
+    "build:sprites": "node scripts/sprites/build-sprites.mjs",
     "build:all": "npm run build:legacy && npm run postbuild:legacy && npm run build:new",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
