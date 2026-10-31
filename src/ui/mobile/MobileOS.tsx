@@ -283,12 +283,7 @@ export default function MobileOS() {
 
   return (
     <div className="mobile-os">
-      {console.log('[MobileOS] 🏠 Rendering mobile-os container')}
       <AnimatePresence>
-        {console.log('[MobileOS] 🎭 AnimatePresence evaluating children (NO WAIT MODE)', {
-          currentView,
-        })}
-
         {/* Launcher */}
         {currentView === 'launcher' &&
           (() => {
@@ -312,10 +307,6 @@ export default function MobileOS() {
                 onClose={handleAppShellClose}
                 appTitle={activeApp.node.name}
               >
-                {console.log('[MobileOS] 🎯 AppLoader children rendering', {
-                  appId: activeApp.appId,
-                  nodeTargetUrl: activeApp.node.targetUrl,
-                })}
                 <AppLoader
                   appId={activeApp.appId}
                   windowId={activeApp.windowId}

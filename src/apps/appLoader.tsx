@@ -3,7 +3,7 @@
  * Ubuntu×XP Desktop Portfolio
  */
 
-import { lazy, Suspense, ComponentType, useEffect } from 'react';
+import { lazy, memo, Suspense, type ComponentType, type LazyExoticComponent } from 'react';
 import type { AppRegistry } from './types';
 
 /**
@@ -36,16 +36,27 @@ const appRegistry: AppRegistry = {
 };
 
 /**
+ * One lazy component per app, created once.
+ *
+ * lazy() must not be called during render: a new lazy component is a new component
+ * type, so every re-render of the parent window (drag, resize, focus) would suspend
+ * again and paint the skeleton in place of the running app.
+ */
+const lazyApps = new Map<string, LazyExoticComponent<ComponentType<Record<string, unknown>>>>();
+
+function getLazyApp(appId: string) {
+  let App = lazyApps.get(appId);
+  if (!App && Object.prototype.hasOwnProperty.call(appRegistry, appId)) {
+    App = lazy(appRegistry[appId]);
+    lazyApps.set(appId, App);
+  }
+  return App;
+}
+
+/**
  * Loading skeleton with animated bones
  */
 function AppSkeleton() {
-  // DEBUG: Log skeleton render
-  useEffect(() => {
-    console.log('[AppLoader] ⏳ Showing skeleton (Suspense fallback)', {
-      timestamp: new Date().toISOString(),
-    });
-  }, []);
-
   return (
     <div className="app-skeleton">
       <div className="app-skeleton__header" />
@@ -176,68 +187,27 @@ interface AppLoaderProps {
 /**
  * App Loader Component
  * Lazy loads apps and shows skeleton while loading
+ *
+ * Memoized so a window that re-renders only because its bounds or focus changed
+ * does not re-render the app inside it.
  */
-export default function AppLoader({ appId, ...props }: AppLoaderProps) {
-  // DEBUG: Log AppLoader invocation
-  console.log('[AppLoader] 🎬 RENDER START', {
-    appId,
-    props,
-    timestamp: new Date().toISOString(),
-  });
-
-  useEffect(() => {
-    console.log('[AppLoader] 🚀 MOUNTING (useEffect)', {
-      appId,
-      propsKeys: Object.keys(props),
-      timestamp: new Date().toISOString(),
-    });
-    return () => {
-      console.log('[AppLoader] 💀 UNMOUNTED (useEffect cleanup)', {
-        appId,
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }, [appId, props]);
-
-  const appImport = appRegistry[appId];
-
-  console.log('[AppLoader] 🔍 Registry lookup', {
-    appId,
-    found: !!appImport,
-    registryKeys: Object.keys(appRegistry),
-    timestamp: new Date().toISOString(),
-  });
+function AppLoader({ appId, ...props }: AppLoaderProps) {
+  const AppComponent = getLazyApp(appId);
 
   // App not found in registry
-  if (!appImport) {
-    console.error('[AppLoader] ❌❌❌ App not found in registry!', {
+  if (!AppComponent) {
+    console.error('[AppLoader] App not found in registry', {
       appId,
       availableApps: Object.keys(appRegistry),
-      timestamp: new Date().toISOString(),
     });
     return <AppError appId={appId} />;
   }
 
-  console.log('[AppLoader] ✅ App found in registry, creating lazy component...', {
-    appId,
-    timestamp: new Date().toISOString(),
-  });
-
-  // Lazy load the app component
-  const AppComponent = lazy(appImport);
-
-  console.log('[AppLoader] 🎁 Wrapping in Suspense', {
-    appId,
-    timestamp: new Date().toISOString(),
-  });
-
   return (
-    <Suspense fallback={(() => {
-      console.log('[AppLoader] ⏳ Suspense fallback rendering');
-      return <AppSkeleton />;
-    })()}>
-      {console.log('[AppLoader] 🎯 Rendering lazy component', { appId })}
+    <Suspense fallback={<AppSkeleton />}>
       <AppComponent {...props} />
     </Suspense>
   );
 }
+
+export default memo(AppLoader);
