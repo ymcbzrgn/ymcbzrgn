@@ -9,8 +9,8 @@ Allow: /
 # (since it's embedded in the main portfolio)
 Disallow: /legacy/
 
-# Sitemap location (update this when you generate a sitemap)
-# Sitemap: https://www.yamacbezirgan.com/sitemap.xml
+# Sitemap location
+Sitemap: https://www.yamacbezirgan.com/sitemap.xml
 
 # Crawl-delay: Be polite to the server
 Crawl-delay: 1

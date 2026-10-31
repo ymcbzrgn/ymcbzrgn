@@ -8,19 +8,22 @@ export default defineConfig({
   plugins: [
     react(),
 
-    // Bundle size visualization (optional, can be disabled in CI)
-    visualizer({
-      open: false,
-      filename: 'dist/bundle-stats.html',
-      gzipSize: true,
-      brotliSize: true,
-      template: 'treemap', // sunburst, treemap, network
-    }),
+    // Bundle size visualization. Opt-in (ANALYZE=true npm run build:new) because the report
+    // is written to dist/ and would otherwise be deployed with the site.
+    process.env.ANALYZE === 'true' &&
+      visualizer({
+        open: false,
+        filename: 'dist/bundle-stats.html',
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap', // sunburst, treemap, network
+      }),
   ],
 
   build: {
     target: 'es2020',
-    sourcemap: true,
+    // Source maps are not used in production and would be published with the site (~2 MB)
+    sourcemap: false,
     minify: 'terser',
 
     rollupOptions: {

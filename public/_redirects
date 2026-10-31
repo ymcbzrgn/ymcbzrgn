@@ -1,34 +1,9 @@
-# Cloudflare Pages - Static File Routing Configuration
-# Serve static files directly without SPA fallback
-
-# Legacy site assets (highest priority)
-/legacy/*  200
-
-# Static assets
-/assets/*  200
-/icons/*   200
-
-# File extensions - serve directly
-/*.pdf     200
-/*.png     200
-/*.jpg     200
-/*.jpeg    200
-/*.gif     200
-/*.webp    200
-/*.svg     200
-/*.ico     200
-/*.json    200
-/*.txt     200
-/*.xml     200
-/*.webmanifest  200
-/*.woff    200
-/*.woff2   200
-/*.ttf     200
-/*.eot     200
-/*.otf     200
-
-# Static pages
-/privacy  /privacy.html  200
-
-# SPA fallback for all other routes
-/*  /index.html  200
+# Cloudflare Pages - Routing Configuration
+#
+# No rules are needed:
+#   - Without a 404.html, Pages serves index.html for unknown paths (SPA mode).
+#   - privacy.html is served at /privacy by Pages' built-in clean URLs, and /privacy.html
+#     redirects to /privacy. A "/privacy /privacy.html 200" rewrite makes those two
+#     redirect to each other forever (ERR_TOO_MANY_REDIRECTS).
+#   - Rules without a destination (e.g. "/*.pdf 200") are invalid, and "/* /index.html 200"
+#     is flagged as an infinite loop; Pages ignores all of them.
