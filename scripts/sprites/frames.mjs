@@ -27,6 +27,23 @@ const hang = (dy = 0, dl = 0, dr = 0, dx = 0) => ({
 const upR = (variant, dy = 0) => ({ part: variant === 'B' ? ARM_UP_B : ARM_UP_A, x: 20, y: 10 + dy, flip: false });
 const upL = (variant, dy = 0) => ({ part: variant === 'B' ? ARM_UP_B : ARM_UP_A, x: 2, y: 10 + dy, flip: true });
 
+/** Playback speed (frames per second) per animation – part of the art, read by the app through mascot.meta.ts. */
+export const FPS = {
+  idle: 2,
+  look: 1.5,
+  walk: 8,
+  run: 12,
+  wave: 6,
+  sit: 1.5,
+  sleep: 1,
+  type: 7,
+  read: 1,
+  coffee: 2.5,
+  jump: 6,
+  stretch: 2,
+  drag: 6,
+};
+
 export const ANIMS = {
   // Standing, breathing, one blink per loop
   idle: [

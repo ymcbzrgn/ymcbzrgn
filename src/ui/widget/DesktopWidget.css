@@ -71,8 +71,6 @@
 
 .desktop-widget__avatar {
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
   border-radius: 50%;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
   image-rendering: pixelated;

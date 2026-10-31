@@ -10,6 +10,7 @@ import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
 import { PROFILE } from '../../os/content/profile';
 import bustUrl from '../../assets/sprites/mascot-bust.png';
+import { SPRITE_BUST } from '../../assets/sprites/mascot.meta';
 import './DesktopWidget.css';
 
 /** Re-render once a minute, right after the minute changes. */
@@ -67,7 +68,7 @@ export default function DesktopWidget() {
       </div>
 
       <div className="desktop-widget__who">
-        <img className="desktop-widget__avatar" src={bustUrl} width={72} height={72} alt="" />
+        <img className="desktop-widget__avatar" src={bustUrl} width={SPRITE_BUST * 3} height={SPRITE_BUST * 3} alt="" />
         <div className="desktop-widget__text">
           <strong className="desktop-widget__name">{PROFILE.name}</strong>
           <span className="desktop-widget__role">{t('role')}</span>

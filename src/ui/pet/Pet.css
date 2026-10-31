@@ -3,7 +3,7 @@
 .pet {
   position: fixed;
   left: 0;
-  bottom: 45px; /* sprite has a 3px empty row below the shoes: feet touch the taskbar edge */
+  bottom: 45px; /* fallback: Pet.tsx sets the real value from the sprite's foot padding */
   z-index: 50; /* above windows (10), below the taskbar (100) */
   pointer-events: none; /* only the sprite itself is interactive */
   will-change: transform;
@@ -22,8 +22,36 @@
   height: 100%;
 }
 
-.pet__body--hop {
+/* Body effects, picked per behaviour by the engine (Fx in mascot.behaviors.ts) */
+.pet__fx {
+  transform-origin: 50% 70%;
+}
+.pet__fx--hop {
   animation: pet-hop 900ms ease-out;
+}
+.pet__fx--bounce {
+  animation: pet-bounce 640ms ease-in-out infinite;
+}
+.pet__fx--spin {
+  animation: pet-spin 800ms linear infinite;
+}
+.pet__fx--backflip {
+  transform-origin: 50% 55%;
+  animation: pet-backflip 900ms ease-in-out infinite;
+}
+.pet__fx--upsideDown {
+  transform-origin: 50% 55%;
+  transform: rotate(180deg);
+}
+.pet__fx--shake {
+  animation: pet-shake 90ms linear infinite;
+}
+.pet__fx--float {
+  animation: pet-float 2.6s ease-in-out infinite;
+}
+.pet__fx--wobble {
+  transform-origin: 50% 95%;
+  animation: pet-wobble 900ms ease-in-out infinite;
 }
 
 .pet__hit {
@@ -197,6 +225,77 @@
   }
 }
 
+@keyframes pet-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-34px);
+  }
+}
+
+/* Spin around the vertical axis (a flat sprite: squash to a sliver and back, mirrored) */
+@keyframes pet-spin {
+  0% {
+    transform: scaleX(1);
+  }
+  25% {
+    transform: scaleX(0.08);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+  75% {
+    transform: scaleX(0.08);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes pet-backflip {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-52px) rotate(-180deg);
+  }
+  100% {
+    transform: translateY(0) rotate(-360deg);
+  }
+}
+
+@keyframes pet-shake {
+  0%,
+  100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes pet-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pet-wobble {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
 @keyframes pet-bubble-in {
   from {
     opacity: 0;
@@ -224,10 +323,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pet__body--hop,
+  .pet__fx,
   .pet__bubble,
   .pet__zzz span {
     animation: none;
+  }
+  .pet__fx--upsideDown {
+    transform: none;
   }
   .pet__zzz span {
     opacity: 1;

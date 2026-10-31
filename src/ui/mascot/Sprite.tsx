@@ -14,7 +14,6 @@ import {
   SPRITE_ROWS,
   type SpriteAnim,
 } from '../../assets/sprites/mascot.meta';
-import { ANIM_FPS } from './animConfig';
 import './Sprite.css';
 
 export type { SpriteAnim };
@@ -34,7 +33,7 @@ export default function Sprite({ anim, scale = 4, fps, flip = false, paused = fa
   const { row, frames } = SPRITE_ANIMS[anim];
   const w = SPRITE_FRAME_W * scale;
   const h = SPRITE_FRAME_H * scale;
-  const speed = fps ?? ANIM_FPS[anim];
+  const speed = fps ?? SPRITE_ANIMS[anim].fps;
 
   const css = {
     width: w,

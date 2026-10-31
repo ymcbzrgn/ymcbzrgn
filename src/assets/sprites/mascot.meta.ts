@@ -3,19 +3,23 @@ export const SPRITE_FRAME_W = 28;
 export const SPRITE_FRAME_H = 38;
 export const SPRITE_COLS = 4;
 export const SPRITE_ROWS = 13;
+/** Transparent rows below the shoes in the standing pose. */
+export const SPRITE_FOOT_PAD = 1;
+/** Width/height of mascot-bust.png. */
+export const SPRITE_BUST = 24;
 export const SPRITE_ANIMS = {
-  idle: { row: 0, frames: 4 },
-  look: { row: 1, frames: 2 },
-  walk: { row: 2, frames: 4 },
-  run: { row: 3, frames: 4 },
-  wave: { row: 4, frames: 4 },
-  sit: { row: 5, frames: 2 },
-  sleep: { row: 6, frames: 2 },
-  type: { row: 7, frames: 4 },
-  read: { row: 8, frames: 2 },
-  coffee: { row: 9, frames: 4 },
-  jump: { row: 10, frames: 3 },
-  stretch: { row: 11, frames: 3 },
-  drag: { row: 12, frames: 2 },
+  idle: { row: 0, frames: 4, fps: 2 },
+  look: { row: 1, frames: 2, fps: 1.5 },
+  walk: { row: 2, frames: 4, fps: 8 },
+  run: { row: 3, frames: 4, fps: 12 },
+  wave: { row: 4, frames: 4, fps: 6 },
+  sit: { row: 5, frames: 2, fps: 1.5 },
+  sleep: { row: 6, frames: 2, fps: 1 },
+  type: { row: 7, frames: 4, fps: 7 },
+  read: { row: 8, frames: 2, fps: 1 },
+  coffee: { row: 9, frames: 4, fps: 2.5 },
+  jump: { row: 10, frames: 3, fps: 6 },
+  stretch: { row: 11, frames: 3, fps: 2 },
+  drag: { row: 12, frames: 2, fps: 6 },
 } as const;
 export type SpriteAnim = keyof typeof SPRITE_ANIMS;

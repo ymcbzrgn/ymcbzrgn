@@ -73,8 +73,6 @@
 
 .simple__avatar {
   flex-shrink: 0;
-  width: 96px;
-  height: 96px;
   border-radius: 50%;
   background: linear-gradient(160deg, #4db6ac, #546e7a);
   image-rendering: pixelated;

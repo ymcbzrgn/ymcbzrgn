@@ -8,6 +8,7 @@ import { openDesktopView } from '../../os/view';
 import { PROFILE } from '../../os/content/profile';
 import { PROFILE_TEXT } from '../../os/content/profileText';
 import bustUrl from '../../assets/sprites/mascot-bust.png';
+import { SPRITE_BUST } from '../../assets/sprites/mascot.meta';
 import './SimpleView.css';
 
 // The embedded project list is the same app used in the desktop window (with its GitHub cache).
@@ -45,7 +46,7 @@ export default function SimpleView() {
 
       <main className="simple__main">
         <section className="simple__hero">
-          <img className="simple__avatar" src={bustUrl} width={96} height={96} alt="" />
+          <img className="simple__avatar" src={bustUrl} width={SPRITE_BUST * 4} height={SPRITE_BUST * 4} alt="" />
           <div>
             <h1 className="simple__name">{PROFILE.name}</h1>
             <p className="simple__role">

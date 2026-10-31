@@ -1,64 +1,82 @@
 /**
  * Pet – the pixel twin that lives on the desktop.
  *
- * It runs in from the left edge, waves hello, then gets on with its own life: wandering, running,
- * sitting, reading, typing, drinking coffee, jumping, stretching, and eventually falling asleep when
- * nobody touches the desktop for a while. It drops a helpful tip now and then, can be dragged
- * around, and opens a small menu when clicked.
+ * It runs in from the left edge, waves hello, then gets on with its own life. What it does is DATA:
+ * the behaviour table in src/assets/sprites/mascot.behaviors.ts (generated from
+ * scripts/sprites/behaviors.mjs) lists every behaviour with its animation, odds, duration, travel,
+ * body effect and speech lines. This component is only the generic engine that plays that table:
+ *   - picks the next behaviour by weight, from a tier that depends on how long the visitor has been
+ *     inactive (calm -> bored -> sleepy), avoiding recent repeats
+ *   - travels (walk / run / dash / chase or flee the cursor / peek over a screen edge)
+ *   - applies a body effect (hop, spin, backflip, shake ...) and speech bubbles
+ *   - falls asleep when nobody is around and wakes up when the mouse moves
+ * plus tips, the click menu, drag & drop, reduced motion and the Settings off switch.
  *
- * Cost: no render loop. Frames are stepped by a CSS animation, walking is a single CSS transform
- * transition, and behaviours are driven by one timeout at a time.
+ * Cost: no render loop. Frames are stepped by a CSS animation, travel is a single CSS transform
+ * transition, body effects are CSS keyframes, and one timeout at a time drives the behaviours.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../../os/store';
-import { useT, type StringKey } from '../../os/i18n/full';
+import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
 import { openSimpleView } from '../../os/view';
 import Sprite, { type SpriteAnim } from '../mascot/Sprite';
-import { SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sprites/mascot.meta';
+import { SPRITE_FOOT_PAD, SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sprites/mascot.meta';
+import { BEHAVIORS, type Behavior, type Fx, type Move } from '../../assets/sprites/mascot.behaviors';
 import './Pet.css';
 
 const SCALE = 3;
 const W = SPRITE_FRAME_W * SCALE;
 const H = SPRITE_FRAME_H * SCALE;
+const FEET = SPRITE_FOOT_PAD * SCALE; // transparent pixels below the shoes
 const TASKBAR = 48;
 const EDGE = 8;
-const WALK_SPEED = 70; // px/s
-const RUN_SPEED = 190; // px/s
+const SPEED = { walk: 70, run: 190, dash: 340, toCursor: 230, fromCursor: 260, toEdge: 190 } as const; // px/s
+const SPEECH_GAP_MS = 9000; // minimum time between two behaviour lines
 const TIP_STORAGE_KEY = 'yb-pet-seen';
 
-type Mode = SpriteAnim;
-
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
-/* ---------- behaviour table ---------- */
-type Weights = [Mode, number][];
-const CALM: Weights = [['idle', 24], ['look', 12], ['walk', 28], ['sit', 8], ['coffee', 6], ['read', 4], ['type', 4], ['jump', 6], ['stretch', 3], ['run', 5]];
-const BORED: Weights = [['walk', 16], ['run', 10], ['sit', 12], ['read', 12], ['type', 12], ['coffee', 10], ['stretch', 8], ['look', 8], ['jump', 8], ['idle', 4]];
-const SLEEPY: Weights = [['sleep', 60], ['sit', 20], ['stretch', 6], ['idle', 8], ['look', 6]];
+/* ---------- behaviour selection ---------- */
+type Tier = 0 | 1 | 2; // calm, bored, sleepy
 
-function pickWeighted(table: Weights, exclude?: Mode): Mode {
-  const rows = table.filter(([m]) => m !== exclude);
-  const total = rows.reduce((sum, [, w]) => sum + w, 0);
+function pickBehavior(tier: Tier, recent: string[]): Behavior {
+  let pool = BEHAVIORS.filter((b) => b.weight[tier] > 0 && !recent.includes(b.id));
+  if (pool.length === 0) pool = BEHAVIORS.filter((b) => b.weight[tier] > 0);
+  const total = pool.reduce((sum, b) => sum + b.weight[tier], 0);
   let r = Math.random() * total;
-  for (const [mode, weight] of rows) {
-    r -= weight;
-    if (r <= 0) return mode;
+  for (const b of pool) {
+    r -= b.weight[tier];
+    if (r <= 0) return b;
   }
-  return rows[0][0];
+  return pool[0];
 }
 
-const DURATION: Partial<Record<Mode, [number, number]>> = {
-  idle: [2500, 6000],
-  look: [1800, 2600],
-  sit: [4000, 9000],
-  read: [6000, 10000],
-  type: [6000, 10000],
-  coffee: [5500, 8000],
-  jump: [900, 900],
-  stretch: [2800, 2800],
-  wave: [2800, 2800],
-};
+/** Where a travelling behaviour goes, which way it faces and how fast. */
+function travelPlan(move: Exclude<Move, 'none'>, fromX: number, pointerX: number | null, vw: number) {
+  const max = Math.max(EDGE, vw - W - EDGE);
+
+  if (move === 'toCursor' && pointerX != null) {
+    const target = clamp(pointerX - W / 2, EDGE, max);
+    return { target, facing: (target > fromX ? 1 : -1) as 1 | -1, speed: SPEED.toCursor };
+  }
+  if (move === 'fromCursor' && pointerX != null) {
+    const target = pointerX < vw / 2 ? max : EDGE;
+    return { target, facing: (target > fromX ? 1 : -1) as 1 | -1, speed: SPEED.fromCursor };
+  }
+  if (move === 'toEdge') {
+    // Half of the sprite goes off-screen: it peeks in from the side
+    const toLeft = Math.random() < 0.5;
+    return { target: toLeft ? -W * 0.5 : vw - W * 0.5, facing: (toLeft ? 1 : -1) as 1 | -1, speed: SPEED.toEdge };
+  }
+
+  // walk / run / dash (and cursor moves when the pointer is unknown): a spot worth the trip
+  let target = rand(EDGE, max);
+  if (Math.abs(target - fromX) < 140) target = fromX < max / 2 ? rand(max * 0.55, max) : rand(EDGE, max * 0.45);
+  const speed = move === 'walk' ? SPEED.walk : move === 'dash' ? SPEED.dash : SPEED.run;
+  return { target, facing: (target > fromX ? 1 : -1) as 1 | -1, speed };
+}
 
 /* ---------- tips ---------- */
 interface TipContext {
@@ -100,6 +118,7 @@ function writeSeen(seen: string[]) {
 /* ---------- component ---------- */
 export default function Pet() {
   const t = useT();
+  const lang = useLang();
   const launch = useLaunch();
   const onboarded = useStore((s) => s.settings.onboarded);
 
@@ -107,7 +126,8 @@ export default function Pet() {
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   );
 
-  const [mode, setMode] = useState<Mode>('idle');
+  const [mode, setMode] = useState<SpriteAnim>('idle');
+  const [fx, setFx] = useState<Fx>('none');
   const [x, setX] = useState(-W - 24); // starts off-screen, runs in
   const [y, setY] = useState(0);
   const [facing, setFacing] = useState<1 | -1>(1);
@@ -119,7 +139,7 @@ export default function Pet() {
 
   // Mutable engine state (kept out of React state: it changes without needing a render)
   const xRef = useRef(-W - 24);
-  const modeRef = useRef<Mode>('idle');
+  const modeRef = useRef<SpriteAnim>('idle');
   const draggingRef = useRef(false);
   const menuRef = useRef(false);
   const aliveRef = useRef(true);
@@ -127,7 +147,12 @@ export default function Pet() {
   const bubbleTimerRef = useRef(0);
   const tipTimerRef = useRef(0);
   const lastActivityRef = useRef(Date.now());
+  const lastSpeechRef = useRef(0);
   const bubbleIdRef = useRef(0);
+  const pointerXRef = useRef<number | null>(null);
+  const recentRef = useRef<string[]>([]);
+  const langRef = useRef(lang);
+  langRef.current = lang;
   const appsRef = useRef<Set<string>>(new Set());
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -137,11 +162,12 @@ export default function Pet() {
   const say = useCallback((text: string, ms = 4200) => {
     window.clearTimeout(bubbleTimerRef.current);
     bubbleIdRef.current += 1;
+    lastSpeechRef.current = Date.now();
     setBubble({ text, id: bubbleIdRef.current });
     bubbleTimerRef.current = window.setTimeout(() => setBubble(null), ms);
   }, []);
 
-  const enter = useCallback((m: Mode) => {
+  const enter = useCallback((m: SpriteAnim) => {
     modeRef.current = m;
     setMode(m);
   }, []);
@@ -151,7 +177,16 @@ export default function Pet() {
     timerRef.current = window.setTimeout(fn, ms);
   }, []);
 
-  /* ----- behaviour loop ----- */
+  const travel = useCallback((target: number, dir: 1 | -1, speed: number) => {
+    const ms = (Math.abs(target - xRef.current) / speed) * 1000;
+    setFacing(dir);
+    setTravelMs(ms);
+    xRef.current = target;
+    setX(target);
+    return ms;
+  }, []);
+
+  /* ----- behaviour loop (generic: plays the data table) ----- */
   const next = useCallback(() => {
     if (!aliveRef.current) return;
     // Busy being dragged / talked to: check again shortly
@@ -160,55 +195,70 @@ export default function Pet() {
       return;
     }
 
-    const idleFor = (Date.now() - lastActivityRef.current) / 1000;
-    const table = idleFor > 60 ? SLEEPY : idleFor > 20 ? BORED : CALM;
-    const choice = pickWeighted(table, modeRef.current);
-
-    switch (choice) {
-      case 'walk':
-      case 'run': {
-        const max = floorMax();
-        let target = rand(EDGE, max);
-        // Make the trip worth it
-        if (Math.abs(target - xRef.current) < 140) target = xRef.current < max / 2 ? rand(max * 0.55, max) : rand(EDGE, max * 0.45);
-        const dist = Math.abs(target - xRef.current);
-        const ms = (dist / (choice === 'run' ? RUN_SPEED : WALK_SPEED)) * 1000;
-        setFacing(target > xRef.current ? 1 : -1);
-        setTravelMs(ms);
-        xRef.current = target;
-        setX(target);
-        enter(choice);
-        schedule(next, ms + 80);
-        return;
-      }
-      case 'sleep': {
-        enter('sleep');
-        say(t('petSleepy'), 2600);
-        // Sleep until somebody moves the mouse or presses a key
-        const watch = () => {
-          if (!aliveRef.current) return;
-          if (Date.now() - lastActivityRef.current < 2500) {
-            enter('stretch');
-            schedule(next, 2800);
-          } else {
-            schedule(watch, 1000);
-          }
-        };
-        schedule(watch, 1500);
-        return;
-      }
-      default: {
-        enter(choice);
-        if (choice === 'jump' && Math.random() < 0.5) say(t('petJump'), 1800);
-        if (choice === 'coffee' && Math.random() < 0.4) say(t('petBoredB'));
-        if (choice === 'read' && Math.random() < 0.4) say(t('petBoredC'));
-        if (choice === 'type' && Math.random() < 0.4) say(t('petBoredD'));
-        if (choice === 'idle' && idleFor > 20 && Math.random() < 0.4) say(t('petBoredA'));
-        const [min, max] = DURATION[choice] ?? [2500, 5000];
-        schedule(next, rand(min, max));
-      }
+    // Back from peeking over a screen edge: walk inside first
+    const max = floorMax();
+    if (xRef.current < EDGE - 2 || xRef.current > max + 2) {
+      const target = clamp(xRef.current, EDGE + 24, max - 24);
+      setFx('none');
+      enter('walk');
+      schedule(next, travel(target, target > xRef.current ? 1 : -1, SPEED.walk) + 80);
+      return;
     }
-  }, [enter, floorMax, say, schedule, t]);
+
+    const idleFor = (Date.now() - lastActivityRef.current) / 1000;
+    const tier: Tier = idleFor > 60 ? 2 : idleFor > 20 ? 1 : 0;
+    const b = pickBehavior(tier, recentRef.current);
+    recentRef.current = [...recentRef.current.slice(-5), b.id];
+
+    setFx(b.fx ?? 'none');
+    enter(b.anim);
+
+    // Speech bubble (rate limited so a chatty table can't spam)
+    const lines = b.lines;
+    if (lines && (lines.when !== 'bored' || tier >= 1) && Date.now() - lastSpeechRef.current > SPEECH_GAP_MS && Math.random() < lines.chance) {
+      const pool = lines[langRef.current];
+      if (pool.length) say(pool[Math.floor(Math.random() * pool.length)]);
+    }
+
+    // Fall asleep (or any "hold until the visitor shows up" pose)
+    if (b.until === 'activity') {
+      const watch = () => {
+        if (!aliveRef.current) return;
+        if (Date.now() - lastActivityRef.current < 2500) {
+          setFx('none');
+          enter('stretch');
+          schedule(next, 2800);
+        } else {
+          schedule(watch, 1000);
+        }
+      };
+      say(t('petSleepy'), 2600);
+      schedule(watch, 1500);
+      return;
+    }
+
+    const dwell = b.duration[1] > 0 ? rand(b.duration[0], b.duration[1]) : 0;
+    const move = b.move ?? 'none';
+    if (move === 'none') {
+      if (b.face === 'random') setFacing(Math.random() < 0.5 ? 1 : -1);
+      schedule(next, dwell || 2500);
+      return;
+    }
+
+    // Travelling behaviour
+    const plan = travelPlan(move, xRef.current, pointerXRef.current, window.innerWidth);
+    const ms = travel(plan.target, plan.facing, plan.speed);
+    if (b.arrive) {
+      const arrive = b.arrive;
+      schedule(() => {
+        setTravelMs(0);
+        enter(arrive);
+        schedule(next, dwell);
+      }, ms + 60);
+    } else {
+      schedule(next, ms + 60 + dwell);
+    }
+  }, [enter, floorMax, say, schedule, t, travel]);
 
   /* ----- start: run in from the left, wave, then live ----- */
   useEffect(() => {
@@ -226,12 +276,9 @@ export default function Pet() {
         return;
       }
       const target = Math.min(floorMax(), 72);
-      const ms = ((target - xRef.current) / RUN_SPEED) * 1000;
-      setFacing(1);
-      setTravelMs(ms);
-      xRef.current = target;
-      setX(target);
+      setFx('none');
       enter('run');
+      const ms = travel(target, 1, SPEED.run);
       schedule(() => {
         setTravelMs(0);
         enter('wave');
@@ -253,13 +300,18 @@ export default function Pet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onboarded]);
 
-  /* ----- track activity, opened apps, window size ----- */
+  /* ----- track activity, pointer, opened apps, window size ----- */
   useEffect(() => {
     const touch = () => {
       lastActivityRef.current = Date.now();
     };
-    const events = ['pointermove', 'pointerdown', 'keydown', 'wheel'] as const;
+    const onMove = (e: PointerEvent) => {
+      pointerXRef.current = e.clientX;
+      lastActivityRef.current = Date.now();
+    };
+    const events = ['pointerdown', 'keydown', 'wheel'] as const;
     events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
+    window.addEventListener('pointermove', onMove, { passive: true });
 
     appsRef.current = new Set(useStore.getState().windows.map((w) => w.appId));
     const unsub = useStore.subscribe((state, prev) => {
@@ -279,6 +331,7 @@ export default function Pet() {
 
     return () => {
       events.forEach((e) => window.removeEventListener(e, touch));
+      window.removeEventListener('pointermove', onMove);
       window.removeEventListener('resize', onResize);
       unsub();
     };
@@ -331,6 +384,7 @@ export default function Pet() {
       setMenuOpen(false);
       menuRef.current = false;
       setFall(false);
+      setFx('none');
       enter('drag');
     }
     if (d.moved) {
@@ -355,6 +409,7 @@ export default function Pet() {
       setMenuOpen(open);
       if (open) {
         setBubble(null);
+        setFx('none');
         enter('wave');
       } else {
         enter('idle');
@@ -366,10 +421,11 @@ export default function Pet() {
     draggingRef.current = false;
     setFall(true);
     setY(0);
+    setFx('hop');
     enter('jump');
-    if (Math.random() < 0.5) say(t('petJump'), 1800);
     schedule(() => {
       setFall(false);
+      setFx('none');
       enter('idle');
       schedule(next, 1200);
     }, 700);
@@ -414,6 +470,7 @@ export default function Pet() {
       style={{
         width: W,
         height: H,
+        bottom: TASKBAR - FEET,
         transform: `translate3d(${x}px, 0, 0)`,
         transition: travelMs ? `transform ${travelMs}ms linear` : 'none',
       }}
@@ -426,7 +483,7 @@ export default function Pet() {
           transition: fall ? 'transform 380ms cubic-bezier(0.5, 0, 1, 0.6)' : 'none',
         }}
       >
-        <div ref={bodyRef} className={`pet__body ${mode === 'jump' ? 'pet__body--hop' : ''}`}>
+        <div ref={bodyRef} className={`pet__body pet__fx pet__fx--${fx}`}>
           <button
             type="button"
             className="pet__hit"
