@@ -4,6 +4,7 @@
  */
 
 import { useStore } from '../../os/store';
+import { setLang, useLang, useT } from '../../os/i18n/full';
 import './Settings.css';
 
 interface SettingsProps {
@@ -32,6 +33,8 @@ const WALLPAPER_PRESETS = [
 export default function Settings({ windowId }: SettingsProps) {
   const settings = useStore((state) => state.settings);
   const updateSettings = useStore((state) => state.updateSettings);
+  const t = useT();
+  const lang = useLang();
 
   // Wallpaper change handler
   const handleWallpaperChange = (wallpaper: string) => {
@@ -66,6 +69,45 @@ export default function Settings({ windowId }: SettingsProps) {
                   aria-label={`Select ${preset.name} wallpaper`}
                 />
               ))}
+            </div>
+          </div>
+
+          {/* Language */}
+          <div className="settings-app__group">
+            <h3 className="settings-app__group-title">{t('setLanguage')}</h3>
+            <div className="settings-app__radio-group">
+              <label className="settings-app__radio">
+                <input type="radio" name="lang" checked={lang === 'en'} onChange={() => setLang('en')} />
+                <span>English</span>
+              </label>
+              <label className="settings-app__radio">
+                <input type="radio" name="lang" checked={lang === 'tr'} onChange={() => setLang('tr')} />
+                <span>Türkçe</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Desktop extras */}
+          <div className="settings-app__group">
+            <div className="settings-app__radio-group">
+              <label className="settings-app__radio">
+                <input
+                  type="checkbox"
+                  checked={!settings.widgetHidden}
+                  onChange={(e) => updateSettings({ widgetHidden: !e.target.checked })}
+                />
+                <span>{t('setWidget')}</span>
+                <small className="settings-app__radio-hint">{t('setWidgetHint')}</small>
+              </label>
+              <label className="settings-app__radio">
+                <input
+                  type="checkbox"
+                  checked={!settings.assistantHidden}
+                  onChange={(e) => updateSettings({ assistantHidden: !e.target.checked })}
+                />
+                <span>{t('setAssistant')}</span>
+                <small className="settings-app__radio-hint">{t('setAssistantHint')}</small>
+              </label>
             </div>
           </div>
 

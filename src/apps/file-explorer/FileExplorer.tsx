@@ -24,6 +24,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useVFSNodes, useVFSNodesByParent, useVFSActions } from '../../os/store';
 import { getIconDisplay } from '../../os/utils/iconMap';
+import { getInitialBounds } from '../../os/utils/windowBounds';
 import {
   getUniqueFolderName,
   getUniqueTextFileName,
@@ -122,18 +123,13 @@ export default function FileExplorer({ windowId, nodeId }: FileExplorerProps) {
 
   // Helper to open app (platform-aware: Desktop window or Mobile fullscreen)
   function openAppFromExplorer(appId: string, node: VFSNode) {
-    const windowWidth = 600;
-    const windowHeight = 450;
-    const x = (window.innerWidth - windowWidth) / 2 + Math.random() * 40 - 20;
-    const y = (window.innerHeight - windowHeight) / 2 + Math.random() * 40 - 20;
-
     openApp({
       id: uuidv4(),
       appId,
       nodeId: node.id,
       title: node.name,
       icon: node.icon || '📄',
-      bounds: { x, y, width: windowWidth, height: windowHeight },
+      bounds: getInitialBounds(appId),
       state: 'normal',
       meta: {},
     });

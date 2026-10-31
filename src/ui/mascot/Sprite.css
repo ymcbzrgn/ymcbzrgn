@@ -1,0 +1,29 @@
+/* Pixel-art sprite playback (see Sprite.tsx) */
+
+.sprite {
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation-name: sprite-play;
+  animation-iteration-count: infinite;
+}
+
+.sprite--paused {
+  animation-play-state: paused;
+}
+
+@keyframes sprite-play {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: var(--sprite-end);
+  }
+}
+
+/* Reduced motion: show the first frame only */
+@media (prefers-reduced-motion: reduce) {
+  .sprite {
+    animation: none;
+  }
+}

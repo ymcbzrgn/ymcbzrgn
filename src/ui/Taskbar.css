@@ -39,6 +39,17 @@
   text-transform: lowercase;
 }
 
+.taskbar__logo--button {
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--border-radius);
+  transition: filter var(--transition-fast);
+}
+
+.taskbar__logo--button:hover {
+  filter: brightness(1.25);
+}
+
 /* Window Switcher Container */
 .taskbar__windows {
   display: flex;

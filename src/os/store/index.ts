@@ -39,6 +39,17 @@ export const useStore = create<AppStore>()(
           gridSize: state.gridSize,
           settings: state.settings,
         }),
+        // Persist's default merge is shallow: a visitor's stored `settings` object would
+        // replace the defaults wholesale and drop keys added after their first visit.
+        // Merge settings one level deeper so new fields keep their defaults.
+        merge: (persisted, current) => {
+          const saved = (persisted ?? {}) as Partial<AppStore>;
+          return {
+            ...current,
+            ...saved,
+            settings: { ...current.settings, ...(saved.settings ?? {}) },
+          };
+        },
       }
     ),
     {

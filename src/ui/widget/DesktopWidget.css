@@ -1,0 +1,156 @@
+/* Desktop intro widget (top-right glass card) */
+
+.desktop-widget {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2; /* above the wallpaper and icons, below windows (10) */
+  width: 300px;
+  padding: 16px 16px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  color: var(--color-text-primary, #f8fafc);
+  user-select: none;
+  animation: desktop-widget-in 380ms ease-out both;
+}
+
+.desktop-widget__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(248, 250, 252, 0.7);
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.desktop-widget:hover .desktop-widget__close,
+.desktop-widget__close:focus-visible {
+  opacity: 1;
+}
+
+.desktop-widget__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.desktop-widget__clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.desktop-widget__time {
+  font-size: 38px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.desktop-widget__date {
+  font-size: 12.5px;
+  color: rgba(248, 250, 252, 0.78);
+}
+
+.desktop-widget__who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.desktop-widget__avatar {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+  image-rendering: pixelated;
+}
+
+.desktop-widget__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.desktop-widget__name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.desktop-widget__role {
+  font-size: 13px;
+  color: rgba(248, 250, 252, 0.88);
+}
+
+.desktop-widget__company {
+  font-size: 12px;
+  color: rgba(248, 250, 252, 0.62);
+}
+
+.desktop-widget__links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.desktop-widget__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.desktop-widget__link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+@keyframes desktop-widget-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Not enough room next to the icons and windows: hide */
+@media (max-width: 1100px), (max-height: 620px) {
+  .desktop-widget {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-widget {
+    animation: none;
+  }
+}

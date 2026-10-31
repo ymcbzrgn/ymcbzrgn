@@ -8,6 +8,9 @@
 import { useState, useEffect } from 'react';
 import { useWindows, useFocusedWindow, useWindowActions } from '@os/store';
 import { getIconDisplay } from '../os/utils/iconMap';
+import { useLang, useT } from '../os/i18n';
+import { useLaunch } from '../os/hooks/useLaunch';
+import { openSimpleView } from '../os/view';
 import './Taskbar.css';
 
 const MAX_VISIBLE_WINDOWS = 10;
@@ -17,6 +20,9 @@ export default function Taskbar() {
   const focusedWindow = useFocusedWindow();
   const { focusWindow, restoreWindow } = useWindowActions();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const lang = useLang();
+  const t = useT();
+  const launch = useLaunch();
 
   // Update time every second
   useEffect(() => {
@@ -46,7 +52,15 @@ export default function Taskbar() {
     <div className="taskbar">
       {/* Start Button / Branding */}
       <div className="taskbar__start">
-        <span className="taskbar__logo">ymcbzrgn</span>
+        <button
+          type="button"
+          className="taskbar__logo taskbar__logo--button"
+          onClick={() => launch('welcome')}
+          title={t('welcomeTitle')}
+          aria-label={t('welcomeTitle')}
+        >
+          ymcbzrgn
+        </button>
       </div>
 
       {/* Window Switcher */}
@@ -79,6 +93,18 @@ export default function Taskbar() {
       {/* System Tray / Clock */}
       <div className="taskbar__tray">
         <button
+          type="button"
+          className="taskbar__privacy"
+          onClick={openSimpleView}
+          title={t('ctaSimple')}
+          aria-label={t('ctaSimple')}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+            <rect x="2.25" y="1.75" width="11.5" height="12.5" rx="1.5" />
+            <path d="M5 5.5h6M5 8h6M5 10.5h3.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button
           className="taskbar__privacy"
           onClick={() => window.open('/privacy.html', '_blank')}
           title="Privacy Policy"
@@ -89,7 +115,7 @@ export default function Taskbar() {
           </svg>
         </button>
         <div className="taskbar__time">
-          {currentTime.toLocaleTimeString('tr-TR', {
+          {currentTime.toLocaleTimeString(lang === 'tr' ? 'tr-TR' : 'en-GB', {
             hour: '2-digit',
             minute: '2-digit',
           })}

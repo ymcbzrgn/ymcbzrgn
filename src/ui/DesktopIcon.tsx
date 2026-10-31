@@ -5,10 +5,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { VFSNode } from '@os/types';
-import { useVFSActions, useVFSNodes, useDesktopActions, useWindowActions } from '@os/store';
+import { useVFSActions, useVFSNodes, useDesktopActions, useWindowActions, useStore } from '@os/store';
 import { validateName, nameExists } from '@os/utils/naming';
 import { getIconDisplay } from '@os/utils/iconMap';
 import { useIsMobile } from '@os/hooks/useDeviceType';
+import { useT } from '@os/i18n';
 import { v4 as uuidv4 } from 'uuid';
 import ContextMenu, { type MenuItem } from './ContextMenu';
 import './DesktopIcon.css';
@@ -41,6 +42,11 @@ export default function DesktopIcon({
   const [renamingValue, setRenamingValue] = useState(node.name);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
+  // First-time hint: a single click only selects an icon on desktop, which looks "broken" to newcomers
+  const [hintVisible, setHintVisible] = useState(false);
+  const iconHintSeen = useStore((state) => state.settings.iconHintSeen);
+  const t = useT();
+  const mouseDownPos = useRef({ x: 0, y: 0 });
   const iconRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +61,8 @@ export default function DesktopIcon({
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent text selection during drag
     e.preventDefault();
+
+    mouseDownPos.current = { x: e.clientX, y: e.clientY };
 
     // Check for multi-select (Ctrl/Cmd key)
     const isMulti = e.ctrlKey || e.metaKey;
@@ -86,11 +94,33 @@ export default function DesktopIcon({
       // Double-click detected
       onDoubleClick(node);
       setLastClickTime(0); // Reset to prevent triple-click
+      setHintVisible(false);
+      if (!iconHintSeen) useStore.getState().updateSettings({ iconHintSeen: true });
     } else {
       // Single click
       setLastClickTime(now);
+      // Not after a drag: only when the pointer stayed put
+      const moved = Math.hypot(e.clientX - mouseDownPos.current.x, e.clientY - mouseDownPos.current.y) > 4;
+      if (!iconHintSeen && !moved) setHintVisible(true);
     }
   };
+
+  // Auto-hide the hint
+  useEffect(() => {
+    if (!hintVisible) return;
+    const timer = window.setTimeout(() => setHintVisible(false), 2600);
+    return () => window.clearTimeout(timer);
+  }, [hintVisible]);
+
+  // Keep the hint on screen near the edges
+  const hintClass = [
+    'desktop-icon__hint',
+    position.y > window.innerHeight * 0.6 ? 'desktop-icon__hint--above' : '',
+    position.x > window.innerWidth - 220 ? 'desktop-icon__hint--right' : '',
+    position.x < 120 ? 'desktop-icon__hint--left' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // Handle context menu
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -381,6 +411,11 @@ export default function DesktopIcon({
             node.name
           )}
         </div>
+        {hintVisible && (
+          <div className={hintClass} role="status">
+            {t('hintDoubleClick')}
+          </div>
+        )}
       </div>
 
       {/* Context Menu */}

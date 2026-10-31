@@ -14,7 +14,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useVFSActions, useVFSNodes } from '../../os/store';
+import { useVFSActions, useVFSNodes, useStore } from '../../os/store';
+import { useLaunch } from '../../os/hooks/useLaunch';
 import type { VFSNode } from '../../os/types';
 import type { MobileOpenAppDetail } from '../../os/hooks/useAppOpener';
 import MobileLauncher from './MobileLauncher';
@@ -67,6 +68,15 @@ export default function MobileOS() {
   useEffect(() => {
     loadVFS();
   }, [loadVFS]);
+
+  // First visit: greet the visitor with the welcome app (closing it marks them onboarded).
+  const launch = useLaunch();
+  const onboarded = useStore((state) => state.settings.onboarded);
+  useEffect(() => {
+    if (onboarded) return;
+    const timer = window.setTimeout(() => launch('welcome'), 700);
+    return () => window.clearTimeout(timer);
+  }, [onboarded, launch]);
 
   // Get active app
   const activeApp = openApps.find((app) => app.id === activeAppId);
@@ -230,7 +240,7 @@ export default function MobileOS() {
       });
 
       const customEvent = event as CustomEvent<MobileOpenAppDetail>;
-      const { nodeId } = customEvent.detail;
+      const { nodeId, appId: requestedAppId, title, icon } = customEvent.detail;
 
       console.log('[MobileOS] 🔍 Event detail', {
         detail: customEvent.detail,
@@ -238,8 +248,22 @@ export default function MobileOS() {
         vfsNodesKeys: Object.keys(vfsNodes),
       });
 
-      // Get node from VFS
-      const node = nodeId ? vfsNodes[nodeId] : null;
+      // Get node from VFS. Apps without a file/folder behind them (welcome, terminal, ...) are
+      // launched by appId: wrap them in a virtual app node so the rest of the flow stays the same.
+      let node: VFSNode | null = nodeId ? vfsNodes[nodeId] ?? null : null;
+      if (!node && requestedAppId) {
+        const now = Date.now();
+        node = {
+          id: `virtual-${requestedAppId}`,
+          type: 'app',
+          name: title,
+          parentId: null,
+          icon,
+          appId: requestedAppId,
+          createdAt: now,
+          modifiedAt: now,
+        };
+      }
       if (!node) {
         console.error('[MobileOS] ❌ Cannot open app: node not found', {
           nodeId,

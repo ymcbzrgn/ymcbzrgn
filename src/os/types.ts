@@ -165,6 +165,15 @@ export interface Settings {
   // Advanced
   showHiddenFiles: boolean;
   enableExperimentalFeatures: boolean;
+
+  // Onboarding & assistant.
+  // Optional on purpose: settings saved by earlier versions don't have these keys,
+  // and `undefined` means "use the default" (see src/os/i18n and the store's persist merge).
+  langOverride?: 'en' | 'tr'; // explicit UI language; undefined = follow the browser
+  onboarded?: boolean; // the welcome window has been shown and closed once
+  iconHintSeen?: boolean; // visitor already learned that desktop icons need a double-click
+  widgetHidden?: boolean; // desktop intro widget dismissed
+  assistantHidden?: boolean; // pixel assistant dismissed
 }
 
 // ============================================================================

@@ -11,7 +11,7 @@
  * - Right-click context menus
  */
 
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   useVFSActions,
@@ -26,11 +26,17 @@ import {
 } from '@os/store';
 import type { VFSNode } from '@os/types';
 import { getUniqueFolderName, getUniqueTextFileName } from '@os/utils/naming';
+import { getInitialBounds } from '@os/utils/windowBounds';
+import { useLaunch } from '@os/hooks/useLaunch';
 import Window from './Window';
 import Taskbar from './Taskbar';
 import DesktopIcon from './DesktopIcon';
 import ContextMenu, { type MenuItem } from './ContextMenu';
 import './Desktop.css';
+
+// Onboarding extras are not needed for the first paint: load them as separate chunks.
+const DesktopWidget = lazy(() => import('./widget/DesktopWidget'));
+const Pet = lazy(() => import('./pet/Pet'));
 
 export default function Desktop() {
   const { loadVFS, createNode } = useVFSActions();
@@ -68,6 +74,17 @@ export default function Desktop() {
   useEffect(() => {
     loadVFS();
   }, [loadVFS]);
+
+  // First visit: greet the visitor with the welcome window (once; closing it marks them onboarded).
+  // useLaunch is stable, so this effect only re-runs when `onboarded` flips.
+  const launch = useLaunch();
+  const onboarded = useStore((state) => state.settings.onboarded);
+  const assistantHidden = useStore((state) => state.settings.assistantHidden);
+  useEffect(() => {
+    if (onboarded) return;
+    const timer = window.setTimeout(() => launch('welcome'), 500);
+    return () => window.clearTimeout(timer);
+  }, [onboarded, launch]);
 
   // Listen for postMessage from iframe (e.g., legacy site opening new windows)
   useEffect(() => {
@@ -133,11 +150,6 @@ export default function Desktop() {
       }
     }
 
-    const windowWidth = 600;
-    const windowHeight = 400;
-    const x = (window.innerWidth - windowWidth) / 2;
-    const y = (window.innerHeight - 48 - windowHeight) / 2;
-
     // Determine app ID
     let appId = 'placeholder';
     let meta: Record<string, any> = {};
@@ -173,7 +185,7 @@ export default function Desktop() {
       nodeId: node.id,
       title: node.name,
       icon: node.icon || (node.type === 'folder' ? '📁' : '📄'),
-      bounds: { x, y, width: windowWidth, height: windowHeight },
+      bounds: getInitialBounds(appId),
       state: 'normal',
       createdAt: Date.now(),
       meta,
@@ -318,6 +330,11 @@ export default function Desktop() {
         ))}
       </div>
 
+      {/* Intro widget (top-right) */}
+      <Suspense fallback={null}>
+        <DesktopWidget />
+      </Suspense>
+
       {/* Windows Container */}
       <div className="windows-container">
         {windows.map((window) => (
@@ -334,6 +351,13 @@ export default function Desktop() {
           />
         ))}
       </div>
+
+      {/* Pixel assistant: not loaded at all when the visitor switched it off */}
+      {!assistantHidden && (
+        <Suspense fallback={null}>
+          <Pet />
+        </Suspense>
+      )}
 
       {/* Context Menu */}
       {contextMenu && contextMenu.targetNodeId === null && (

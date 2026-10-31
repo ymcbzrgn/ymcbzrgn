@@ -6,6 +6,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useVFSNodes, useVFSActions } from '../../os/store';
 import type { VFSNode } from '../../os/types';
+import { useLang, useT } from '../../os/i18n/full';
+import { useLaunch } from '../../os/hooks/useLaunch';
+import { openSimpleView } from '../../os/view';
+import { PROFILE } from '../../os/content/profile';
+import { PROFILE_TEXT } from '../../os/content/profileText';
 import './Terminal.css';
 
 interface TerminalProps {
@@ -32,6 +37,9 @@ export default function Terminal({ windowId }: TerminalProps) {
   const vfsNodesRecord = useVFSNodes();
   const vfsNodes = Object.values(vfsNodesRecord);
   const { createNode, deleteNode, updateNode } = useVFSActions();
+  const t = useT();
+  const lang = useLang();
+  const launch = useLaunch();
 
   // Focus input on mount and when clicking terminal
   useEffect(() => {
@@ -422,9 +430,63 @@ export default function Terminal({ windowId }: TerminalProps) {
     return { command: input, output: now, type: 'success' };
   };
 
+  // ---- Portfolio commands (onboarding) ----
+  const cmdAbout = (): CommandOutput => {
+    const text = PROFILE_TEXT[lang];
+    const lines = [
+      `${PROFILE.name} - ${t('role')}`,
+      '',
+      text.summary,
+      '',
+      ...text.focus.map((line) => `* ${line}`),
+      '',
+      t('termMore'),
+    ];
+    return { command: input, output: lines.join('\n'), type: 'success' };
+  };
+
+  const cmdProjects = (): CommandOutput => {
+    launch('projects');
+    return { command: input, output: `${t('termOpeningProjects')}\n${PROFILE.github}`, type: 'success' };
+  };
+
+  const cmdCv = (): CommandOutput => {
+    launch('cv');
+    return { command: input, output: `${t('termOpeningCv')}\n${PROFILE.site}${PROFILE.cvUrl}`, type: 'success' };
+  };
+
+  const cmdContact = (): CommandOutput => {
+    const lines = [
+      `${t('termContact')}:`,
+      `  email     ${PROFILE.email}`,
+      `  linkedin  ${PROFILE.linkedin}`,
+      `  github    ${PROFILE.github}`,
+      `  web       ${PROFILE.site}`,
+    ];
+    return { command: input, output: lines.join('\n'), type: 'success' };
+  };
+
+  const cmdSimple = (): CommandOutput => {
+    // Let the output render before the page switches
+    window.setTimeout(openSimpleView, 450);
+    return { command: input, output: t('termOpeningSimple'), type: 'success' };
+  };
+
+  const cmdWelcome = (): CommandOutput => {
+    launch('welcome');
+    return { command: input, output: '', type: 'success' };
+  };
+
   // Command: help - show available commands
   const cmdHelp = (args: string[]): CommandOutput => {
     const helpText = `
+${t('termHelpTitle')}:
+    about           ${t('termHelpAbout')}
+    projects        ${t('termHelpProjects')}
+    cv              ${t('termHelpCv')}
+    contact         ${t('termHelpContact')}
+    simple          ${t('termHelpSimple')}
+
 Available Commands:
   File Navigation:
     ls              List directory contents
@@ -509,6 +571,18 @@ Examples:
         return cmdDate(args);
       case 'help':
         return cmdHelp(args);
+      case 'about':
+        return cmdAbout();
+      case 'projects':
+        return cmdProjects();
+      case 'cv':
+        return cmdCv();
+      case 'contact':
+        return cmdContact();
+      case 'simple':
+        return cmdSimple();
+      case 'welcome':
+        return cmdWelcome();
       default:
         return {
           command: input,
@@ -582,7 +656,7 @@ Examples:
           <div className="terminal-app__welcome">
             Welcome to Yamac's Portfolio Terminal!
             <br />
-            Type 'help' for available commands.
+            Start with 'about' - or type 'help' for all commands.
             <br />
             <br />
           </div>
