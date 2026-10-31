@@ -15,7 +15,7 @@
  * Cost: no render loop. Frames are stepped by a CSS animation, travel is a single CSS transform
  * transition, body effects are CSS keyframes, and one timeout at a time drives the behaviours.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useStore } from '../../os/store';
 import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
@@ -463,6 +463,13 @@ export default function Pet() {
 
   /* ----- render ----- */
   const alignClass = x < 120 ? 'pet__bubble--left' : x > vw - W - 120 ? 'pet__bubble--right' : '';
+  // Peeking over a screen edge puts half of the sprite off-screen: keep the bubble (and menu) on-screen
+  const bubbleStyle: CSSProperties | undefined =
+    x < 8
+      ? { left: 8 - x, transform: 'none' }
+      : x > vw - W - 8
+        ? { left: 'auto', right: x - (vw - W - 8), transform: 'none' }
+        : undefined;
 
   return (
     <div
@@ -494,7 +501,8 @@ export default function Pet() {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           >
-            <Sprite anim={mode} scale={SCALE} flip={facing === -1} />
+            {/* key: every behaviour starts its animation from the first frame */}
+            <Sprite key={mode} anim={mode} scale={SCALE} flip={facing === -1} />
           </button>
           {mode === 'sleep' && (
             <div className="pet__zzz" aria-hidden="true">
@@ -506,13 +514,13 @@ export default function Pet() {
         </div>
 
         {bubble && !menuOpen && (
-          <div key={bubble.id} className={`pet__bubble ${alignClass}`} role="status">
+          <div key={bubble.id} className={`pet__bubble ${alignClass}`} style={bubbleStyle} role="status">
             {bubble.text}
           </div>
         )}
 
         {menuOpen && (
-          <div className={`pet__bubble pet__menu ${alignClass}`} role="menu">
+          <div className={`pet__bubble pet__menu ${alignClass}`} style={bubbleStyle} role="menu">
             <div className="pet__menu-title">{t('petMenuTitle')}</div>
             <button type="button" role="menuitem" onClick={act(() => launch('cv'))}>
               {t('petMenuCv')}

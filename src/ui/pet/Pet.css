@@ -56,7 +56,8 @@
 
 .pet__hit {
   position: absolute;
-  inset: 0;
+  /* only the body is clickable: the frame has wide transparent corners (arms, props) that must not eat clicks */
+  inset: 3% 22% 0 22%;
   padding: 0;
   border: 0;
   background: none;

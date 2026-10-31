@@ -244,6 +244,9 @@
 
   .welcome__stage {
     height: 230px;
+    /* twin on the left, speech bubble on the right: the bubble must not cover the hair */
+    justify-content: flex-start;
+    padding-left: 20px;
   }
 
   .welcome__sprite--wide {
