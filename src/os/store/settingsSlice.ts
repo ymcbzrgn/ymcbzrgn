@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: Settings = {
   mode: 'auto',
 
   // Wallpaper
-  wallpaper: '/wallpapers/ubuntu-default.jpg',
+  wallpaper: 'none', // the desktop's own gradient (see useThemeManager)
   wallpaperFit: 'cover',
 
   // Icon Pack

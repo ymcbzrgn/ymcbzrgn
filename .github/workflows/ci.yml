@@ -1,6 +1,6 @@
 name: CI
 
-# Type check, lint (errors), production build, bundle budgets, behaviour coverage and the browser tests.
+# Type check, lint (errors), production build, bundle budgets, SEO checks, behaviour coverage and the browser tests.
 # Cloudflare Pages deploys main by itself; this tells you whether a push is healthy.
 
 on:
@@ -47,6 +47,9 @@ jobs:
 
       - name: Bundle budgets
         run: npm run check:budgets
+
+      - name: SEO checks (canonical, hreflang, JSON-LD, sitemap, the CV's links)
+        run: npm run check:seo
 
       - name: Install Chromium for the browser tests
         run: npx playwright install --with-deps chromium

@@ -38,7 +38,7 @@ export default function StatusBar() {
       {/* Right side: Indicators */}
       <div className="status-bar__right">
         {/* Network signal (fake - always full) */}
-        <span className="status-bar__icon" aria-label="Network">
+        <span className="status-bar__icon" role="img" aria-label="Network">
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="0" y="8" width="3" height="6" rx="1" fill="white"/>
             <rect x="5" y="5" width="3" height="9" rx="1" fill="white"/>
@@ -48,7 +48,7 @@ export default function StatusBar() {
         </span>
 
         {/* Battery (fake - always full) */}
-        <span className="status-bar__icon" aria-label="Battery">
+        <span className="status-bar__icon" role="img" aria-label="Battery">
           <svg width="27" height="14" viewBox="0 0 27 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="1" width="21" height="12" rx="2" stroke="white" strokeWidth="1.5" fill="none"/>
             <rect x="24" y="4.5" width="3" height="5" rx="1" fill="white"/>

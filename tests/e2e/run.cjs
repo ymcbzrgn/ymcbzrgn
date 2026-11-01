@@ -13,7 +13,7 @@ const path = require('path');
 const { DIST, serve } = require('./lib.cjs');
 
 /** suites that start their own server */
-const SELF_HOSTED = ['onboarding', 'pet', 'control', 'rooms', 'autonomy', 'features'];
+const SELF_HOSTED = ['onboarding', 'pet', 'control', 'rooms', 'autonomy', 'features', 'seo'];
 /** suites that are given BASE (a running server) */
 const WITH_BASE = ['settings', 'smoke-apps', 'remount', 'stage2'];
 const TIMEOUT_MS = 8 * 60 * 1000;

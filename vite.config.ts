@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { resolve } from 'path';
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { seoPlugin } from './scripts/seo/plugin';
 
 type LogRow = [hash: string, author: string, date: string, subject: string];
 
@@ -30,10 +31,19 @@ function readGitLog(): LogRow[] {
   }
 }
 
+/** Screenshots a visitor of the Projects window may find in public/projects (Name.png / Name.jpg). */
+function readProjectImages(): string[] {
+  const dir = resolve(__dirname, 'public/projects');
+  return existsSync(dir) ? readdirSync(dir).filter((f) => /\.(png|jpg)$/i.test(f)) : [];
+}
+
 // New portfolio Vite configuration
 export default defineConfig({
   plugins: [
     react(),
+
+    // Title/description/canonical/JSON-LD, the static resume pages, sitemap and llms.txt (scripts/seo)
+    seoPlugin(),
 
     // Bundle size visualization. Opt-in (ANALYZE=true npm run build:new) because the report
     // is written to dist/ and would otherwise be deployed with the site.
@@ -80,6 +90,7 @@ export default defineConfig({
 
   define: {
     __GIT_LOG__: JSON.stringify(readGitLog()),
+    __PROJECT_IMAGES__: JSON.stringify(readProjectImages()),
   },
 
   resolve: {

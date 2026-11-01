@@ -75,9 +75,10 @@ export default function RepoCard({ repo, index = 0 }: RepoCardProps) {
       }
     }
 
-    // Stage 2: Local public folder
+    // Stage 2: Local public folder (only the files that really are there: a guess would be a 404)
     const localExtensions = ['.png', '.jpg'];
     for (const ext of localExtensions) {
+      if (!__PROJECT_IMAGES__.includes(`${repo.name}${ext}`)) continue;
       const localUrl = `/projects/${repo.name}${ext}`;
       const isValid = await checkImage(localUrl);
       if (isValid) {

@@ -1,36 +1,13 @@
 /**
- * "Simple view": a one-page alternative to the desktop, addressed as /#simple so it can be
- * linked directly (e.g. from a CV or a LinkedIn profile).
- *
- * State lives in the URL hash, so no router is needed.
+ * "Simple view": the one-page, no-frills version of the portfolio. It is a static page generated at
+ * build time (scripts/seo), so it loads instantly, works without JavaScript and can be indexed and
+ * shared: /resume/ in English, /tr/ozgecmis/ in Turkish. Old /#simple links are redirected by a
+ * small script in index.html.
  */
-import { useSyncExternalStore } from 'react';
+import { getLang, type Lang } from './i18n';
 
-const HASH = '#simple';
-
-function subscribe(onChange: () => void) {
-  window.addEventListener('hashchange', onChange);
-  window.addEventListener('popstate', onChange);
-  return () => {
-    window.removeEventListener('hashchange', onChange);
-    window.removeEventListener('popstate', onChange);
-  };
-}
-
-const getSnapshot = () => window.location.hash === HASH;
-const getServerSnapshot = () => false;
-
-/** True while the simple view is active. */
-export function useSimpleView(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-}
+export const RESUME_PATH: Record<Lang, string> = { en: '/resume/', tr: '/tr/ozgecmis/' };
 
 export function openSimpleView(): void {
-  window.location.hash = HASH;
-}
-
-export function openDesktopView(): void {
-  // Drop the hash without leaving a "#" in the URL, then tell listeners (replaceState is silent)
-  window.history.replaceState(null, '', window.location.pathname + window.location.search);
-  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  window.location.assign(RESUME_PATH[getLang()]);
 }

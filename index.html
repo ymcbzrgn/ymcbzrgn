@@ -3,6 +3,19 @@
   <head>
     <meta charset="UTF-8" />
 
+    <!-- Old links to the one-page view (/#simple) now go to the static resume page. -->
+    <script>
+      if (location.hash === '#simple') {
+        var tr = /^tr/i.test(navigator.language || '');
+        try {
+          var saved = JSON.parse(localStorage.getItem('ubuntu-xp-storage') || '{}');
+          var chosen = saved && saved.state && saved.state.settings && saved.state.settings.langOverride;
+          if (chosen) tr = chosen === 'tr';
+        } catch (e) {}
+        location.replace(tr ? '/tr/ozgecmis/' : '/resume/');
+      }
+    </script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -17,76 +30,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="YB Portfolio" />
 
-    <!-- Primary Meta Tags -->
-    <title>Yamaç Bezirgan - Full-Stack Developer | AI/ML Portfolio</title>
-    <meta name="title" content="Yamaç Bezirgan - Full-Stack Developer | AI/ML Portfolio" />
-    <meta name="description" content="Interactive desktop OS portfolio showcasing full-stack development, AI/ML integration, and creative engineering. Built with React, TypeScript, and modern web APIs." />
-    <meta name="author" content="Yamaç Bezirgan" />
-    <meta name="keywords" content="Yamaç Bezirgan, Full-Stack Developer, AI ML, React Developer, TypeScript, Portfolio, Web Development, Computer Engineering" />
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.yamacbezirgan.com/" />
-    <meta property="og:title" content="Yamaç Bezirgan - Full-Stack Developer | AI/ML Portfolio" />
-    <meta property="og:description" content="Interactive desktop OS portfolio showcasing full-stack development, AI/ML integration, and creative engineering." />
-    <meta property="og:image" content="https://www.yamacbezirgan.com/og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:site_name" content="Yamaç Bezirgan Portfolio" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://www.yamacbezirgan.com/" />
-    <meta name="twitter:title" content="Yamaç Bezirgan - Full-Stack Developer | AI/ML Portfolio" />
-    <meta name="twitter:description" content="Interactive desktop OS portfolio showcasing full-stack development, AI/ML integration, and creative engineering." />
-    <meta name="twitter:image" content="https://www.yamacbezirgan.com/og-image.jpg" />
-    <meta name="twitter:creator" content="@ymcbzrgn" />
-
-    <!-- LinkedIn -->
-    <meta property="article:author" content="https://linkedin.com/in/yamacbezirgan" />
-
-    <!-- Structured data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Yamaç Bezirgan",
-        "url": "https://www.yamacbezirgan.com/",
-        "jobTitle": "Software Engineer",
-        "worksFor": { "@type": "Organization", "name": "Arketic AI" },
-        "knowsAbout": [
-          "Software Engineering",
-          "React",
-          "Node.js",
-          "Python",
-          "Machine Learning",
-          "Artificial Intelligence",
-          "Full-Stack Development",
-          "Web Development"
-        ],
-        "sameAs": ["https://github.com/ymcbzrgn", "https://linkedin.com/in/yamacbezirgan"]
-      }
-    </script>
+    <!--
+      Title, description, canonical, hreflang, Open Graph, Twitter and JSON-LD are generated at build
+      time from src/os/content (scripts/seo/plugin.ts). Do not write them here.
+    -->
+    <!--seo:head-->
   </head>
   <body>
-    <noscript>
-      <div
-        style="max-width: 36rem; margin: 3rem auto; padding: 1.5rem; background: #fff; color: #222; border-radius: 8px; font: 16px/1.6 system-ui, sans-serif"
-      >
-        <h1 style="margin: 0 0 0.5rem">Yamaç Bezirgan</h1>
-        <p style="margin: 0 0 1rem">
-          Software Engineer. This portfolio is an interactive desktop environment and needs
-          JavaScript to run.
-        </p>
-        <ul style="margin: 0; padding-left: 1.25rem">
-          <li><a href="/YAMAC_BEZIRGAN_CURRENT_CV.pdf">CV (PDF)</a></li>
-          <li><a href="https://github.com/ymcbzrgn">GitHub</a></li>
-          <li><a href="https://linkedin.com/in/yamacbezirgan">LinkedIn</a></li>
-          <li><a href="mailto:contact@yamacbezirgan.com">contact@yamacbezirgan.com</a></li>
-        </ul>
-      </div>
-    </noscript>
+    <!-- Name, role and links as plain HTML: what crawlers and no-JS visitors read. main.tsx removes it. -->
+    <!--seo:boot-->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

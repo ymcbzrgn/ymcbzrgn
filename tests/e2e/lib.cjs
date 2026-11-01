@@ -1,6 +1,6 @@
 /**
- * Shared helpers for the browser tests (Playwright, Chromium): a tiny static server for dist/ (with SPA
- * fallback), a page factory that mocks the network and collects errors, and the pass/fail bookkeeping.
+ * Shared helpers for the browser tests (Playwright, Chromium): a tiny static server for dist/ (Cloudflare
+ * Pages rules: folder index, name.html, 404.html), a page factory that mocks the network and collects errors, and the pass/fail bookkeeping.
  *
  *   npm run build:new && npm run test:e2e
  *
@@ -29,13 +29,27 @@ const TYPES = {
   '.xml': 'application/xml',
 };
 
+/**
+ * Maps a URL path to a file the way Cloudflare Pages does: a folder serves its index.html, /name serves
+ * name.html, and anything else gets 404.html with status 404 (a build without a 404 page falls back to
+ * index.html, like a single-page app host).
+ */
+function resolveFile(urlPath) {
+  const clean = path.normalize(urlPath);
+  for (const rel of [clean, path.join(clean, 'index.html'), `${clean}.html`]) {
+    const f = path.join(DIST, rel);
+    if (f.startsWith(DIST) && fs.existsSync(f) && fs.statSync(f).isFile()) return { file: f, status: 200 };
+  }
+  const notFound = path.join(DIST, '404.html');
+  if (fs.existsSync(notFound)) return { file: notFound, status: 404 };
+  return { file: path.join(DIST, 'index.html'), status: 200 };
+}
+
 function serve() {
   const server = http.createServer((req, res) => {
-    const p = decodeURIComponent(req.url.split('?')[0]);
-    let f = path.join(DIST, p);
-    if (!(f.startsWith(DIST) && fs.existsSync(f) && fs.statSync(f).isFile())) f = path.join(DIST, 'index.html');
-    res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
+    const { file, status } = resolveFile(decodeURIComponent(req.url.split('?')[0]));
+    res.writeHead(status, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
+    fs.createReadStream(file).pipe(res);
   });
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, base: `http://127.0.0.1:${server.address().port}` })));
 }
@@ -115,4 +129,4 @@ async function boot(browser, base, opts = {}) {
   return { context, page };
 }
 
-module.exports = { DIST, SHOTS, serve, ok, sleep, summary, boot, mockNetwork, pdfjsRoutes, seedSettings, REPOS, failures: () => failures };
+module.exports = { DIST, SHOTS, serve, resolveFile, ok, sleep, summary, boot, mockNetwork, pdfjsRoutes, seedSettings, REPOS, failures: () => failures };

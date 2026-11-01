@@ -14,6 +14,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": [],
 
     // Strictness (Orta seviye - esnek)
     "strict": true,
@@ -48,6 +49,5 @@
       "@apps/*": ["src/apps/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }

@@ -7,19 +7,16 @@ const path = require('path');
 const ROOT = path.join(__dirname, '../..');
 const SP = process.env.E2E_TMP || path.join(require('os').tmpdir(), 'portfolio-e2e');
 fs.mkdirSync(path.join(SP, 'room-shots'), { recursive: true });
-const { pdfjsRoutes } = require('./lib.cjs');
+const { pdfjsRoutes, resolveFile } = require('./lib.cjs');
 const DIST = path.resolve(process.env.DIST_DIR || path.join(ROOT, 'dist'));
 const OUT = path.join(SP, 'vis');
 fs.mkdirSync(OUT, { recursive: true });
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json', '.pdf': 'application/pdf', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain', '.xml': 'application/xml' };
 const server = http.createServer((req, res) => {
-  const p = decodeURIComponent(req.url.split('?')[0]);
-  let f = path.join(DIST, p);
-  const ok = f.startsWith(DIST) && fs.existsSync(f) && fs.statSync(f).isFile();
-  if (!ok) f = path.join(DIST, 'index.html');
-  res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' });
-  fs.createReadStream(f).pipe(res);
+  const { file, status } = resolveFile(decodeURIComponent(req.url.split('?')[0])); // (Cloudflare Pages rules)
+  res.writeHead(status, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
+  fs.createReadStream(file).pipe(res);
 });
 
 let failures = 0;
@@ -179,34 +176,35 @@ const onboardedInit = (extra = {}) => (s) => localStorage.setItem('ubuntu-xp-sto
   const anim = await pr.evaluate(() => getComputedStyle(document.querySelector('.pet .sprite')).animationName);
   ok(anim === 'none', 'sprite animasyonu kapalı (' + anim + ')');
 
-  /* ---------------- 3) sade görünüm ---------------- */
-  console.log('\n[3] Sade görünüm (/#simple)');
+  /* ---------------- 3) sade görünüm (statik /resume/ sayfası) ---------------- */
+  console.log('\n[3] Sade görünüm (/resume/)');
   const ctxS = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'en-US' });
   const ps = await ctxS.newPage();
   watch(ps);
   await routes(ps);
   await ps.addInitScript(onboardedInit());
   await ps.goto(BASE + '/#simple', { waitUntil: 'load' });
-  await ps.waitForSelector('.simple');
-  ok((await ps.locator('.simple__name').innerText()) === 'Yamaç Bezirgan', 'doğrudan #simple linki çalışıyor');
-  ok((await ps.locator('.desktop-container').count()) === 0, 'masaüstü yüklenmedi');
+  await ps.waitForURL('**/resume/', { timeout: 10000 });
+  ok(new URL(ps.url()).pathname === '/resume/', 'eski #simple bağlantısı /resume/ sayfasına yönleniyor');
+  ok((await ps.locator('h1').innerText()) === 'Yamaç Bezirgan', 'resume sayfası açıldı');
+  ok((await ps.locator('.desktop-container').count()) === 0, 'masaüstü yüklenmedi (statik sayfa)');
   ok((await ps.locator('a[href="/YAMAC_BEZIRGAN_CURRENT_CV.pdf"][download]').count()) === 1, 'CV indirme bağlantısı var');
-  ok((await ps.locator('.simple__summary').innerText()).startsWith('I am a software engineer focused on AI platforms'), 'özet metni Hakkımda\'dan');
-  ok((await ps.locator('.simple__projects .github-projects').count()) === 1, 'projeler bölümü gömülü');
+  ok((await ps.locator('.summary').innerText()).startsWith('I am a software engineer focused on AI platforms'), 'özet metni Hakkımda\'dan');
+  ok((await ps.locator('#projects article.card').count()) >= 5, 'projeler bölümü dolu');
   await ps.screenshot({ path: `${OUT}/simple-1-en.png` });
-  await ps.screenshot({ path: `${OUT}/simple-1-en-full.png`, fullPage: false });
-  await ps.locator('.simple__pill').click();
-  ok((await ps.locator('.simple__summary').innerText()).startsWith('Yapay zeka platformları'), 'TR anahtarı: özet Türkçe');
-  await ps.locator('.simple__pill').click();
-  await ps.locator('.simple__bar .simple__btn--ghost').click();
+  await ps.locator('a.pill').click();
+  await ps.waitForURL('**/tr/ozgecmis/');
+  ok((await ps.locator('.summary').innerText()).startsWith('Yapay zeka platformları'), 'TR anahtarı: özet Türkçe');
+  await ps.locator('a.pill').click();
+  await ps.waitForURL('**/resume/');
+  await ps.locator('header.bar a.btn--ghost').click();
   await ps.waitForSelector('.desktop-container');
-  ok(!(await ps.url()).includes('#'), 'masaüstüne dönünce URL temiz: ' + (await ps.url()));
-  // masaüstünden "Simple view" (karşılama menüsü yerine asistan değil; görev çubuğu logosu → karşılama → Simple view)
+  ok(new URL(ps.url()).pathname === '/', 'masaüstüne dönünce URL: ' + ps.url());
+  // masaüstünden "Simple view" (görev çubuğu logosu → karşılama → Simple view)
   await ps.locator('.taskbar__logo--button').click();
   await ps.locator('.welcome').getByRole('button', { name: 'Simple view' }).click();
-  await ps.waitForSelector('.simple');
-  ok((await ps.evaluate(() => location.hash)) === '#simple', 'karşılamadaki "Simple view" düğmesi sade görünüme geçirdi');
-  ok((await ps.locator('.window').count()) === 0, '(sade görünüme geçerken karşılama kapatıldı)');
+  await ps.waitForURL('**/resume/', { timeout: 10000 });
+  ok(true, 'karşılamadaki "Simple view" düğmesi /resume/ sayfasına götürdü');
 
   /* ---------------- 4) terminal komutları ---------------- */
   console.log('\n[4] Terminal komutları');
@@ -235,8 +233,8 @@ const onboardedInit = (extra = {}) => (s) => localStorage.setItem('ubuntu-xp-sto
   await pt.waitForSelector('.window__title:text-is("Projects")', { timeout: 10000 });
   ok(true, 'projects: Projects penceresi açıldı');
   await run('simple');
-  await pt.waitForSelector('.simple', { timeout: 5000 });
-  ok(true, 'simple: sade görünüme geçti');
+  await pt.waitForURL('**/resume/', { timeout: 5000 });
+  ok(true, 'simple: /resume/ sayfasına geçti');
 
   /* ---------------- 5) mobil ---------------- */
   console.log('\n[5] Mobil ilk ziyaret');

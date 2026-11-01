@@ -104,7 +104,7 @@ I enjoy building software that is technically solid, useful in practice, and cle
 ### Contact
 
 - Email: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://www.yamacbezirgan.com)
+- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
 - LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
 - GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
 
@@ -141,7 +141,7 @@ Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısınd
 ### İletişim
 
 - E-posta: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://www.yamacbezirgan.com)
+- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
 - LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
 - GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
 
@@ -529,7 +529,7 @@ I enjoy building software that is technically solid, useful in practice, and cle
 ### Contact
 
 - Email: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://www.yamacbezirgan.com)
+- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
 - LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
 - GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
 
@@ -579,7 +579,7 @@ Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısınd
 ### İletişim
 
 - E-posta: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://www.yamacbezirgan.com)
+- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
 - LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
 - GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
 

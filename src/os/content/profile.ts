@@ -7,7 +7,7 @@ export const PROFILE = {
   name: 'Yamaç Bezirgan',
   company: 'Arketic AI',
   email: 'contact@yamacbezirgan.com',
-  site: 'https://www.yamacbezirgan.com',
+  site: 'https://yamacbezirgan.com',
   github: 'https://github.com/ymcbzrgn',
   linkedin: 'https://linkedin.com/in/yamacbezirgan',
   cvUrl: '/YAMAC_BEZIRGAN_CURRENT_CV.pdf',

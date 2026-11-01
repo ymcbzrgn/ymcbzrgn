@@ -12,17 +12,13 @@ import Desktop from './ui/Desktop';
 import { useIsMobile } from './os/hooks/useDeviceType';
 import { useThemeManager } from './os/hooks/useThemeManager';
 import { useLang } from './os/i18n';
-import { useSimpleView } from './os/view';
 
 // Mobile UI (and framer-motion with it) is only needed on small screens,
 // so keep it out of the bundle every desktop visitor downloads.
 const MobileOS = lazy(() => import('./ui/mobile/MobileOS'));
-// The one-page alternative to the desktop (/#simple)
-const SimpleView = lazy(() => import('./ui/simple/SimpleView'));
 
 function App() {
   const isMobile = useIsMobile();
-  const simpleView = useSimpleView();
 
   // Apply theme CSS variables
   useThemeManager();
@@ -37,8 +33,6 @@ function App() {
   // This allows the OS simulation to handle right-clicks internally (e.g., Minesweeper flags)
   // Works across all browsers: Chrome, Firefox, Safari, Edge, Opera, IE9+
   useEffect(() => {
-    if (simpleView) return; // the plain one-page view keeps the browser's own context menu
-
     const preventContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       return false; // Extra safety for legacy browsers
@@ -49,16 +43,12 @@ function App() {
     return () => {
       document.removeEventListener('contextmenu', preventContextMenu);
     };
-  }, [simpleView]);
+  }, []);
 
   return (
     <div className="app">
-      {/* Adaptive UI: simple one-page view, Mobile OS or Desktop OS */}
-      {simpleView ? (
-        <Suspense fallback={null}>
-          <SimpleView />
-        </Suspense>
-      ) : isMobile ? (
+      {/* Adaptive UI: Mobile OS or Desktop OS */}
+      {isMobile ? (
         <Suspense fallback={null}>
           <MobileOS />
         </Suspense>

@@ -116,8 +116,12 @@ export function useThemeManager() {
   useEffect(() => {
     const root = document.documentElement;
 
-    // Wallpaper can be a gradient, solid color, or image URL
-    if (wallpaper.startsWith('linear-gradient') || wallpaper.startsWith('#')) {
+    // Wallpaper can be a gradient, solid color, or image URL. 'none' (and the path older versions stored as
+    // their default, a file that was never shipped) leaves the desktop's own gradient showing; asking
+    // for a file that does not exist would only produce a 404 on every visit.
+    if (wallpaper === 'none' || wallpaper === '/wallpapers/ubuntu-default.jpg') {
+      root.style.setProperty('--wallpaper', 'none');
+    } else if (wallpaper.startsWith('linear-gradient') || wallpaper.startsWith('#')) {
       // Gradient or solid color
       root.style.setProperty('--wallpaper', wallpaper);
     } else {

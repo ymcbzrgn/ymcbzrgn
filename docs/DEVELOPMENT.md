@@ -6,7 +6,7 @@ The site is a React + TypeScript + Vite "desktop OS". `main` is deployed by Clou
 
 ```bash
 npm ci
-npm run verify        # type check, lint errors, build, bundle budgets, behaviour table, browser tests
+npm run verify        # type check, lint errors, build, bundle budgets, behaviour table, SEO checks, browser tests
 ```
 
 The browser tests need Chromium once: `npx playwright install chromium`.
@@ -20,6 +20,8 @@ The browser tests need Chromium once: `npx playwright install chromium`.
 | `npm run build` | `build:new` plus the legacy site: the full production build |
 | `npm run check:budgets` | fails when the first paint (gzip) or a lazy chunk gets heavier than its budget (`scripts/check-budgets.mjs`) |
 | `npm run check:behaviors` | sanity check of the pixel twin's generated behaviour table |
+| `npm run check:seo` | checks the built pages: canonical, hreflang, JSON-LD, sitemap, no link to the dead `www` host, the CV's links and title (`scripts/check-seo.mjs`) |
+| `npm run seo:assets` | redraws `og-en.jpg`, `og-tr.jpg` and `avatar.png` (the share images) with the pixel twin; commit the result |
 | `npm run test:e2e` | all browser suites in `tests/e2e` against `dist/` (`node tests/e2e/run.cjs features pet` runs some) |
 | `npm run bench:drag` | window drag frame-time benchmark (needs a running server in `BASE`) |
 | `npm run build:sprites` | regenerates the pixel twin and the room scenery sheets from `scripts/sprites` |
@@ -41,6 +43,26 @@ The browser tests need Chromium once: `npx playwright install chromium`.
   at build time (git-ignored). The Projects window falls back to it when the live API refuses. It never fails a
   build; set `GITHUB_TOKEN` in the build environment to avoid the anonymous rate limit.
 - **Special days** (`src/ui/pet/specialDays.ts`): add `?day=MM-DD` to the address to see one.
+
+## SEO and GEO
+
+The desktop is client-rendered, so the HTML on its own would be an empty `<div>`. `scripts/seo` (a Vite plugin,
+so a plain `vite build` is enough on any host) fixes that at build time:
+
+- `index.html` only holds two markers. The plugin fills them with the title, description, canonical, hreflang,
+  Open Graph, Twitter and JSON-LD (WebSite, ProfilePage, Person), and a small "boot" block (name, role, links).
+  `src/main.tsx` removes the boot block once the desktop or the phone UI is on screen.
+- After the bundle is written it derives `/tr/` (the same shell in Turkish; opening it selects Turkish),
+  the static resume pages `/resume/` and `/tr/ozgecmis/`, `404.html`, `sitemap.xml`, `llms.txt` and `llms-full.txt`.
+  Old `/#simple` links are redirected to the resume by a script in `index.html`.
+- **One source of facts**: `src/os/content/career.ts` (from the CV). The pages, JSON-LD, llms.txt, the recruiter
+  card and the story all read it. When the CV changes, change that file.
+- **The canonical host is the apex, `https://yamacbezirgan.com`.** `www` has no DNS record, so nothing may point
+  at it (`check:seo` fails if something does). If you add a `www` record in Cloudflare, redirect it to the apex.
+- **The CV PDF** comes out of Canva with the file name as its title and a link to the dead `www` host. After
+  every new export run `pip install pypdf && python3 scripts/seo/fix-cv-pdf.py`; the rendering does not change.
+- Cloudflare's "AI crawlers" setting adds its own block to `robots.txt` and can answer 403 to training crawlers;
+  that is a dashboard setting, not something in this repo.
 
 ## Browser tests
 
