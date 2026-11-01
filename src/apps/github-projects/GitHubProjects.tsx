@@ -87,6 +87,22 @@ function formatCooldown(until: number): string {
 }
 
 /**
+ * The repositories as they were when the site was built (scripts/snapshot-github.mjs). Always there,
+ * instant, and no rate limit: the fallback whenever the live API says no. Null when the build had none.
+ */
+async function loadSnapshot(): Promise<CachedRepoData | null> {
+  try {
+    const res = await fetch('/data/github-repos.json', { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { generatedAt?: number; repos?: Repo[] };
+    if (!Array.isArray(data.repos) || data.repos.length === 0 || !data.repos[0]?.name) return null;
+    return { repos: data.repos, timestamp: data.generatedAt ?? Date.now() };
+  } catch {
+    return null; // (also what the single-page fallback of the host answers for a missing file: it is not JSON)
+  }
+}
+
+/**
  * Save repos to localStorage cache
  */
 function saveToCache(repos: Repo[]): void {
@@ -160,13 +176,14 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
     setLoading(true);
     setError(null);
 
-    const cached = getFromCache();
+    const stored = getFromCache();
     const lastFetchStr = localStorage.getItem(LAST_FETCH_KEY);
     const lastFetch = lastFetchStr ? parseInt(lastFetchStr) : 0;
 
     // Cooldown check: If fetched recently and cache exists, show cached data
     const timeSinceLastFetch = Date.now() - lastFetch;
-    if (timeSinceLastFetch < COOLDOWN_MS && cached) {
+    if (timeSinceLastFetch < COOLDOWN_MS && stored) {
+      const cached = stored;
       console.log('[GitHubProjects] Cooldown active, using cache');
       setRepos(cached.repos);
       setError({
@@ -178,6 +195,11 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
       return;
     }
 
+    // Whatever the live API does, there is a saved list to fall back on (this visitor's own cache, else the
+    // build's snapshot). The snapshot loads alongside the live request and is only waited for when needed.
+    const snapshot = stored ? null : loadSnapshot();
+    const fallback = async () => stored ?? (snapshot ? await snapshot : null);
+
     try {
       const res = await fetch(
         'https://api.github.com/users/ymcbzrgn/repos?per_page=100&sort=updated'
@@ -187,6 +209,7 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
         // Handle 403 Forbidden (API access restricted)
         if (res.status === 403) {
           console.warn('[GitHubProjects] 403 Forbidden - using cache fallback');
+          const cached = await fallback();
           if (cached) {
             setRepos(cached.repos);
             setError({
@@ -205,6 +228,7 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
         // Handle 429 Rate Limit
         if (res.status === 429) {
           console.warn('[GitHubProjects] 429 Rate limit - using cache fallback');
+          const cached = await fallback();
           if (cached) {
             setRepos(cached.repos);
             setError({
@@ -250,6 +274,7 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
     } catch (err) {
       // Network error or other fetch failure - use cache if available
       console.error('[GitHubProjects] Fetch error:', err);
+      const cached = await fallback();
       if (cached) {
         setRepos(cached.repos);
         setError({

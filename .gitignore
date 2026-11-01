@@ -46,3 +46,6 @@ CLAUDE.md
 PRD+TDD.md
 ROADMAP*.md
 CHANGELOG.md
+
+# generated at build time (scripts/snapshot-github.mjs)
+public/data/github-repos.json

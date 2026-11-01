@@ -1,0 +1,63 @@
+name: CI
+
+# Type check, lint (errors), production build, bundle budgets, behaviour coverage and the browser tests.
+# Cloudflare Pages deploys main by itself; this tells you whether a push is healthy.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # --ignore-scripts: no git hooks (husky) on a build machine
+      - run: npm ci --ignore-scripts
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint (errors only; warnings are tracked separately)
+        run: npm run lint:errors
+
+      - name: Pixel twin behaviour table
+        run: npm run check:behaviors
+
+      - name: Build
+        run: npm run build:new
+        env:
+          # lifts GitHub's anonymous rate limit for the build-time repository snapshot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bundle budgets
+        run: npm run check:budgets
+
+      - name: Install Chromium for the browser tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run test:e2e
+
+      - name: Keep the screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: ${{ runner.temp }}/portfolio-e2e*
+          if-no-files-found: ignore

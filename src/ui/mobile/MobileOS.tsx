@@ -133,7 +133,7 @@ export default function MobileOS() {
 
       // Determine app ID (same logic as Desktop.tsx for feature parity)
       let appId = 'placeholder';
-      let meta: Record<string, any> = {};
+      const meta: Record<string, any> = {};
 
       // IMPORTANT: Check special folders BEFORE generic folder check!
       if (node.id === 'projects') {

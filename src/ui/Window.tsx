@@ -164,7 +164,7 @@ export default function Window({
       const deltaX = e.clientX - resizeState.startX;
       const deltaY = e.clientY - resizeState.startY;
 
-      let newBounds = { ...resizeState.startBounds };
+      const newBounds = { ...resizeState.startBounds };
       const direction = resizeState.direction;
 
       // North (top edge)

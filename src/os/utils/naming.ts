@@ -79,6 +79,7 @@ export function validateName(name: string): true | string {
   }
 
   // Check for invalid characters (OS-specific, but these are universal)
+  // eslint-disable-next-line no-control-regex -- control characters are exactly what a file name must not contain
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/;
   if (invalidChars.test(name)) {
     return 'Name contains invalid characters';
