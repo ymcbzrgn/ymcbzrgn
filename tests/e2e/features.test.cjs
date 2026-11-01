@@ -150,6 +150,9 @@ const ach = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('yb-ac
     ok(((await ach(page)).sudo ?? 0) > 0, 'hidden "Not in the sudoers file" is awarded');
     out = await term(page, 'sudo hire-me');
     ok(/Permission granted/.test(out) && /contact@yamacbezirgan\.com/.test(out), 'sudo hire-me is granted');
+    await page.waitForSelector('.window[data-app-id="recruiter-app"]', { timeout: 4000 });
+    ok(true, '... and it opens the recruiter card');
+    await page.locator('.window[data-app-id="recruiter-app"] [aria-label="Close window"]').click();
     out = await term(page, 'open Games');
     await page.waitForSelector('.window[data-app-id="file-explorer"]');
     ok(true, 'open <name> opens a folder');

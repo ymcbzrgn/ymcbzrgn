@@ -1,0 +1,129 @@
+/* How this site is built */
+
+.about-site {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  padding: 20px 22px 18px;
+  overflow: auto;
+  background: #fff;
+  color: #1e293b;
+  font-family: var(--font-family);
+}
+
+.about-site h2 {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-site__lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.about-site__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.about-site__tiles div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.about-site__tiles strong {
+  color: #0f172a;
+  font-size: 20px;
+}
+
+.about-site__tiles span {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.about-site__ci p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.about-site__ci .is-passing {
+  color: #047857;
+}
+
+.about-site__ci .is-failing {
+  color: #b91c1c;
+}
+
+.about-site__ci .is-running {
+  color: #b45309;
+}
+
+.about-site__list,
+.about-site__commits {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-site__list li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.about-site__list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #6366f1;
+}
+
+.about-site__commits li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.about-site__commits a {
+  font-family: var(--font-family-mono);
+}
+
+.about-site__commits span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.about-site__commits time {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.about-site__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12.5px;
+}

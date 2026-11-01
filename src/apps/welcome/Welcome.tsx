@@ -11,7 +11,9 @@ import { useLaunch, type LaunchTarget } from '../../os/hooks/useLaunch';
 import { useIsMobile } from '../../os/hooks/useDeviceType';
 import { openSimpleView } from '../../os/view';
 import { requestTour } from '../../ui/pet/petEvents';
+import { openStory } from '../../os/events';
 import { PROFILE } from '../../os/content/profile';
+import { forGuest } from '../../os/personal';
 import Sprite, { type SpriteAnim } from '../../ui/mascot/Sprite';
 import './Welcome.css';
 
@@ -90,7 +92,7 @@ export default function Welcome({ windowId }: WelcomeProps) {
     <div className="welcome">
       <div className="welcome__layout">
         <div className="welcome__stage">
-          <div className="welcome__bubble">{t('petHello')}</div>
+          <div className="welcome__bubble">{forGuest(t('petHelloFor'), t('petHello'))}</div>
           <div className="welcome__sprite welcome__sprite--wide">
             <Sprite anim={anim} scale={7} />
           </div>
@@ -105,7 +107,7 @@ export default function Welcome({ windowId }: WelcomeProps) {
             {t('langOther')}
           </button>
 
-          <h1 className="welcome__title">{t('welcomeGreeting')}</h1>
+          <h1 className="welcome__title">{forGuest(t('welcomeGreetingFor'), t('welcomeGreeting'))}</h1>
           <p className="welcome__role">
             {t('role')} · {t('tagline')}
           </p>
@@ -118,6 +120,21 @@ export default function Welcome({ windowId }: WelcomeProps) {
             </button>
             <button type="button" className="welcome__btn welcome__btn--secondary" onClick={() => go('projects')}>
               {t('ctaProjects')}
+            </button>
+            {isMobile && (
+              <button
+                type="button"
+                className="welcome__btn welcome__btn--secondary"
+                onClick={() => {
+                  close();
+                  window.setTimeout(openStory, 200);
+                }}
+              >
+                ▶ {t('ctaStory')}
+              </button>
+            )}
+            <button type="button" className="welcome__btn welcome__btn--secondary" onClick={() => go('recruiter')}>
+              🧾 {t('ctaGlance')}
             </button>
             {!isMobile && (
               <button

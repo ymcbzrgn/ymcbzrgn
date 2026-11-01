@@ -64,6 +64,22 @@ so a plain `vite build` is enough on any host) fixes that at build time:
 - Cloudflare's "AI crawlers" setting adds its own block to `robots.txt` and can answer 403 to training crawlers;
   that is a dashboard setting, not something in this repo.
 
+## For visitors who have ten seconds
+
+All lazy, none of it in the first paint:
+
+- **Personal links.** `/?for=Acme` greets "Acme" in the welcome window, from the twin and on the recruiter card
+  (`src/os/personal.ts` cleans the value: letters, digits, spaces and `. & ' - _`, 40 characters, shown as text only).
+- **At a glance** (`src/apps/recruiter`): the whole profile on one screen, with the CV, a `.vcf` contact
+  (`vcard.ts`, no phone number on purpose) and a copy-email button. `glance` in the terminal, `sudo hire-me`, the palette.
+- **Yamaç in 30 seconds** (`src/ui/story`): seven tap-through cards (tap, hold, swipe), full screen on a phone,
+  offered in the phone's welcome window and reachable at `/?story`, in the palette and as `story` in the terminal.
+- **Career** (`src/apps/career`, `src/ui/rooms/CareerRoom.tsx`): the timeline as a room for the twin, and as a list
+  for phones and for anyone who has the twin switched off.
+- **How this site is built** (`src/apps/about-site`): numbers measured on the build (`dist/data/build-info.json`,
+  written by the SEO plugin), what this visit has downloaded, and the live CI status of `main` from the GitHub API
+  (cached for ten minutes; it says so when GitHub refuses).
+
 ## Browser tests
 
 `tests/e2e/lib.cjs` has the shared helpers (static server for `dist/`, a page factory that mocks the network and

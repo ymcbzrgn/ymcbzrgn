@@ -13,6 +13,7 @@ import { unlock } from '../../os/achievements';
 import { sfx } from '../../os/sound/sfx';
 import { useTourStore } from '../tour/tourStore';
 import AchievementToasts from './AchievementToasts';
+import StoryHost from '../story/StoryHost';
 
 const CommandPalette = lazy(() => import('../palette/CommandPalette'));
 const TourHud = lazy(() => import('../tour/TourHud'));
@@ -88,6 +89,7 @@ export default function Extras() {
   return (
     <>
       <AchievementToasts />
+      <StoryHost />
       {tourActive && (
         <Suspense fallback={null}>
           <TourHud />

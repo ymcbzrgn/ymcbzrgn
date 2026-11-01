@@ -14,17 +14,21 @@ const DIST = resolve(process.env.DIST_DIR || 'dist');
 
 /** KB, gzip, unless noted. "now" is what it weighed when the budget was set. */
 const BUDGETS = {
-  criticalPath: { max: 78, now: 75.9 },
+  criticalPath: { max: 78, now: 76.4 },
   chunks: [
     { name: 'Pet', re: /^Pet-.*\.js$/, max: 10, now: 6.7 },
     { name: 'PetControl', re: /^PetControl-.*\.js$/, max: 10, now: 6.7 },
-    { name: 'Terminal', re: /^Terminal-.*\.js$/, max: 13, now: 9.4 },
+    { name: 'Terminal', re: /^Terminal-.*\.js$/, max: 13, now: 9.9 },
     { name: 'MusicPlayer', re: /^MusicPlayer-.*\.js$/, max: 8, now: 4.7 },
-    { name: 'CommandPalette', re: /^CommandPalette-.*\.js$/, max: 5, now: 3.0 },
+    { name: 'CommandPalette', re: /^CommandPalette-.*\.js$/, max: 5, now: 3.5 },
     { name: 'tour', re: /^tour-.*\.js$/, max: 4, now: 2.5 },
     { name: 'Extras', re: /^Extras-.*\.js$/, max: 3, now: 1.5 },
     { name: 'synth', re: /^synth-.*\.js$/, max: 3, now: 1.3 },
     { name: 'Achievements', re: /^Achievements-.*\.js$/, max: 3, now: 1.2 },
+    { name: 'Story', re: /^Story-.*\.js$/, max: 5, now: 3.0 },
+    { name: 'RecruiterCard', re: /^RecruiterCard-.*\.js$/, max: 4, now: 1.7 },
+    { name: 'AboutSite', re: /^AboutSite-.*\.js$/, max: 5, now: 3.6 },
+    { name: 'Career', re: /^Career-.*\.js$/, max: 3, now: 1.1 },
   ],
   /** raw KB (images are already compressed) */
   files: [

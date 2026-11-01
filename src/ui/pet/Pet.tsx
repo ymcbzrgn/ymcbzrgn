@@ -24,6 +24,7 @@ import { useStore } from '../../os/store';
 import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
 import { openSimpleView } from '../../os/view';
+import { forGuest, guest } from '../../os/personal';
 import Sprite, { type SpriteAnim } from '../mascot/Sprite';
 import { SPRITE_FOOT_PAD, SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sprites/mascot.meta';
 import { BEHAVIORS, type Behavior, type Fx, type Move } from '../../assets/sprites/mascot.behaviors';
@@ -383,9 +384,10 @@ export default function Pet() {
         enter('wave');
         enteredRef.current = true;
         const seen = readSeen();
-        if (!seen.includes('hello')) {
-          say(t('petHello'), 4800);
-          writeSeen([...seen, 'hello']);
+        const helloKey = guest ? `hello-${guest}` : 'hello'; // a personal link is greeted by name
+        if (!seen.includes(helloKey)) {
+          say(forGuest(t('petHelloFor'), t('petHello')), 4800);
+          writeSeen([...seen, helloKey]);
         }
         // a special day: say so, once that day
         const today = specialDayFor(new Date(), new URLSearchParams(window.location.search).get('day'));

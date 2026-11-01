@@ -8,6 +8,7 @@
 
 export const PALETTE_EVENT = 'yb:palette';
 export const MELTDOWN_EVENT = 'yb:meltdown';
+export const STORY_EVENT = 'yb:story';
 
 let paletteWanted = false;
 
@@ -27,4 +28,19 @@ export function takePaletteRequest(): boolean {
 /** The terminal's classic prank: the desktop "crashes", then comes back untouched. */
 export function requestMeltdown() {
   window.dispatchEvent(new Event(MELTDOWN_EVENT));
+}
+
+let storyWanted = false;
+
+/** Open "Yamaç in 30 seconds", the tap-through story (also reachable at /?story). */
+export function openStory() {
+  storyWanted = true;
+  window.dispatchEvent(new Event(STORY_EVENT));
+}
+
+/** Read and clear a pending story request. */
+export function takeStoryRequest(): boolean {
+  const wanted = storyWanted;
+  storyWanted = false;
+  return wanted;
 }

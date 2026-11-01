@@ -18,7 +18,7 @@ import { ACHIEVEMENT_IDS, unlock, unlockedAt } from '../../os/achievements';
 import { DEFS } from '../../os/achievementDefs';
 import { setSoundOn, soundOn } from '../../os/sound/ctx';
 import { sfx } from '../../os/sound/sfx';
-import { requestMeltdown } from '../../os/events';
+import { openStory, requestMeltdown } from '../../os/events';
 import { openNodeWindow } from '../../os/utils/openNode';
 import { fold } from '../../os/utils/text';
 import { requestTour, sendPetScript } from '../../ui/pet/petEvents';
@@ -497,6 +497,31 @@ export default function Terminal({ windowId }: TerminalProps) {
     return { command: input, output: lines.join('\n'), type: 'success' };
   };
 
+  const cmdGlance = (): CommandOutput => {
+    launch('recruiter');
+    return { command: input, output: t('termOpeningGlance'), type: 'success' };
+  };
+
+  const cmdCareer = (): CommandOutput => {
+    launch('career');
+    return { command: input, output: t('termOpeningCareer'), type: 'success' };
+  };
+
+  const cmdSite = (): CommandOutput => {
+    launch('aboutsite');
+    return { command: input, output: t('termOpeningSite'), type: 'success' };
+  };
+
+  const cmdStory = (): CommandOutput => {
+    window.setTimeout(openStory, 400);
+    return { command: input, output: t('termOpeningStory'), type: 'success' };
+  };
+
+  const cmdVcard = (): CommandOutput => {
+    void import('../recruiter/vcard').then((m) => m.downloadVCard(lang));
+    return { command: input, output: t('termVcard'), type: 'success' };
+  };
+
   const cmdSimple = (): CommandOutput => {
     // Let the output render before the page switches
     window.setTimeout(openSimpleView, 450);
@@ -639,6 +664,7 @@ export default function Terminal({ windowId }: TerminalProps) {
     if (rest === 'hire-me' || rest === 'hire-yamac') {
       sendPetScript({ kind: 'do', anim: 'celebrate' });
       sfx('celebrate');
+      window.setTimeout(() => launch('recruiter'), 700);
       return ok(`[sudo] password for visitor: ********\n${tr ? 'İzin verildi.' : 'Permission granted.'}\n${PROFILE.email}`);
     }
     return fail(tr ? 'visitor, sudoers dosyasında değil. Bu olay rapor edilecek.' : 'visitor is not in the sudoers file. This incident will be reported.');
@@ -668,6 +694,11 @@ export default function Terminal({ windowId }: TerminalProps) {
 
   const extrasHelp = tr
     ? `Eğlence ve portfolyo:
+    glance          İK kartı: her şey tek ekranda
+    story           "30 saniyede Yamaç", dokun-ilerle hikâye
+    career          kariyer zaman çizelgesi (ikiz için bir oda)
+    site            bu site nasıl yapıldı
+    vcard           kişiyi rehbere kaydet (.vcf)
     tour            piksel ikizle rehberli tur
     neofetch        bu makinenin özellikleri
     achievements    başarımların
@@ -679,6 +710,11 @@ export default function Terminal({ windowId }: TerminalProps) {
     cat About-Me.md | grep -i ai     (grep head tail wc sort uniq)
 `
     : `Fun & portfolio extras:
+    glance          the recruiter card: everything on one screen
+    story           "Yamaç in 30 seconds", tap-through story
+    career          the career timeline (a room for the twin)
+    site            how this site is built
+    vcard           save my contact (.vcf)
     tour            guided tour with the pixel twin
     neofetch        specs of this machine
     achievements    your trophies
@@ -794,6 +830,17 @@ Examples:
         return cmdContact();
       case 'simple':
         return cmdSimple();
+      case 'glance':
+      case 'recruiter':
+        return cmdGlance();
+      case 'vcard':
+        return cmdVcard();
+      case 'story':
+        return cmdStory();
+      case 'career':
+        return cmdCareer();
+      case 'site':
+        return cmdSite();
       case 'control':
       case 'drive':
         return cmdControl();

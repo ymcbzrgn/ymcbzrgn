@@ -33,6 +33,9 @@ const appRegistry: AppRegistry = {
   'terminal-app': () => import('./terminal/Terminal'),
   'welcome-app': () => import('./welcome/Welcome'),
   'achievements-app': () => import('./achievements/Achievements'),
+  'recruiter-app': () => import('./recruiter/RecruiterCard'),
+  'career-app': () => import('./career/Career'),
+  'about-site-app': () => import('./about-site/AboutSite'),
   'music-player-app': () => import('./music-player/MusicPlayer'),
   'photo-gallery-app': () => import('./photo-gallery/PhotoGallery'),
 };

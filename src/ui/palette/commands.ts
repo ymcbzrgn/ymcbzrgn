@@ -8,6 +8,7 @@ import type { StringKey } from '../../os/i18n/full';
 import { toggleLang, type Lang } from '../../os/i18n/full';
 import type { LaunchTarget } from '../../os/hooks/useLaunch';
 import { openSimpleView } from '../../os/view';
+import { openStory } from '../../os/events';
 import { openNodeWindow } from '../../os/utils/openNode';
 import { fold } from '../../os/utils/text';
 import { PROFILE } from '../../os/content/profile';
@@ -62,6 +63,11 @@ export function buildItems(ctx: PaletteCtx): PaletteItem[] {
   const items: PaletteItem[] = [
     action('tour', '🧭', t('petMenuTour'), 'tour guide show around walk rehber gezdir gezi tanitim', () => requestTour()),
     action('control', '🎮', t('petMenuControl'), 'control drive twin pet play game kontrol sur ikiz oyna', () => withAssistant(requestPetControl)),
+    action('career', '🗺️', t('palCareer'), 'career timeline history experience education kariyer zaman cizelgesi gecmis deneyim egitim oda room', () => launch('career')),
+    action('aboutsite', '🛠️', t('palAboutSite'), 'how this site is built engineering stack tests ci performance nasil yapildi muhendislik bu site', () => launch('aboutsite')),
+    action('story', '▶️', t('palStory'), 'story stories 30 seconds quick intro short tap hikaye saniye kisa tanitim', () => openStory()),
+    action('glance', '🧾', t('palGlance'), 'recruiter hr hire at a glance summary card contact ik insan kaynaklari ozet kart tek bakista', () => launch('recruiter')),
+    action('vcard', '📇', t('palVcard'), 'save contact vcard vcf address book rehber kisi kaydet kartvizit', () => void import('../../apps/recruiter/vcard').then((m) => m.downloadVCard(lang))),
     action('cv', '📄', t('petMenuCv'), 'cv resume curriculum ozgecmis', () => launch('cv')),
     action('cv-dl', '⬇️', t('downloadCv'), 'download cv resume pdf indir ozgecmis', () => {
       const a = document.createElement('a');

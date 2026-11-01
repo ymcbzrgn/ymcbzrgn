@@ -23,6 +23,7 @@ import MobileAppShell from './MobileAppShell';
 import MobileAppSwitcher from './MobileAppSwitcher';
 import AppLoader from '../../apps/appLoader';
 import './MobileOS.css';
+import StoryHost from '../story/StoryHost';
 
 type MobileView = 'launcher' | 'app' | 'switcher';
 
@@ -307,6 +308,7 @@ export default function MobileOS() {
 
   return (
     <div className="mobile-os">
+      <StoryHost />
       <AnimatePresence>
         {/* Launcher */}
         {currentView === 'launcher' &&

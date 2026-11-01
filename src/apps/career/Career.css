@@ -1,0 +1,110 @@
+/* Career timeline */
+
+.career {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  background: #fff;
+  color: #1e293b;
+  font-family: var(--font-family);
+}
+
+.career__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 8px;
+}
+
+.career__bar h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+.career .room {
+  flex: none;
+}
+
+.career__card {
+  display: flex;
+  gap: 14px;
+  margin: 14px 18px 0;
+  padding: 16px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.career__icon {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.career__card small {
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.career__card h2 {
+  margin: 2px 0 4px;
+  font-size: 19px;
+}
+
+.career__card p {
+  margin: 0;
+  color: #475569;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.career__list {
+  display: flex;
+  flex-direction: column;
+  margin: 14px 18px 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.career__list button {
+  display: grid;
+  grid-template-columns: 48px 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.career__list button:hover {
+  background: #f1f5f9;
+}
+
+.career__list button.is-selected {
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 600;
+}
+
+.career__year {
+  color: #64748b;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.career__dot {
+  font-size: 18px;
+}
+
+.career__name {
+  font-size: 14.5px;
+}

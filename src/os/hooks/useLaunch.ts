@@ -13,7 +13,7 @@ import { PROFILE } from '../content/profile';
 import { getInitialBounds } from '../utils/windowBounds';
 import { useAppOpener } from './useAppOpener';
 
-export type LaunchTarget = 'welcome' | 'cv' | 'projects' | 'terminal' | 'settings' | 'achievements';
+export type LaunchTarget = 'welcome' | 'cv' | 'projects' | 'terminal' | 'settings' | 'achievements' | 'recruiter' | 'career' | 'aboutsite';
 
 interface LaunchSpec {
   appId: string;
@@ -40,6 +40,12 @@ function specFor(target: LaunchTarget): LaunchSpec {
       return { appId: 'settings-app', title: tr ? 'Ayarlar' : 'Settings', icon: '⚙️', singleton: true };
     case 'achievements':
       return { appId: 'achievements-app', title: tr ? 'Başarımlar' : 'Achievements', icon: '🏆', singleton: true };
+    case 'recruiter':
+      return { appId: 'recruiter-app', title: tr ? 'Tek bakışta' : 'At a glance', icon: '🧾', singleton: true };
+    case 'career':
+      return { appId: 'career-app', title: tr ? 'Kariyer' : 'Career', icon: '🗺️', singleton: true };
+    case 'aboutsite':
+      return { appId: 'about-site-app', title: tr ? 'Bu site nasıl yapıldı' : 'How this site is built', icon: '🛠️', singleton: true };
   }
 }
 
