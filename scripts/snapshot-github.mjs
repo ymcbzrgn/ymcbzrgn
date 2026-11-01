@@ -16,14 +16,17 @@ import { fileURLToPath } from 'node:url';
 const USER = process.env.GITHUB_USER || 'ymcbzrgn';
 const API = (process.env.GITHUB_API_URL || 'https://api.github.com').replace(/\/$/, '');
 const OUT = fileURLToPath(new URL('../public/data/github-repos.json', import.meta.url));
-const headers = {
-  Accept: 'application/vnd.github+json',
-  'User-Agent': 'portfolio-build',
-  ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
-};
+const base = { Accept: 'application/vnd.github+json', 'User-Agent': 'portfolio-build' };
+// A token only lifts the rate limit. A stale or placeholder one in the environment (a 401) must not cost us
+// the snapshot, so after the first 401 the script carries on anonymously.
+let token = process.env.GITHUB_TOKEN || '';
 
 async function getJson(url) {
-  const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+  let res = await fetch(url, { headers: token ? { ...base, Authorization: `Bearer ${token}` } : base, signal: AbortSignal.timeout(15000) });
+  if (res.status === 401 && token) {
+    token = '';
+    res = await fetch(url, { headers: base, signal: AbortSignal.timeout(15000) });
+  }
   if (!res.ok) throw new Error(`${res.status} for ${url}`);
   return res.json();
 }
