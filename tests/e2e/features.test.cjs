@@ -289,6 +289,19 @@ const ach = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('yb-ac
     await page.waitForSelector('.tour-hud', { state: 'detached', timeout: 8000 });
     ok(true, 'Esc stops the tour');
     ok((await winCount(page)) === before, 'and leaves no windows behind');
+    // Esc stops it even when a text field (the terminal) has the focus, and Space does not steal typing there
+    await palette(page, 'open terminal');
+    await page.waitForSelector('.terminal-app__input');
+    await page.locator('.terminal-app__input').focus();
+    await page.evaluate(() => window.dispatchEvent(new Event('pet:tour')));
+    await page.waitForSelector('.tour-hud', { timeout: 6000 });
+    await page.locator('.terminal-app__input').focus();
+    await page.keyboard.type('a b');
+    ok((await page.locator('.terminal-app__input').inputValue()) === 'a b', 'typing a space in the terminal is not taken by the tour');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('.tour-hud', { state: 'detached', timeout: 8000 });
+    ok(true, 'Esc stops the tour while the terminal has the focus');
+    await page.locator('.window[data-app-id="terminal-app"] button[aria-label="Close window"]').click();
     ok(page.__errors.length === 0, 'no console errors' + (page.__errors.length ? ': ' + page.__errors.join(' | ') : ''));
     await context.close();
   }

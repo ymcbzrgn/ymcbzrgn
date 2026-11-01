@@ -14,14 +14,15 @@ export default function TourHud() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target as HTMLElement | null)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const st = useTourStore.getState();
+      // Esc always stops (even with the cursor in the terminal); the other keys never steal typing
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         if (st.ending) st.choose('done');
         else st.stop();
-      } else if (!st.ending && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) {
+      } else if (!st.ending && !isTypingTarget(e.target as HTMLElement | null) && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) {
         if ((e.target as HTMLElement | null)?.closest?.('button, a[href]')) return; // keep Enter/Space for focused buttons
         e.preventDefault();
         e.stopPropagation();
