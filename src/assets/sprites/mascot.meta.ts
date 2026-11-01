@@ -2,7 +2,7 @@
 export const SPRITE_FRAME_W = 40;
 export const SPRITE_FRAME_H = 46;
 export const SPRITE_COLS = 6;
-export const SPRITE_ROWS = 68;
+export const SPRITE_ROWS = 79;
 /** Transparent rows below the shoes in the standing pose. */
 export const SPRITE_FOOT_PAD = 1;
 /** Width/height of mascot-bust.png. */
@@ -76,5 +76,36 @@ export const SPRITE_ANIMS = {
   box: { row: 65, frames: 4, fps: 6 },
   fish: { row: 66, frames: 6, fps: 2 },
   peek: { row: 67, frames: 4, fps: 2 },
+  walkDown: { row: 68, frames: 6, fps: 9 },
+  walkUp: { row: 69, frames: 6, fps: 9 },
+  crouch: { row: 70, frames: 4, fps: 3 },
+  pickup: { row: 71, frames: 6, fps: 7 },
+  putdown: { row: 72, frames: 6, fps: 7 },
+  carryIdle: { row: 73, frames: 4, fps: 4 },
+  carryWalk: { row: 74, frames: 6, fps: 9 },
+  point: { row: 75, frames: 4, fps: 4 },
+  inspect: { row: 76, frames: 4, fps: 3 },
+  knock: { row: 77, frames: 4, fps: 6 },
+  arcade: { row: 78, frames: 4, fps: 8 },
 } as const;
 export type SpriteAnim = keyof typeof SPRITE_ANIMS;
+/**
+ * Points inside a 40x46 frame (sprite facing right, origin top-left). When the sprite is
+ * mirrored (facing left) use x' = 40 - x; carry.x is the frame centre, so it stays the same.
+ *   carry  bottom-centre of the item held overhead in carryIdle / carryWalk / last frame of pickup:
+ *          draw the 16x16 icon at (x - 8, y - 16); the fists overlap its bottom row by one pixel.
+ *   floor  bottom-centre of an item lying on the floor just in front of the toes (pickup / putdown),
+ *          same convention: its last row is the twin's floor contact row.
+ */
+export const SPRITE_ANCHORS = { carry: { x: 20, y: 4 }, floor: { x: 36, y: 45 } } as const;
+/**
+ * Optional: per frame of these animations, where the carried item's bottom-centre is (same
+ * convention, mirror x the same way), so it can ride along with the hands and bob with the walk;
+ * null = the item lies on the floor at SPRITE_ANCHORS.floor.
+ */
+export const SPRITE_CARRY_PATH: { readonly [K in SpriteAnim]?: readonly ({ readonly x: number; readonly y: number } | null)[] } = {
+  pickup: [null, null, null, { x: 27, y: 31 }, { x: 20, y: 6 }, { x: 20, y: 4 }],
+  putdown: [{ x: 20, y: 4 }, { x: 20, y: 6 }, { x: 27, y: 31 }, null, null, null],
+  carryIdle: [{ x: 20, y: 4 }, { x: 20, y: 5 }, { x: 20, y: 4 }, { x: 20, y: 5 }],
+  carryWalk: [{ x: 20, y: 4 }, { x: 20, y: 5 }, { x: 20, y: 4 }, { x: 20, y: 4 }, { x: 20, y: 5 }, { x: 20, y: 4 }],
+};

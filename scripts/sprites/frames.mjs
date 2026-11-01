@@ -9,7 +9,7 @@
  * The engine does not restart an animation when it switches to it, so every loop is written to
  * read well from any frame (one-shot stories are short loops that make sense when repeated).
  */
-import { FLOOR, TORSO_SIDE, face, pose } from './character.mjs';
+import { FLOOR, TORSO_SIDE, face, pose, standLegs } from './character.mjs';
 import { part, place, rotPart, rotFrame } from './lib.mjs';
 import * as PR from './props.mjs';
 
@@ -821,3 +821,190 @@ anim('peek', 2, [
   S({ dx: 6, dy: 2, headDx: 3, face: { eyes: 'right', brows: 'up', mouth: 'o' }, arms: peekArms(false), fx: [fx(FX.ex, 37, 6)] }),
 ]);
 
+/* =================================================================== */
+/* Control mode and rooms (mostly driven by the app directly)          */
+/* =================================================================== */
+const Bk = (o = {}) => pose({ view: 'back', ...o });
+
+// Walking towards the viewer / away from the viewer: one step per three frames.
+// Feet: F = planted in front, M = planted under the body, P = pushing off (heel up), W = swinging through.
+// Front view: the foot in front is closer, so it sits 1 px lower; a foot in the air rises.
+// Back view: the foot in front is farther away, so it sits higher; pushing off / swinging shows the sole.
+const STEPS = [
+  // [body dy, left foot, right foot, arm swing (+1 = left arm forward)]
+  [0, 'F', 'P', -1], // left foot lands in front
+  [1, 'M', 'P', -1], // weight on it (body dips), the right heel peels off
+  [0, 'M', 'W', 0], // right foot swings through
+  [0, 'P', 'F', 1], // right foot lands
+  [1, 'P', 'M', 1],
+  [0, 'W', 'M', 0],
+];
+const LIFT_FRONT = { F: -1, M: 0, P: 1, W: 2 };
+const LIFT_BACK = { F: 1, M: 0, P: 0, W: 2 };
+const walkLegs = (left, right, back) => (j) => {
+  const T = back ? LIFT_BACK : LIFT_FRONT;
+  const L = standLegs(j, [T[left], T[right]], back ? 'back' : 'front');
+  if (back && 'PW'.includes(left)) L.l[3] = { ...L.l[3], shoe: 'heel' };
+  if (back && 'PW'.includes(right)) L.r[3] = { ...L.r[3], shoe: 'heel' };
+  return L;
+};
+// the forward hand swings in towards the belly and up a little (foreshortened), the other one out
+const swingArms = (s) => fa(s > 0 ? [-1, 3, 0, 5] : s < 0 ? [-1, 3, -2, 5] : HANG_L, s < 0 ? [1, 3, 0, 5] : s > 0 ? [1, 3, 2, 5] : HANG_R);
+anim('walkDown', 9, STEPS.map(([dy, l, r, s]) => F({
+  dy,
+  legs: walkLegs(l, r, false),
+  face: { eyes: 'open', mouth: 'smile' },
+  arms: swingArms(s),
+})));
+anim('walkUp', 9, STEPS.map(([dy, l, r, s]) => Bk({ dy, legs: walkLegs(l, r, true), arms: swingArms(-s) })));
+
+/* ---- squatting (crouch, pickup, putdown) ---- */
+// The feet stay planted where they stand; the hips sink and go back, the knees come forward over
+// the toes and the head leans in. depth = px the hips sink (2..4).
+const squat = (depth, { lean = true } = {}) => ({
+  dx: lean ? -1 : 0,
+  dy: depth,
+  headDx: lean ? 2 : 0,
+  legs: (j) => ({
+    l: [j.hipL, depth > 2 ? [25, 37] : [24, 37], [20, A], { shoe: 'right', thin: true }],
+    r: [j.hipR, depth > 2 ? [22, 38] : [21, 38], [17, A], { shoe: 'right', back: true, thin: true }],
+  }),
+});
+// both hands reaching forward and down to (x, y): open hands, the far one a pixel behind
+const reach = (x, y) => (j) => ({
+  backArm: 'r',
+  l: [j.shL, [j.shL[0] + 3, j.shL[1] + 4], [x, y], { hand: 'open' }],
+  r: [j.shR, [j.shR[0] + 3, j.shR[1] + 4], [x - 1, y], { hand: 'open', back: true }],
+});
+
+// Squatting low, hands on the knees, breathing and blinking
+const kneeHands = (j) => ({
+  backArm: 'r',
+  l: [j.shL, [j.shL[0] + 2, j.shL[1] + 3], [23, j.shL[1] + 3], { hand: 'open' }],
+  r: [j.shR, [j.shR[0] + 2, j.shR[1] + 3], [21, j.shR[1] + 4], { hand: 'open', back: true }],
+});
+anim('crouch', 3, [
+  S({ ...squat(3), face: { eyes: 'right', mouth: 'smile' }, arms: kneeHands }),
+  S({ ...squat(4), face: { eyes: 'right', mouth: 'small' }, arms: kneeHands }),
+  S({ ...squat(4), face: { eyes: 'blink', mouth: 'small' }, arms: kneeHands }),
+  S({ ...squat(3), face: { eyes: 'right', mouth: 'cat' }, arms: kneeHands }),
+]);
+
+/* ---- carrying things overhead (rooms) ---- */
+// The arms are far too short to reach over the big head, so they rise behind it: only the sleeves
+// and the fists show above the hair, gripping the bottom corners of the item. The app draws the
+// item (16x16) with its bottom-centre at CARRY: frame pixels, sprite facing right, item drawn at
+// (x - 8, y - 16). x is the frame centre, so the mirrored sprite uses the same anchor.
+export const CARRY = { x: 20, y: 4 };
+// Where an item lies on the floor just in front of the toes, for pickup / putdown (same convention).
+export const CARRY_FLOOR = { x: 36, y: 45 };
+const NEAR_FIST_X = 27; // fists 15 px apart: they sit on the item's bottom corners
+const FAR_FIST_X = 12;
+/** Arms raised behind the head; hy moves the fists (positive = down). */
+const liftArms = (hy = 0) => (j) => ({
+  backArm: ['l', 'r'],
+  l: [j.shL, [j.shL[0] + 6, j.shL[1] - 11], [NEAR_FIST_X, CARRY.y + 1 + hy], { hand: 'fist' }],
+  r: [j.shR, [j.shR[0] - 5, j.shR[1] - 11], [FAR_FIST_X, CARRY.y + 1 + hy], { hand: 'fist', back: true }],
+});
+const carryF = (f) => ({ eyes: 'right', mouth: 'smile', ...f });
+const CARRY_IDLE = [
+  S({ face: carryF(), arms: liftArms(0) }),
+  S({ dy: 1, face: carryF({ mouth: 'flat' }), arms: liftArms(1) }),
+  S({ face: carryF({ eyes: 'blink' }), arms: liftArms(0) }),
+  S({ dy: 1, face: carryF({ mouth: 'wavy', extras: ['sweat'] }), arms: liftArms(1) }),
+];
+// holding the (invisible) load against the chest on the way up / down
+const hug = sa([3, 2, 7, 0, { hand: 'fist' }], [3, 2, 6, 1, { hand: 'fist' }]);
+const HUG_ITEM = { x: 27, y: 31 };
+
+// Picking something up from the floor in front of the feet and lifting it overhead.
+// The last frame is carryIdle's first frame.
+anim('pickup', 7, [
+  S({ headDx: 1, headDy: 1, face: { eyes: 'down', mouth: 'o' }, arms: sa([1, 3, 3, 5, { hand: 'open' }], [1, 3, 2, 6, { hand: 'open' }]), fx: [fx(FX.ex, 31, 5)] }),
+  S({ ...squat(3), face: { eyes: 'down', mouth: 'small' }, arms: reach(26, 39) }),
+  S({ ...squat(4), face: { eyes: 'squeeze', mouth: 'flat' }, arms: reach(27, 41), fx: [fx(FX.dust, 32, 41)] }),
+  S({ ...squat(2), face: { eyes: 'squeeze', mouth: 'teeth', extras: ['sweat'] }, arms: hug }),
+  S({ ...squat(2, { lean: false }), face: { eyes: 'squint', mouth: 'grin' }, arms: liftArms(2) }),
+  CARRY_IDLE[0],
+]);
+// Putting it down again: the same story backwards, ending relaxed and pleased.
+anim('putdown', 7, [
+  CARRY_IDLE[0],
+  S({ ...squat(2, { lean: false }), face: { eyes: 'right', mouth: 'small' }, arms: liftArms(2) }),
+  S({ ...squat(2), face: { eyes: 'down', mouth: 'flat' }, arms: hug }),
+  S({ ...squat(4), face: { eyes: 'down', mouth: 'small' }, arms: reach(27, 41) }),
+  S({ ...squat(3), face: { eyes: 'happy', mouth: 'smile' }, arms: reach(25, 38) }),
+  S({ face: { eyes: 'happy', mouth: 'grin' }, arms: sa([-1, 3, -1, 6], [1, 3, 1, 6]), fx: [fx(FX.sparkle, 31, 6)] }),
+]);
+anim('carryIdle', 4, CARRY_IDLE);
+
+// Walking with the load: a slightly heavier step than the normal walk (6 frames, the body dips on each step)
+const CW = [
+  // [dy, near leg, far leg]
+  [0, [1, 2, 3, A], [-1, 2, -3, A]], // near foot in front
+  [1, [1, 2, 1, A], [-1, 1, -3, A - 2]], // weight on it, far heel up
+  [0, [0, 2, -1, A], [1, 2, 1, A - 2]], // far foot swings through
+  [0, [-1, 2, -3, A], [1, 2, 3, A]], // far foot in front
+  [1, [-1, 1, -3, A - 2], [1, 2, 1, A]],
+  [0, [1, 2, 1, A - 2], [0, 2, -1, A]],
+];
+anim('carryWalk', 9, CW.map(([dy, n, f]) => S({ dy, legs: sl(n, f), face: carryF(), arms: liftArms(dy) })));
+
+/**
+ * Optional, per frame: where the carried item's bottom-centre is (same convention as CARRY), so the
+ * app can let it ride along with the hands; null = the item lies on the floor at CARRY_FLOOR.
+ */
+const up = (hy = 0) => ({ x: CARRY.x, y: CARRY.y + hy });
+export const CARRY_PATH = {
+  pickup: [null, null, null, HUG_ITEM, up(2), up(0)],
+  putdown: [up(0), up(2), HUG_ITEM, null, null, null],
+  carryIdle: [up(0), up(1), up(0), up(1)],
+  carryWalk: CW.map(([dy]) => up(dy)),
+};
+
+// Pointing straight ahead, other hand on the hip, chin up: "Look, over there!"
+const FINGER = part('FINGER', ['SS']);
+const pointArms = (reach) => sa([4, -1, 8 + reach, -2, { hand: 'fist', thumb: -1 }], [-4, 2, -1, 5, { hand: 'none' }]);
+anim('point', 4, [
+  S({ headDy: -1, face: { eyes: 'right', mouth: 'o' }, arms: pointArms(0), front: [prop(FINGER, 30, 26)] }),
+  S({ headDy: -1, face: { eyes: 'right', brows: 'up', mouth: 'grin' }, arms: pointArms(1), front: [prop(FINGER, 31, 26)], fx: [fx(FX.sparkle, 34, 22)] }),
+  S({ headDy: -1, face: { eyes: 'right', mouth: 'grin' }, arms: pointArms(1), front: [prop(FINGER, 31, 26)], fx: [fx(FX.ex, 31, 3)] }),
+  S({ headDy: -1, face: { eyes: 'happy', mouth: 'grin' }, arms: pointArms(0), front: [prop(FINGER, 30, 26)], fx: [fx(FX.spark1, 35, 23)] }),
+]);
+
+// Inspecting something with a magnifying glass, leaning in and squinting
+const MAGNIFIER = part('MAGNIFIER', [
+  '.aaa.',
+  'a*::a',
+  'a:::a',
+  'a:::a',
+  '.aaa.',
+  '4....',
+  '4....',
+]);
+const inspectArms = (dy) => sa([4, 1, 9, -4 + dy, { hand: 'fist', thumb: -1 }], [1, 3, 2, 6], { overHead: 'l' });
+anim('inspect', 3, [
+  S({ dx: 1, headDx: 1, face: { eyes: ['squint', 'right'], mouth: 'flat' }, arms: inspectArms(0), front: [prop(MAGNIFIER, 30, 16)] }),
+  S({ dx: 1, headDx: 1, face: { eyes: ['squint', 'right'], mouth: 'o' }, arms: inspectArms(-1), front: [prop(MAGNIFIER, 30, 15)] }),
+  S({ dx: 1, headDx: 2, face: { eyes: ['squint', 'right'], brows: 'up', mouth: 'cat' }, arms: inspectArms(-1), front: [prop(MAGNIFIER, 30, 15)], fx: [fx(FX.spark1, 34, 13)] }),
+  S({ dx: 1, headDx: 1, face: { eyes: ['squint', 'right'], mouth: 'flat' }, arms: inspectArms(0), front: [prop(MAGNIFIER, 30, 16)], fx: [fx(FX.q, 26, 1)] }),
+]);
+
+// Knocking on a door just in front of him (tiny tick marks on each knock)
+const KNOCK = part('KNOCK', ['..!', '.!.', '...', '!!.', '...', '.!.', '..!']);
+const knockArm = (out) => sa([9, 1, 11 + out, -5, { hand: 'fist', thumb: -1 }], [0, 3, 0, 6]);
+anim('knock', 6, [
+  S({ face: { eyes: 'right', mouth: 'small' }, arms: knockArm(0) }),
+  S({ dx: 1, headDx: 1, face: { eyes: 'right', mouth: 'o' }, arms: knockArm(2), fx: [fx(KNOCK, 35, 18)] }),
+  S({ face: { eyes: 'right', mouth: 'small' }, arms: knockArm(0) }),
+  S({ dx: 1, headDx: 1, face: { eyes: 'blink', mouth: 'o' }, arms: knockArm(2), fx: [fx(KNOCK, 35, 18)] }),
+]);
+
+// Playing an arcade machine: joystick and buttons, swaying, tongue out
+const arcadeArms = (stick, btn) => sa([3, 3, 8 + stick, 1, { hand: 'fist' }], [3, 3, 7, 2 + btn, { hand: 'fist' }]);
+anim('arcade', 8, [
+  S({ face: { eyes: 'right', mouth: 'tongue' }, arms: arcadeArms(0, 0) }),
+  S({ dx: -1, headDx: -1, face: { eyes: 'squint', mouth: 'tongue' }, arms: arcadeArms(-1, 1) }),
+  S({ face: { eyes: 'right', brows: 'up', mouth: 'tongue', extras: ['sweat'] }, arms: arcadeArms(0, 0) }),
+  S({ dx: 1, headDx: 1, face: { eyes: 'squint', mouth: 'tongue' }, arms: arcadeArms(1, 1), fx: [fx(FX.spark1, 35, 24)] }),
+]);

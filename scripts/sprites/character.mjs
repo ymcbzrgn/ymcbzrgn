@@ -63,6 +63,32 @@ const HEAD_SIDE = part('HEAD_SIDE', [
   '......ssSSSSSSSSSs....', // 19
   '........sssSSSSs......', // 20 chin
 ]);
+// Back of the head (walking away from the viewer). Same box and silhouette as the front head,
+// mirrored: the tuft leans the other way, the crown whorl and the nape locks show, ears stick out.
+// Row 20 stays empty so the back of the sweater collar shows under the neck.
+export const HEAD_BACK = part('HEAD_BACK', [
+  '......hD..............', // 0  tuft
+  '.......hD..HHH........', // 1
+  '......HHhDHHhhHH......', // 2
+  '....HHhiihhhhhhhHD....', // 3
+  '...HhiiihhhHDDhhhHD...', // 4  crown whorl
+  '..HhiihhhhDhiiDhhhHD..', // 5
+  '.DHhihhhhhDhhHhihhHHD.', // 6
+  'DHhihhhhhhhDDhhiihhHHD', // 7
+  'DHhhhhhhhhhhhHhhhhhHHD', // 8
+  'DHhhhhhHhhhhhhHhhhhHHD', // 9  soft strands fanning out from the crown
+  'DHHhhhHhhhhhhhhHhhhHHD', // 10
+  '.DHhhHhhhhHhhhhhHhhHD.', // 11
+  '.DHhhDhhhhDhhhhhDhHHD.', // 12 locks separate towards the nape
+  '..sDhDhhhDhhhhhhDhHDs.', // 13 ears
+  '..zsDHhhDHhhhhhDhHHDz.', // 14
+  '..ssDHHDHHhhhhDHhHDss.', // 15
+  '....DHDHDHHhhDHDHHD...', // 16
+  '.....D.DsDHHDsD.DD....', // 17 tips
+  '.......sSSSSSSsz......', // 18 neck
+  '.......sSSSSSSsz......', // 19
+  '......................', // 20
+]);
 export const HEAD_W = HEAD_BASE.w;
 export const HEAD_H = HEAD_BASE.h;
 
@@ -165,6 +191,18 @@ export const TORSO = part('TORSO', [
   '....CCQQQQCC....',
   '..cGCqQqqQqCGg..',
   '.cGGcCCCCCCcGgg.',
+  '.cGGGGGGGGGGGgg.',
+  '.cGGGGGGGGGGGgg.',
+  '.cGGGGGGGGGGGgg.',
+  '.cGGGGGGGGGGgGg.',
+  '.CCcCcCcCcCcCCg.',
+  '.cCCCCCCCCCCCcg.',
+]);
+// Back view: the back of the crew neck and the same ribbed hem, light still from the top-left.
+export const TORSO_BACK = part('TORSO_BACK', [
+  '....CCCCCCCC....',
+  '..cGCcCCCCcCGg..',
+  '.cGGGGGGGGGGGgg.',
   '.cGGGGGGGGGGGgg.',
   '.cGGGGGGGGGGGgg.',
   '.cGGGGGGGGGGGgg.',
@@ -297,8 +335,10 @@ const SHOES = {
 };
 SHOES.up = part('SHOE_UP', ['Ff.', 'FFV', 'FFV', 'vfV']); // side view, toes up, sole facing forward (sitting, legs out)
 SHOES.down = rotPart(SHOES.right, 1, 'SHOE_DN'); // side view, toes down (lying on the belly, kicking)
+SHOES.back = part('SHOE_B', ['.FvFf', 'FFFFf', 'VVVVV']); // back view: heel counter with the orange heel tab
+SHOES.heel = part('SHOE_H', ['.FFf.', 'VfffV', 'VVVVV']); // back view, heel lifted: the sole flashes
 // pixel of the shoe that sits under the ankle
-const SHOE_ANCHOR = { front: [2, 0], right: [1, 0], left: [4, 0], sole: [1, 0], up: [0, 3], down: [1, 0] };
+const SHOE_ANCHOR = { front: [2, 0], right: [1, 0], left: [4, 0], sole: [1, 0], up: [0, 3], down: [1, 0], back: [2, 0], heel: [2, 0] };
 
 /* ------------------------------------------------------------------ */
 /* Pose composer                                                       */
@@ -307,11 +347,14 @@ const VIEW = {
   // torso position, shoulders/hips relative to the torso, head offset relative to the torso
   front: { torso: TORSO, at: [12, 27], shL: [1, 2], shR: [14, 2], hipL: [3, 9], hipR: [12, 9], head: [-3, -20] },
   side: { torso: TORSO_SIDE, at: [13, 27], shL: [6, 2], shR: [5, 2], hipL: [7, 9], hipR: [5, 9], head: [-5, -20] },
+  // seen from behind: same skeleton as the front view (l is still the limb on the viewer's left)
+  back: { torso: TORSO_BACK, at: [12, 27], shL: [1, 2], shR: [14, 2], hipL: [3, 9], hipR: [12, 9], head: [-3, -20] },
 };
 
 /**
  * Compose one frame. Everything is optional; the default is the neutral standing pose.
  *   view          'front' | 'side' (three-quarter, facing right; the engine mirrors it for left)
+ *                 | 'back' (walking away: HEAD_BACK, TORSO_BACK, heel shoes; same skeleton as front)
  *   dx, dy        offset of the upper body (torso, head, shoulders, hips)
  *   face          expression for face() (view is filled in) or a ready head part
  *   headDx/headDy fine-tune the head; head: {x, y, flip, flipY} absolute override; head: null hides it
@@ -340,7 +383,7 @@ export function pose(o = {}) {
     hipR: [tx + V.hipR[0], ty + V.hipR[1]],
     view,
   };
-  const L = o.legs ? o.legs(j) : view === 'side' ? sideLegs(j) : standLegs(j, o.lift ?? [0, 0]);
+  const L = o.legs ? o.legs(j) : view === 'side' ? sideLegs(j) : standLegs(j, o.lift ?? [0, 0], view === 'back' ? 'back' : 'front');
   const A = o.arms ? o.arms(j) : view === 'side' ? sideArms(j) : hangArms(j);
 
   const drawP = (list) => {
@@ -364,7 +407,7 @@ export function pose(o = {}) {
   drawP(o.mid);
   for (const k of ['l', 'r']) if (!behind.includes(k) && !inFront.includes(k)) drawArm(k);
   if (o.head !== null) {
-    const fc = o.face && o.face.rows ? o.face : face({ view, ...(o.face ?? {}) });
+    const fc = o.face && o.face.rows ? o.face : view === 'back' ? HEAD_BACK : face({ view, ...(o.face ?? {}) });
     const hx = o.head?.x ?? tx + V.head[0] + (o.headDx ?? 0);
     const hy = o.head?.y ?? ty + V.head[1] + (o.headDy ?? 0);
     blit(b, fc, hx, hy, PAL, { flip: o.head?.flip, flipY: o.head?.flipY, contour: true, outlines: OUTLINE });
@@ -378,13 +421,13 @@ export function pose(o = {}) {
 
 const ANKLE_Y = FLOOR - 2;
 
-/** Front view legs: standing, feet slightly apart. lift = [left, right] px a foot is raised. */
-export function standLegs(j, [liftL, liftR] = [0, 0]) {
+/** Front (or back) view legs: standing, feet slightly apart. lift = [left, right] px a foot is raised. */
+export function standLegs(j, [liftL, liftR] = [0, 0], shoe = 'front') {
   const [lx, ly] = j.hipL;
   const [rx, ry] = j.hipR;
   return {
-    l: [[lx, ly], [lx, Math.min(ly + 2, ANKLE_Y - liftL)], [lx, ANKLE_Y - liftL], { shoe: 'front' }],
-    r: [[rx, ry], [rx, Math.min(ry + 2, ANKLE_Y - liftR)], [rx, ANKLE_Y - liftR], { shoe: 'front', flipShoe: true }],
+    l: [[lx, ly], [lx, Math.min(ly + 2, ANKLE_Y - liftL)], [lx, ANKLE_Y - liftL], { shoe }],
+    r: [[rx, ry], [rx, Math.min(ry + 2, ANKLE_Y - liftR)], [rx, ANKLE_Y - liftR], { shoe, flipShoe: true }],
   };
 }
 

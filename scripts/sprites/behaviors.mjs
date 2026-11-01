@@ -19,7 +19,9 @@
  *
  * The engine itself relies on these animations existing: idle, run (entrance), wave (greeting, menu),
  * sleep + stretch (falling asleep / waking up), drag (being picked up), jump (landing after a drop),
- * walk (coming back from a screen edge); the welcome window also plays look.
+ * walk (coming back from a screen edge); the welcome window also plays look. The control-mode and
+ * room animations (walkDown, walkUp, pickup, putdown, carryIdle, carryWalk, knock, arcade) are driven
+ * by the app directly and need no behaviour here.
  *
  * Tiers: while the visitor is busy (calm) the twin mostly potters about, with the odd surprise
  * (push-ups out of nowhere, a sneeze, a trip). Left alone (bored) it gets wild. After a minute
@@ -76,6 +78,14 @@ export const BEHAVIORS = [
   { id: 'heart', anim: 'heart', weight: [2, 2, 0], duration: [2500, 3500],
     lines: say(0.5, ['Thanks for stopping by!'], ['Uğradığın için teşekkürler!']) },
   { id: 'stretch', anim: 'stretch', weight: [2, 3, 6], duration: [2800, 2800] },
+  { id: 'look-there', anim: 'point', weight: [2, 2, 0], duration: [2200, 3200], face: 'random',
+    lines: say(0.45, ['Look, over there!', 'A wild feature request appeared!'], ['Bak, şurada!', 'Vahşi bir özellik isteği belirdi!']) },
+  { id: 'inspect', anim: 'inspect', weight: [2, 2, 0], duration: [3000, 4500], face: 'random',
+    lines: say(0.5, ['Hmm, suspicious pixel…', 'Is that a 1px misalignment?'], ['Hmm, şüpheli bir piksel…', 'Bu 1 piksellik bir kayma mı?']) },
+  { id: 'inspect-cursor', anim: 'walk', arrive: 'inspect', weight: [1, 2, 0], duration: [2500, 3500], move: 'toCursor',
+    lines: say(0.45, ['Let me take a closer look at that cursor.'], ['Şu imlece yakından bir bakayım.']) },
+  { id: 'squat', anim: 'crouch', weight: [1, 2, 1], duration: [2500, 4000], face: 'random',
+    lines: say(0.4, ['Catching my breath…', 'Squat break. Never skip leg day.'], ['Biraz soluklanıyorum…', 'Çömelme molası. Bacak günü atlanmaz.']) },
 
   /* ---------------- sudden surprises (rare while you are busy, common when you are not) ---------------- */
   { id: 'pushup', anim: 'pushup', weight: [3, 6, 0], duration: [3500, 6000], face: 'random',
