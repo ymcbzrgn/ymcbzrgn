@@ -162,6 +162,15 @@
   margin-bottom: -2px;
 }
 
+.story__art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: -4px;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.22));
+}
+
 .story__rows,
 .story__bullets {
   display: flex;
@@ -170,6 +179,19 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* a small phone: the same cards, a little tighter */
+.story[data-compact] .story__body {
+  gap: 12px;
+}
+
+.story[data-compact] .story__rows {
+  gap: 10px;
+}
+
+.story[data-compact] .story__rows li {
+  padding: 9px 12px;
 }
 
 .story__rows li {
@@ -192,10 +214,11 @@
 }
 
 .story__rows--projects li {
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
+  padding: 10px 14px;
 }
 
 .story__rows--projects span {

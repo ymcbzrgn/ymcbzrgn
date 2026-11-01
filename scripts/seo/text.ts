@@ -5,7 +5,7 @@
 import { PROFILE } from '../../src/os/content/profile';
 import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, spanLabel } from '../../src/os/content/career';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
-import { LANGS, PATH, abs, currentRole, roleLine, type Lang } from './site';
+import { LANGS, MD_PATH, PATH, abs, currentRole, roleLine, type Lang } from './site';
 
 export function llmsTxt(): string {
   return `# ${PROFILE.name}
@@ -16,6 +16,8 @@ export function llmsTxt(): string {
 
 - [Resume (English)](${abs(PATH.resume.en)}): experience, projects, education, skills, languages and contact on one page
 - [Özgeçmiş (Türkçe)](${abs(PATH.resume.tr)}): the same résumé in Turkish
+- [Resume (English, Markdown)](${abs(MD_PATH.en)}): the same résumé as plain Markdown
+- [Özgeçmiş (Türkçe, Markdown)](${abs(MD_PATH.tr)}): the same résumé in Turkish, as plain Markdown
 - [CV (PDF)](${abs(PROFILE.cvUrl)}): the one-page CV
 - [Interactive desktop](${abs(PATH.home.en)}): the playful version of the portfolio (needs JavaScript)
 
@@ -62,6 +64,11 @@ function fullSection(lang: Lang): string {
   out.push('', `## ${t ? 'Contact' : 'İletişim'}`, '');
   out.push(`- Email: ${PROFILE.email}`, `- LinkedIn: ${PROFILE.linkedin}`, `- GitHub: ${PROFILE.github}`, `- ${t ? 'Website' : 'Web sitesi'}: ${PROFILE.site}`, '');
   return out.join('\n');
+}
+
+/** One language of the résumé as Markdown, with where it came from and when it was updated. */
+export function resumeMarkdown(lang: Lang, modified: string): string {
+  return `${fullSection(lang)}\n---\n\n${lang === 'tr' ? 'Kaynak sayfa' : 'Source page'}: ${abs(PATH.resume[lang])} · ${lang === 'tr' ? 'Güncelleme' : 'Updated'} ${modified}\n`;
 }
 
 export function llmsFullTxt(): string {

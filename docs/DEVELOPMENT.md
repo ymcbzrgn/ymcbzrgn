@@ -24,7 +24,7 @@ The browser tests need Chromium once: `npx playwright install chromium`.
 | `npm run seo:assets` | redraws `og-en.jpg`, `og-tr.jpg` and `avatar.png` (the share images) with the pixel twin; commit the result |
 | `npm run test:e2e` | all browser suites in `tests/e2e` against `dist/` (`node tests/e2e/run.cjs features pet` runs some) |
 | `npm run bench:drag` | window drag frame-time benchmark (needs a running server in `BASE`) |
-| `npm run build:sprites` | regenerates the pixel twin and the room scenery sheets from `scripts/sprites` |
+| `npm run build:sprites` | regenerates the pixel twin and the room scenery sheets from `scripts/sprites` (props are drawn in code in `scene.mjs`; `--preview out.png` writes an enlarged contact sheet) |
 | `npm run gitlog` | refreshes `src/assets/gitlog.fallback.json` (what the terminal's `git log` shows when the build has no history) |
 
 ## Things worth knowing
@@ -55,6 +55,10 @@ so a plain `vite build` is enough on any host) fixes that at build time:
 - After the bundle is written it derives `/tr/` (the same shell in Turkish; opening it selects Turkish),
   the static resume pages `/resume/` and `/tr/ozgecmis/`, `404.html`, `sitemap.xml`, `llms.txt` and `llms-full.txt`.
   Old `/#simple` links are redirected to the resume by a script in `index.html`.
+- The same résumé is also served as Markdown (`/resume.md`, `/tr/ozgecmis.md`): linked from the pages
+  (`<link rel="alternate" type="text/markdown">`) and from `llms.txt`. `robots.txt` names the AI search and
+  user-triggered bots (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User)
+  so their welcome does not depend on a host's managed block; training crawlers are left to that block.
 - **One source of facts**: `src/os/content/career.ts` (from the CV). The pages, JSON-LD, llms.txt, the recruiter
   card and the story all read it. When the CV changes, change that file.
 - **The canonical host is the apex, `https://yamacbezirgan.com`.** `www` has no DNS record, so nothing may point

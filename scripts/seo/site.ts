@@ -21,6 +21,9 @@ export const PATH: Record<PageId, Record<Lang, string>> = {
   resume: { en: '/resume/', tr: '/tr/ozgecmis/' },
 };
 
+/** The same résumé as plain Markdown (for assistants and agents that prefer it to HTML) */
+export const MD_PATH: Record<Lang, string> = { en: '/resume.md', tr: '/tr/ozgecmis.md' };
+
 export const abs = (path: string): string => SITE + path;
 
 export const OG_IMAGE: Record<Lang, string> = { en: '/og-en.jpg', tr: '/og-tr.jpg' };

@@ -35,7 +35,7 @@ export interface RoomStripProps {
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const nextFrames = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
-const FALLBACK_EMOJI: Record<string, string> = { door: '🚪', door_up: '⬆️', arcade: '🕹️', computer: '🖥️', sign: '🪧', pdf: '📕', scroll: '📜', book_stack: '📚', secret: '❓' };
+const FALLBACK_EMOJI: Record<string, string> = { door: '🚪', door_up: '⬆️', arcade: '🕹️', computer: '🖥️', sign: '🪧', pdf: '📕', scroll: '📜', book_stack: '📚', secret: '❓', trophy: '🏆', grad_cap: '🎓', suitcase: '🧳', server_rack: '🗄️', toolbox: '🧰' };
 
 export default function RoomStrip({ windowId, theme: themeId, specs, exit, title, badge }: RoomStripProps) {
   const t = useT();

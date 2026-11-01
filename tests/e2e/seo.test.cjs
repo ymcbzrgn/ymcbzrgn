@@ -34,8 +34,14 @@ async function text(base, path, init) {
   ok(sitemap.status === 200 && /xml/.test(sitemap.type) && sitemap.body.includes('<loc>https://yamacbezirgan.com/resume/</loc>'), 'sitemap.xml is served');
   const llms = await text(base, '/llms.txt');
   ok(llms.status === 200 && llms.type.startsWith('text/plain') && llms.body.includes('# Yamaç Bezirgan'), 'llms.txt is plain text');
+  const md = await text(base, '/resume.md');
+  ok(md.status === 200 && md.type.startsWith('text/markdown') && md.body.startsWith('# Yamaç Bezirgan') && md.body.includes('Arketic AI'), '/resume.md is the résumé as Markdown');
+  const mdTr = await text(base, '/tr/ozgecmis.md');
+  ok(mdTr.status === 200 && mdTr.body.includes('Yazılım Mühendisi') && mdTr.body.includes('Deneyim'), '/tr/ozgecmis.md is the Turkish one');
+  ok(resume.body.includes('<link rel="alternate" type="text/markdown" href="https://yamacbezirgan.com/resume.md"'), '/resume/ advertises its Markdown twin');
   const robots = await text(base, '/robots.txt');
   ok(robots.body.includes('Sitemap: https://yamacbezirgan.com/sitemap.xml'), 'robots.txt points at the sitemap');
+  ok(/User-agent: OAI-SearchBot[\s\S]*User-agent: Claude-SearchBot[\s\S]*User-agent: PerplexityBot[\s\S]*Allow: \//.test(robots.body), 'robots.txt welcomes the AI search bots by name');
   const missing = await text(base, '/no-such-page');
   ok(missing.status === 404 && missing.body.includes('noindex'), 'an unknown address is a real 404 (noindex), not the homepage');
   const privacy = await text(base, '/privacy');

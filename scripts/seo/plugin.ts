@@ -18,8 +18,8 @@ import { dirname, join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
 import { headBlock } from './head';
 import { BOOT_STYLE, bootBlock, notFoundPage, resumePage, type Repo } from './pages';
-import { PATH } from './site';
-import { llmsFullTxt, llmsTxt, sitemapXml } from './text';
+import { MD_PATH, PATH } from './site';
+import { llmsFullTxt, llmsTxt, resumeMarkdown, sitemapXml } from './text';
 
 const HEAD = /<!--seo:head:start-->[\s\S]*?<!--seo:head:end-->/;
 const BOOT = /<!--seo:boot:start-->[\s\S]*?<!--seo:boot:end-->/;
@@ -141,12 +141,14 @@ export function seoPlugin(): Plugin {
       const repos = readRepos(dist);
       write(dist, `${PATH.resume.en}index.html`.replace(/^\//, ''), resumePage('en', content, repos));
       write(dist, `${PATH.resume.tr}index.html`.replace(/^\//, ''), resumePage('tr', content, repos));
+      write(dist, MD_PATH.en.slice(1), resumeMarkdown('en', content));
+      write(dist, MD_PATH.tr.slice(1), resumeMarkdown('tr', content));
       write(dist, '404.html', notFoundPage());
       write(dist, 'sitemap.xml', sitemapXml({ content, privacy }));
       write(dist, 'llms.txt', llmsTxt());
       write(dist, 'llms-full.txt', llmsFullTxt());
       write(dist, 'data/build-info.json', JSON.stringify(buildInfo(root, dist, html)) + '\n');
-      console.log(`[seo] pages written: ${PATH.home.tr}, ${PATH.resume.en}, ${PATH.resume.tr}, 404.html, sitemap.xml, llms.txt, llms-full.txt (${repos.length} repos in the snapshot)`);
+      console.log(`[seo] pages written: ${PATH.home.tr}, ${PATH.resume.en}, ${PATH.resume.tr}, ${MD_PATH.en}, ${MD_PATH.tr}, 404.html, sitemap.xml, llms.txt, llms-full.txt (${repos.length} repos in the snapshot)`);
     },
   };
 }

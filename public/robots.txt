@@ -8,4 +8,15 @@ Allow: /
 # the old site is embedded in the portfolio and is not meant to be found on its own
 Disallow: /legacy/
 
+# AI assistants that search the web or fetch a page when somebody asks about this person:
+# welcome. (A bot with its own group ignores the group above, so the legacy rule is repeated.)
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Allow: /
+Disallow: /legacy/
+
 Sitemap: https://yamacbezirgan.com/sitemap.xml

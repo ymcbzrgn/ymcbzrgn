@@ -1316,6 +1316,216 @@ sprite('pegtools', 24, 20, {}, (b) => {
   finish(b);
 });
 
+/* ---- career room: one prop per milestone of the timeline ---- */
+const GOLD = { hi: '#fff1a8', light: '#f7d154', base: '#e3a924', mid: '#c28414', dark: '#8f5a0c' };
+
+// a silver cup on a wooden pedestal with a brass plaque: second place (22x32)
+sprite('trophy', 22, 32, { floor: true }, (b) => {
+  // pedestal
+  bevel(b, 2, 21, 18, 11, WOODS.base, WOODS.light, WOODS.dark, WOOD);
+  hline(b, 1, 20, 20, WOODS.hi, WOOD);
+  hline(b, 1, 20, 21, WOODS.light, WOOD);
+  rect(b, 6, 25, 10, 5, GOLD.base, BRASS);
+  hline(b, 6, 15, 25, GOLD.hi, BRASS);
+  hline(b, 6, 15, 29, GOLD.dark, BRASS);
+  hline(b, 8, 13, 26, GOLD.dark, BRASS);
+  hline(b, 8, 12, 28, GOLD.dark, BRASS);
+  // foot, stem and knob
+  rect(b, 6, 18, 10, 2, METALS.base, METAL);
+  hline(b, 6, 15, 18, METALS.hi, METAL);
+  hline(b, 6, 15, 19, METALS.dark, METAL);
+  rect(b, 9, 13, 4, 5, METALS.light, METAL);
+  vline(b, 9, 13, 17, METALS.hi, METAL);
+  vline(b, 12, 13, 17, METALS.dark, METAL);
+  rect(b, 8, 12, 6, 1, METALS.hi, METAL);
+  // the bowl
+  const half = [7, 8, 8, 8, 8, 7, 7, 6, 5, 4, 4];
+  half.forEach((hw, i) => {
+    const y = 1 + i;
+    const x0 = 11 - hw;
+    const x1 = 10 + hw;
+    for (let x = x0; x <= x1; x++) {
+      let c = METALS.light;
+      if (x === x0) c = METALS.hi;
+      else if (x === x0 + 1) c = METALS.hi;
+      else if (x === x1) c = METALS.dark;
+      else if (x === x1 - 1) c = METALS.base;
+      if (i === 0) c = x > 8 ? METALS.light : METALS.hi; // the rim
+      px(b, x, y, c, METAL);
+    }
+  });
+  hline(b, 5, 16, 2, METALS.base, METAL); // the cup's mouth
+  vline(b, 6, 4, 6, '#ffffff', METAL); // a gleam
+  // handles
+  art(b, 0, 2, ['.hl.', 'hl..', 'hl..', 'hl..', '.ll.', '..l.'], { h: [METALS.hi, METAL], l: [METALS.light, METAL] });
+  art(b, 18, 2, ['.bd.', '..bd', '..bd', '..bd', '.bd.', '.b..'], { b: [METALS.base, METAL], d: [METALS.dark, METAL] });
+  // a "2" on the bowl
+  art(b, 9, 4, ['ddd', '..d', 'ddd', 'd..', 'ddd'], { d: [METALS.deep, METAL] });
+  finish(b);
+});
+
+// a mortarboard with a gold tassel on two books: graduation (26x28)
+sprite('grad_cap', 26, 28, { floor: true }, (b) => {
+  // the books
+  const flat = (y, h, r) => {
+    rect(b, 2, y, 22, h, r[2], INK);
+    hline(b, 2, 23, y, r[1], INK);
+    hline(b, 2, 23, y + h - 1, r[4], INK);
+    vline(b, 2, y, y + h - 1, r[3], INK);
+    hline(b, 4, 21, y + Math.floor(h / 2), PAPERS.cream, INK);
+  };
+  flat(14, 6, RAMP.red);
+  flat(20, 8, RAMP.blue);
+  // the cap's crown
+  rect(b, 8, 10, 10, 4, '#1b2038', DARK);
+  hline(b, 8, 17, 10, '#2c3458', DARK);
+  // the board: a flat diamond
+  const rows = [[11, 14], [9, 16], [7, 18], [5, 20], [3, 22], [5, 20], [7, 18], [9, 16], [11, 14]];
+  rows.forEach(([x0, x1], i) => {
+    for (let x = x0; x <= x1; x++) {
+      const edgeL = x <= x0 + 1 && i <= 4;
+      px(b, x, 1 + i, edgeL ? '#4a5483' : i > 4 && x >= x1 - 1 ? '#161a2e' : '#232a45', DARK);
+    }
+  });
+  // the button and the tassel
+  art(b, 12, 4, ['gg', 'gg'], { g: [GOLD.light, BRASS] });
+  hline(b, 14, 19, 5, GOLD.base, BRASS);
+  vline(b, 20, 5, 9, GOLD.base, BRASS);
+  art(b, 19, 9, ['.gg.', 'gggg', 'gGgg', 'gGgg', 'g.Gg'], { g: [GOLD.light, BRASS], G: [GOLD.mid, BRASS] });
+  finish(b);
+});
+
+// a travel case with stickers and a little Italian flag: the year in Milan (26x26)
+sprite('suitcase', 26, 26, { floor: true }, (b) => {
+  // flag on a pole
+  vline(b, 20, 0, 8, METALS.dark, METAL);
+  art(b, 21, 1, ['ggwwrr', 'ggwwrr', 'ggwwrr', 'ggwwrr'], { g: ['#2e9b4a', CLOTH], w: ['#fbfaf7', CLOTH], r: ['#d9382f', CLOTH] });
+  // the handle
+  art(b, 8, 4, ['.dddddddd.', 'd........d'], { d: [WOODS.deep, WOOD] });
+  // the case
+  bevel(b, 2, 8, 22, 16, '#a86b3c', '#d9a46a', '#7a4a26', WOOD);
+  hline(b, 3, 22, 14, '#8f5a2c', WOOD); // the seam of the lid
+  for (const x of [6, 18]) {
+    rect(b, x, 8, 2, 16, '#6b3f1d', WOOD); // straps
+    vline(b, x, 8, 23, '#8f5a2c', WOOD);
+  }
+  for (const [x, y] of [[2, 8], [22, 8], [2, 22], [22, 22]]) rect(b, x, y, 2, 2, METALS.light, METAL); // corners
+  rect(b, 11, 13, 4, 3, GOLD.base, BRASS); // the lock
+  px(b, 12, 14, GOLD.dark, BRASS);
+  // stickers
+  art(b, 9, 17, ['ggwwrr', 'ggwwrr', 'ggwwrr'], { g: ['#2e9b4a', INK], w: ['#fbfaf7', INK], r: ['#d9382f', INK] });
+  art(b, 16, 16, ['.bb.', 'bybb', 'bbyb', '.bb.'], { b: [RAMP.blue[2], INK], y: [GOLD.light, INK] });
+  // feet
+  rect(b, 4, 24, 3, 2, '#3a2418', WOOD);
+  rect(b, 19, 24, 3, 2, '#3a2418', WOOD);
+  finish(b);
+});
+
+// a server rack whose lights blink and whose screen draws a little graph: the platform at work (20x40)
+sprite('server_rack', 20, 40, { frames: 2, fps: 2, floor: true }, (b, f) => {
+  rect(b, 1, 0, 18, 40, '#2a2b3e', DARK);
+  vline(b, 1, 0, 39, '#3c3e58', DARK);
+  hline(b, 1, 18, 0, '#3c3e58', DARK);
+  vline(b, 18, 1, 39, '#1b1c2b', DARK);
+  const unit = (y) => {
+    rect(b, 3, y, 14, 6, '#3c3e58', DARK);
+    hline(b, 3, 16, y, '#50537a', DARK);
+    hline(b, 3, 16, y + 5, '#1b1c2b', DARK);
+  };
+  // the screen unit
+  rect(b, 3, 2, 14, 8, '#14151f', DARK);
+  hline(b, 3, 16, 2, '#50537a', DARK);
+  [3, 6, 9, 4, 7, 5].forEach((h, i) => {
+    const tall = (h + (f ? (i % 2 ? 2 : -1) : 0) + 9) % 6 + 2;
+    vline(b, 4 + i * 2, 9 - tall, 8, i % 2 ? RAMP.cyan[1] : RAMP.green[1], DARK);
+  });
+  // four drive units: two lights and vent slots each
+  [12, 19, 26, 33].forEach((y, k) => {
+    unit(y);
+    px(b, 5, y + 2, (k + f) % 2 ? '#7cf27c' : '#1f6b2a', DARK);
+    px(b, 7, y + 2, (k + f + 1) % 3 === 0 ? '#ffb347' : '#6b4a1a', DARK);
+    for (let i = 0; i < 4; i++) hline(b, 10, 15, y + 1 + i, '#262842', DARK);
+  });
+  finish(b);
+});
+
+/* ---- project icons (16x16): one per project of the CV, used by the story ---- */
+// HydraQuant: candlesticks climbing on a dark chart
+sprite('proj_quant', 16, 16, {}, (b) => {
+  rect(b, 0, 0, 16, 16, '#14151f', DARK);
+  hline(b, 0, 15, 0, '#2c2f4a', DARK);
+  for (const y of [4, 8, 12]) hline(b, 1, 14, y, '#20233a', DARK);
+  const candle = (x, wick0, wick1, body0, body1, c) => {
+    vline(b, x + 1, wick0, wick1, '#8a90a8', DARK);
+    rect(b, x, body0, 3, body1 - body0 + 1, c, DARK);
+  };
+  candle(1, 8, 14, 9, 12, '#e5534b');
+  candle(5, 5, 12, 7, 11, '#4cd964');
+  candle(9, 4, 10, 5, 8, '#e5534b');
+  candle(13, 1, 8, 2, 6, '#4cd964');
+  finish(b);
+});
+// QuirkLLM: a terminal with a prompt and a few lines of code
+sprite('proj_llm', 16, 16, {}, (b) => {
+  rect(b, 0, 0, 16, 16, '#14151f', DARK);
+  rect(b, 0, 0, 16, 3, '#2c2f4a', DARK);
+  px(b, 2, 1, '#ff5f56', DARK);
+  px(b, 4, 1, '#ffbd2e', DARK);
+  px(b, 6, 1, '#27c93f', DARK);
+  art(b, 2, 5, ['g.', '.g', 'g.'], { g: ['#7cf27c', DARK] });
+  hline(b, 6, 8, 7, '#7cf27c', DARK);
+  hline(b, 3, 9, 10, '#3fe7ff', DARK);
+  hline(b, 3, 12, 12, '#c084fc', DARK);
+  hline(b, 3, 7, 14, '#ffe066', DARK);
+  finish(b);
+});
+// Shiffy: a phone showing a shift calendar
+sprite('proj_shift', 16, 16, {}, (b) => {
+  rect(b, 3, 0, 10, 16, '#2a2b3e', DARK);
+  vline(b, 3, 0, 15, '#3c3e58', DARK);
+  rect(b, 4, 2, 8, 11, '#fbfaf7', DARK);
+  rect(b, 4, 2, 8, 2, RAMP.blue[2], DARK);
+  const cell = { y: GOLD.light, g: RAMP.green[1], b: RAMP.blue[1], r: RAMP.red[1] };
+  ['yg.', 'gby', '.rg'].forEach((row, j) =>
+    [...row].forEach((ch, i) => {
+      if (ch !== '.') rect(b, 4 + i * 3, 5 + j * 3, 2, 2, cell[ch], DARK);
+    })
+  );
+  hline(b, 6, 9, 14, '#8a90a8', DARK);
+  finish(b);
+});
+// Canny edge detection: the photo on the left, its edges on the right
+sprite('proj_edge', 16, 16, {}, (b) => {
+  rect(b, 0, 0, 8, 16, '#7f8794', DARK);
+  rect(b, 8, 0, 8, 16, '#0b0c12', DARK);
+  vline(b, 8, 0, 15, '#fbfaf7', DARK);
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 8; x++) {
+      const dl = Math.hypot(x - 3.5, y - 7.5);
+      if (dl <= 3.9) px(b, x, y, dl < 2.2 ? '#e3e7ef' : '#c0c6d2', DARK);
+      const dr = Math.hypot(x + 8 - 11.5, y - 7.5);
+      if (Math.abs(dr - 3.9) < 0.6) px(b, x + 8, y, '#fbfaf7', DARK);
+    }
+  }
+  for (let i = 0; i < 6; i++) px(b, 9 + i, 14 - i, '#fbfaf7', DARK); // a straight edge
+  finish(b);
+});
+// this site: a tiny desktop with a window and a taskbar
+sprite('proj_os', 16, 16, {}, (b) => {
+  rect(b, 0, 0, 16, 16, '#4db6ac', DARK);
+  rect(b, 0, 13, 16, 3, '#1c2236', DARK);
+  rect(b, 1, 14, 3, 1, '#f59e0b', DARK);
+  hline(b, 12, 14, 14, '#8a90a8', DARK);
+  rect(b, 3, 2, 11, 9, '#fbfaf7', DARK);
+  rect(b, 3, 2, 11, 2, '#f59e0b', DARK);
+  px(b, 12, 2, '#ffffff', DARK);
+  px(b, 11, 2, '#fde68a', DARK);
+  hline(b, 5, 11, 6, '#9aa1b2', DARK);
+  hline(b, 5, 9, 8, '#9aa1b2', DARK);
+  hline(b, 5, 10, 10, '#c7ccd8', DARK);
+  finish(b);
+});
+
 /** Room themes: wall + floor tiles and 1-3 floor-standing decor sprites that set the mood. */
 export const THEMES = {
   default: { wall: 'wall_default', floor: 'floor_default', decor: ['plant', 'lamp'] },

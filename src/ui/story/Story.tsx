@@ -12,6 +12,7 @@ import { guest } from '../../os/personal';
 import { openSimpleView } from '../../os/view';
 import { downloadVCard } from '../../apps/recruiter/vcard';
 import Sprite from '../mascot/Sprite';
+import SceneSprite from '../rooms/SceneSprite';
 import './Story.css';
 
 const SLIDE_MS = 4600;
@@ -69,6 +70,9 @@ const TEXT: Record<Lang, Record<string, string>> = {
   },
 };
 
+/** the icon (scene sheet) of each project of the CV */
+const ICON: Record<string, string> = { hydraquant: 'proj_quant', portfolio: 'proj_os', quirkllm: 'proj_llm', shiffy: 'proj_shift', canny: 'proj_edge' };
+
 const BG = [
   'linear-gradient(160deg,#134e4a,#0f766e 46%,#1e3a8a)',
   'linear-gradient(160deg,#312e81,#4c1d95)',
@@ -109,6 +113,16 @@ export default function Story({ onClose }: Props) {
   const work = PROFILE_TEXT[lang].work;
   const arketic = ROLES[0];
 
+  // pixel props from the room scenery, drawn bigger on a tall screen
+  const art = (names: string[], scale: number) => (
+    <div className="story__art">
+      {names.map((name) => (
+        <SceneSprite key={name} name={name} scale={scale} />
+      ))}
+    </div>
+  );
+  const big = compact ? 2 : 3;
+
   const slides: ReactNode[] = useMemo(
     () => [
       // 1: hello
@@ -124,6 +138,7 @@ export default function Story({ onClose }: Props) {
       </>,
       // 2: what I build
       <>
+        {art(['computer', 'server_rack', 'toolbox'], big)}
         <h2>{L.build}</h2>
         <ul className="story__rows">
           {work.map((w) => (
@@ -136,6 +151,7 @@ export default function Story({ onClose }: Props) {
       </>,
       // 3: right now
       <>
+        {art(['server_rack', 'computer'], big)}
         <h2>{L.now}</h2>
         <p className="story__lead">{L.nowSub}</p>
         <ul className="story__bullets">
@@ -146,6 +162,7 @@ export default function Story({ onClose }: Props) {
       </>,
       // 4: proof
       <>
+        {art(['trophy', 'grad_cap', 'suitcase'], big)}
         <h2>{L.proof}</h2>
         <div className="story__tiles">
           <div>
@@ -174,6 +191,7 @@ export default function Story({ onClose }: Props) {
         <ul className="story__rows story__rows--projects">
           {PROJECTS.map((p) => (
             <li key={p.id}>
+              <SceneSprite name={ICON[p.id] ?? 'proj_os'} scale={2} />
               <strong>{p.name}</strong>
               <span>{p.stack}</span>
             </li>
@@ -182,6 +200,7 @@ export default function Story({ onClose }: Props) {
       </>,
       // 6: stack
       <>
+        {art(['toolbox', 'book_stack'], big)}
         <h2>{L.stack}</h2>
         <ul className="story__chips">
           {SKILLS.flatMap((g) => g.items).map((s) => (
@@ -221,7 +240,7 @@ export default function Story({ onClose }: Props) {
         </div>
       </>,
     ],
-    [L, arketic, compact, lang, onClose, work]
+    [L, arketic, big, compact, lang, onClose, work]
   );
 
   const last = slides.length - 1;
@@ -303,7 +322,7 @@ export default function Story({ onClose }: Props) {
   const playing = !held && !hidden;
 
   return (
-    <div className="story" role="dialog" aria-modal="true" aria-label={L.title} data-reduce={reduce ? '1' : undefined}>
+    <div className="story" role="dialog" aria-modal="true" aria-label={L.title} data-reduce={reduce ? '1' : undefined} data-compact={compact ? '1' : undefined}>
       <div
         className="story__card"
         ref={cardRef}

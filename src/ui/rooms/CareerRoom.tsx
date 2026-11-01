@@ -9,11 +9,11 @@ import { useRoomStore } from './roomStore';
 /** a prop from the scene sheet for each station */
 const SPRITE: Record<string, string> = {
   altinbas: 'book_stack',
-  milan: 'sign',
+  milan: 'suitcase', // (with an Italian flag)
   exagate: 'toolbox',
-  ideathon: 'poster_a',
-  graduate: 'scroll',
-  arketic: 'computer',
+  ideathon: 'trophy', // second place: a silver cup with a 2 on it
+  graduate: 'grad_cap',
+  arketic: 'server_rack', // its lights blink
 };
 
 interface Props {

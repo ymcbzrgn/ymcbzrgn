@@ -6,7 +6,7 @@
 import { PROFILE } from '../../src/os/content/profile';
 import { MEDALS, PITCH, SKILLS, SPOKEN, STUDIES } from '../../src/os/content/career';
 import { STRINGS } from '../../src/os/i18n/strings';
-import { AVATAR, LANGS, LOCALE, META, OG_IMAGE, OG_SIZE, PATH, abs, esc, jsonScript, type Lang, type PageId } from './site';
+import { AVATAR, LANGS, LOCALE, MD_PATH, META, OG_IMAGE, OG_SIZE, PATH, abs, esc, jsonScript, type Lang, type PageId } from './site';
 
 const PERSON_ID = abs('/#person');
 const SITE_ID = abs('/#website');
@@ -81,6 +81,7 @@ export function headBlock(page: PageId, lang: Lang, modified: string): string {
     `<link rel="canonical" href="${url}" />`,
     ...LANGS.map((l) => `<link rel="alternate" hreflang="${l}" href="${abs(PATH[page][l])}" />`),
     `<link rel="alternate" hreflang="x-default" href="${abs(PATH[page].en)}" />`,
+    ...(page === 'resume' ? [`<link rel="alternate" type="text/markdown" href="${abs(MD_PATH[lang])}" title="Markdown" />`] : []),
     `<meta property="og:type" content="${page === 'resume' ? 'profile' : 'website'}" />`,
     `<meta property="og:site_name" content="${esc(PROFILE.name)}" />`,
     `<meta property="og:title" content="${esc(meta.title)}" />`,

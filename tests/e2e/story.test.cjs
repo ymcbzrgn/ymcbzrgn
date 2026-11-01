@@ -36,6 +36,17 @@ async function openFromPalette(page, query = 'story') {
     await page.keyboard.press('ArrowLeft');
     ok((await activeBar(page)) === 0, 'ArrowLeft: back');
 
+    // pixel props from the room scenery illustrate the cards, and every project has its icon
+    const counts = [];
+    for (let i = 0; i < 5; i += 1) {
+      await page.keyboard.press('ArrowRight');
+      counts.push(await page.locator('.story__body .scene-sprite').count());
+      if (i === 1) ok((await page.locator('.story__body .scene-sprite--anim').count()) >= 1, 'the server rack and the computer blink');
+    }
+    ok(counts.join(',') === '3,2,3,5,2', 'cards 2-6 are illustrated (props, 5 project icons): ' + counts.join(','));
+    for (let i = 0; i < 5; i += 1) await page.keyboard.press('ArrowLeft');
+    ok((await activeBar(page)) === 0, 'and back to the first card');
+
     // taps: right side = next, left side = back
     const box = await cardBox(page);
     await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.55);

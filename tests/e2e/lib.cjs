@@ -26,6 +26,7 @@ const TYPES = {
   '.pdf': 'application/pdf',
   '.webmanifest': 'application/manifest+json',
   '.txt': 'text/plain',
+  '.md': 'text/markdown; charset=utf-8',
   '.xml': 'application/xml',
 };
 

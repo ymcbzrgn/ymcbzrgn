@@ -133,9 +133,20 @@ ok(!/www\.yamacbezirgan/.test(sitemap) && all(/<lastmod>(\d{4}-\d{2}-\d{2})<\/la
 const robots = has('robots.txt') ? read('robots.txt') : '';
 ok(robots.includes(`Sitemap: ${SITE}/sitemap.xml`) && !/www\.yamacbezirgan/.test(robots) && !/Crawl-delay/i.test(robots), 'robots.txt points at the sitemap, no www, no crawl-delay');
 ok(/Disallow: \/legacy\//.test(robots) && !/^User-agent: (Googlebot|Bingbot)/m.test(robots), 'robots.txt: legacy stays out, no per-bot group that would bypass it');
+for (const bot of ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User']) {
+  const group = robots.split(/\n\s*\n/).find((g) => new RegExp(`^User-agent: ${bot}$`, 'm').test(g)) || '';
+  ok(/^Allow: \/$/m.test(group) && /^Disallow: \/legacy\/$/m.test(group), `robots.txt: ${bot} is welcome (and still kept out of /legacy/)`);
+}
 ok(has('llms.txt') && read('llms.txt').startsWith('# Yamaç Bezirgan') && read('llms.txt').includes(SITE + '/resume/'), 'llms.txt names the person and links the resume');
 ok(has('llms-full.txt') && read('llms-full.txt').includes('Arketic AI') && read('llms-full.txt').includes('(Türkçe)'), 'llms-full.txt has both languages');
 ok(has('404.html') && /name="robots" content="noindex"/.test(read('404.html')), '404.html exists and is noindex');
+for (const [file, url, lang] of [['resume.md', '/resume/', 'en'], ['tr/ozgecmis.md', '/tr/ozgecmis/', 'tr']]) {
+  const md = has(file) ? read(file) : '';
+  ok(md.startsWith('# Yamaç Bezirgan') && md.includes('Arketic AI') && md.includes(`${SITE}${url}`) && !/<\/?[a-z][^>]*>/i.test(md), `${file}: the résumé as plain Markdown, pointing back at its page`);
+  const html = read(`${url.slice(1)}index.html`);
+  ok(html.includes(`<link rel="alternate" type="text/markdown" href="${SITE}/${file}"`), `${url} advertises ${file}`);
+  ok(read('llms.txt').includes(`${SITE}/${file}`), `llms.txt links ${file}`);
+}
 ok(has('privacy.html') && read('privacy.html').includes(`<link rel="canonical" href="${SITE}/privacy"`), 'privacy page has its canonical');
 ok(!has('og-image.jpg'), 'the old og-image.jpg (with typos) is gone');
 
