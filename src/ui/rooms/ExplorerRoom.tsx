@@ -4,7 +4,7 @@
  * can open them, or pick files up and carry them into another folder (a real move). Hidden places
  * show up as suspicious wall panels; finding one makes it visible for good.
  */
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useDesktopActions, useVFSActions, useVFSNodes, useVFSNodesByParent } from '../../os/store';
 import { nameExists } from '../../os/utils/naming';
 import { useT } from '../../os/i18n/full';
@@ -13,6 +13,7 @@ import type { VFSNode } from '../../os/types';
 import RoomStrip from './RoomStrip';
 import { NEVER_REVEAL, themeFor, visualFor, type RoomPropSpec } from './rooms';
 import { useRoomStore, type Carry } from './roomStore';
+import { unlock } from '../../os/achievements';
 
 interface Props {
   windowId: string;
@@ -24,8 +25,8 @@ interface Props {
   openNode(node: VFSNode): void;
 }
 
-/** Hidden places the twin can find (the music player is still a stub, so it stays hidden). */
-const SECRETS = ['photo-gallery-app', 'downloads'];
+/** Hidden places the twin can find. */
+const SECRETS = ['photo-gallery-app', 'downloads', 'music-player-app'];
 
 export default function ExplorerRoom({ windowId, folderId, parentId, goUp, goInto, openNode }: Props) {
   const t = useT();
@@ -60,6 +61,7 @@ export default function ExplorerRoom({ windowId, folderId, parentId, goUp, goInt
       await moveNode(node.id, targetId);
       if (node.parentId === 'root') removeIconPosition(node.id); // it left the desktop
       if (targetId === 'root') initializeIconPosition(node.id, node.type); // it landed on the desktop
+      unlock('carry');
       return 'moved';
     } catch {
       return 'locked';
@@ -72,6 +74,11 @@ export default function ExplorerRoom({ windowId, folderId, parentId, goUp, goInt
   );
   const found = SECRETS.filter((id) => nodes[id] && !nodes[id].hidden).length;
   const total = SECRETS.filter((id) => nodes[id]).length;
+  // (also for places found on an earlier visit: the badge says so, the achievements should agree)
+  useEffect(() => {
+    if (found > 0) unlock('secret');
+    if (total > 0 && found >= total) unlock('secretsAll');
+  }, [found, total]);
 
   const sorted = useMemo(
     () =>

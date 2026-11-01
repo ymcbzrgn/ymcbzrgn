@@ -174,6 +174,8 @@ export interface Settings {
   iconHintSeen?: boolean; // visitor already learned that desktop icons need a double-click
   widgetHidden?: boolean; // desktop intro widget dismissed
   assistantHidden?: boolean; // pixel assistant dismissed
+  soundOn?: boolean; // sound effects + music (off until the visitor switches them on)
+  soundVolume?: number; // 0..1, default 0.6
 }
 
 // ============================================================================

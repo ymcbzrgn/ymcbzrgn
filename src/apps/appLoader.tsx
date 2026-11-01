@@ -32,6 +32,7 @@ const appRegistry: AppRegistry = {
   'calendar-app': () => import('./calendar/Calendar'),
   'terminal-app': () => import('./terminal/Terminal'),
   'welcome-app': () => import('./welcome/Welcome'),
+  'achievements-app': () => import('./achievements/Achievements'),
   'music-player-app': () => import('./music-player/MusicPlayer'),
   'photo-gallery-app': () => import('./photo-gallery/PhotoGallery'),
 };

@@ -118,6 +118,8 @@ const en = {
   roomLook: 'Look at this one!',
   roomProjectsTitle: 'The workshop',
   roomWelcome: 'My room! Arrow keys to walk, E to use things.',
+  roomPhotosTitle: 'The gallery',
+  roomPhotoNone: 'No pictures yet. Put some in Pictures.',
 
   // settings
   setAssistant: 'Pixel assistant',
@@ -140,7 +142,54 @@ const en = {
   termOpeningProjects: 'Opening projects…',
   termOpeningSimple: 'Switching to the simple view…',
   termContact: 'Contact',
-  termMore: 'Try: cv · projects · contact · simple · control',
+  termMore: 'Try: cv · projects · contact · simple · control · tour · neofetch',
+
+  // taskbar tray, command palette
+  trayPalette: 'Command palette (Ctrl K)',
+  trayAch: 'Achievements',
+  traySoundOn: 'Sound is on. Click to mute',
+  traySoundOff: 'Sound is off. Click to turn it on',
+  palPlaceholder: 'Search apps, files and actions…',
+  palEmpty: 'Nothing matches that',
+  palHint: '↑↓ move · Enter open · Esc close',
+  palSuggested: 'Suggested',
+  palActions: 'Actions',
+  palOpen: 'Open',
+  palSwitchLang: 'Switch language (EN / TR)',
+  palSoundOn: 'Turn sound on',
+  palSoundOff: 'Turn sound off',
+  palAssistantShow: 'Show the pixel assistant',
+  palAssistantHide: 'Hide the pixel assistant',
+  palTerminal: 'Open Terminal',
+  palSettings: 'Open Settings',
+  palMusic: 'Open Music Player',
+
+  // tour
+  petMenuTour: 'Show me around',
+  ctaTour: 'Show me around',
+  tourLabel: 'Guided tour',
+  tourNext: 'Next',
+  tourStop: 'Stop',
+  tourDriveCta: 'Take the controls',
+
+  // achievements
+  achTitle: 'Achievements',
+  achUnlocked: 'Achievement unlocked',
+  achCount: 'unlocked',
+  achHidden: 'Hidden achievement',
+  achHiddenHint: 'Keep exploring to find this one.',
+  achGroupTwin: 'The twin',
+  achGroupRooms: 'Rooms',
+  achGroupGames: 'Arcade',
+  achGroupTerminal: 'Terminal',
+  achGroupDesktop: 'Desktop',
+  achGroupSound: 'Sound',
+  achMoves: 'moves discovered',
+
+  // sound settings
+  setSound: 'Sound',
+  setSoundHint: 'Footsteps, doors and music. Off until you switch it on',
+  setVolume: 'Volume',
 };
 
 type MoreKey = keyof typeof en;
@@ -247,6 +296,8 @@ const tr: Record<MoreKey, string> = {
   roomLook: 'Şuna bak!',
   roomProjectsTitle: 'Atölye',
   roomWelcome: 'Benim odam! Yön tuşlarıyla yürü, E ile kullan.',
+  roomPhotosTitle: 'Galeri',
+  roomPhotoNone: 'Henüz resim yok. Resimler klasörüne biraz at.',
 
   setAssistant: 'Piksel asistan',
   setAssistantHint: 'Masaüstünde dolaşan küçük piksel halim',
@@ -267,7 +318,54 @@ const tr: Record<MoreKey, string> = {
   termOpeningProjects: 'Projeler açılıyor…',
   termOpeningSimple: 'Sade görünüme geçiliyor…',
   termContact: 'İletişim',
-  termMore: 'Dene: cv · projects · contact · simple · control',
+  termMore: 'Dene: cv · projects · contact · simple · control · tour · neofetch',
+
+  // taskbar tray, command palette
+  trayPalette: 'Komut paleti (Ctrl K)',
+  trayAch: 'Başarımlar',
+  traySoundOn: 'Ses açık. Kapatmak için tıkla',
+  traySoundOff: 'Ses kapalı. Açmak için tıkla',
+  palPlaceholder: 'Uygulama, dosya ve işlem ara…',
+  palEmpty: 'Eşleşen bir şey yok',
+  palHint: '↑↓ gez · Enter aç · Esc kapat',
+  palSuggested: 'Öneriler',
+  palActions: 'İşlemler',
+  palOpen: 'Aç',
+  palSwitchLang: 'Dili değiştir (EN / TR)',
+  palSoundOn: 'Sesi aç',
+  palSoundOff: 'Sesi kapat',
+  palAssistantShow: 'Pixel asistanı göster',
+  palAssistantHide: 'Pixel asistanı gizle',
+  palTerminal: "Terminal'i aç",
+  palSettings: 'Ayarları aç',
+  palMusic: 'Müzik çaları aç',
+
+  // tour
+  petMenuTour: 'Beni gezdir',
+  ctaTour: 'Gezdir beni',
+  tourLabel: 'Rehberli tur',
+  tourNext: 'İleri',
+  tourStop: 'Bitir',
+  tourDriveCta: 'Kontrolü al',
+
+  // achievements
+  achTitle: 'Başarımlar',
+  achUnlocked: 'Başarım kazanıldı',
+  achCount: 'kazanıldı',
+  achHidden: 'Gizli başarım',
+  achHiddenHint: 'Bunu bulmak için keşfetmeye devam et.',
+  achGroupTwin: 'İkiz',
+  achGroupRooms: 'Odalar',
+  achGroupGames: 'Oyun salonu',
+  achGroupTerminal: 'Terminal',
+  achGroupDesktop: 'Masaüstü',
+  achGroupSound: 'Ses',
+  achMoves: 'hareket keşfedildi',
+
+  // sound settings
+  setSound: 'Ses',
+  setSoundHint: 'Ayak sesleri, kapılar ve müzik. Sen açana kadar kapalı',
+  setVolume: 'Ses düzeyi',
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = {

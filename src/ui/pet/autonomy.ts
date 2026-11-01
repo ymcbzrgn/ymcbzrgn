@@ -7,6 +7,9 @@
 import { useStore } from '../../os/store';
 import { getLang } from '../../os/i18n';
 import type { PetApi } from './control/types';
+import type { SpriteAnim } from '../mascot/Sprite';
+import { getMusicState } from '../../apps/music-player/musicState';
+import { unlock } from '../../os/achievements';
 import { anim } from './control/moves';
 import { ease, easeOutBack, flashIcon, frames, lerp, sleep } from './control/enter';
 
@@ -58,7 +61,20 @@ function pickIcon(): HTMLElement | null {
   return visible.length ? pick(visible) : null;
 }
 
-async function perch(api: PetApi, winId: string) {
+interface PerchOptions {
+  /** what it does up there (default: sit) */
+  anim?: SpriteAnim;
+  /** how long it stays, ms */
+  stay?: [number, number];
+  /** keep going when the window is not in front (the music player plays on in the background) */
+  anyLayer?: boolean;
+  /** a line to say once it is up there (null: none) */
+  say?: string | null;
+  /** end early when this returns true */
+  until?: () => boolean;
+}
+
+async function perch(api: PetApi, winId: string, opts: PerchOptions = {}) {
   const { W, H, FEET, TASKBAR } = api;
   const vh = window.innerHeight;
   const maxGy = Math.max(0, vh - TASKBAR - (H - FEET) - 4);
@@ -99,14 +115,16 @@ async function perch(api: PetApi, winId: string) {
 
   // 3. sit there, riding along with the window
   finishedOnBar = true;
-  api.set({ anim: A_SIT, facing: 1 });
-  api.say(line('perch'), 4200);
-  const until = performance.now() + rand(9000, 15000);
+  api.set({ anim: opts.anim ?? A_SIT, facing: 1 });
+  const said = opts.say === undefined ? line('perch') : opts.say;
+  if (said) api.say(said, 4200);
+  const [stayMin, stayMax] = opts.stay ?? [9000, 15000];
+  const until = performance.now() + rand(stayMin, stayMax);
   await new Promise<void>((resolve) => {
     const step = () => {
       const r = barRect();
-      const frontmost = useStore.getState().focusedWindowId === winId;
-      if (interrupted(api) || !r || !frontmost || performance.now() > until) return resolve();
+      const frontmost = opts.anyLayer || useStore.getState().focusedWindowId === winId;
+      if (interrupted(api) || !r || !frontmost || performance.now() > until || opts.until?.()) return resolve();
       const s = spot(r);
       api.set({ x: s.x, gy: s.gy });
       requestAnimationFrame(step);
@@ -190,6 +208,48 @@ export async function runAutonomy(api: PetApi): Promise<void> {
     // put it back on the taskbar unless somebody else has taken over meanwhile
     if (!interrupted(api)) api.set({ anim: 'idle', fx: 'none', gy: 0, jy: 0, vis: { scale: 1, opacity: 1 } });
     else api.set({ vis: { scale: 1, opacity: 1 } });
+    api.lock(false);
+  }
+}
+
+/* ---------- dancing to the music player ---------- */
+
+const DANCES: Record<string, string[]> = {
+  sunrise: ['dance', 'disco', 'hula', 'skip'],
+  night: ['headphones', 'conduct', 'meditate', 'ballet'],
+  boss: ['headbang', 'drums', 'guitar', 'karate'],
+  dock: ['hula', 'moonwalk', 'conduct', 'dance'],
+};
+const ANY_DANCE = ['dance', 'disco', 'headbang', 'moonwalk', 'robot', 'hula'];
+
+const DANCE_LINES = {
+  en: ['This one is a banger.', 'Who needs a gym? I have this.', 'Keep it playing!', 'My feet have a mind of their own.'],
+  tr: ['Bu parça efsane.', 'Spor salonuna ne gerek, bende bu var.', 'Çalmaya devam et!', 'Ayaklarım kendi kendine oynuyor.'],
+} as const;
+
+/** The music player is playing: dance on its title bar (or right where it stands if there is no such window). */
+export async function runDance(api: PetApi): Promise<void> {
+  if (interrupted(api) || !getMusicState().playing) return;
+  const names = DANCES[getMusicState().track] ?? ANY_DANCE;
+  const move = anim(pick(names), 'dance');
+  const musicStopped = () => !getMusicState().playing;
+  const { windows } = useStore.getState();
+  const player = windows.find((w) => w.appId === 'music-player-app' && w.state === 'normal' && w.bounds.y > api.H - api.FEET + 12);
+  api.lock(true);
+  try {
+    unlock('dance');
+    if (player) {
+      await perch(api, player.id, { anim: move, stay: [9000, 14000], anyLayer: true, say: pick(DANCE_LINES[getLang()]), until: musicStopped });
+    } else {
+      api.set({ anim: move, fx: 'none' });
+      api.say(pick(DANCE_LINES[getLang()]), 3600);
+      const end = performance.now() + rand(6000, 9000);
+      while (!interrupted(api) && !musicStopped() && performance.now() < end) await sleep(300);
+    }
+  } catch (e) {
+    console.warn('[pet]', e);
+  } finally {
+    if (!interrupted(api)) api.set({ anim: 'idle', fx: 'none', gy: 0, jy: 0, vis: { scale: 1, opacity: 1 } });
     api.lock(false);
   }
 }

@@ -1,0 +1,91 @@
+/* Achievement toasts */
+
+.ach-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 62px;
+  z-index: 180;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ach-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  max-width: 320px;
+  padding: 10px 16px 10px 12px;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.97), rgba(15, 23, 42, 0.97));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: ach-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both, ach-out 300ms ease 4300ms forwards;
+}
+
+.ach-toast:hover {
+  border-color: var(--color-accent);
+}
+
+.ach-toast__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.16);
+  font-size: 22px;
+}
+
+.ach-toast__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ach-toast__text small {
+  color: var(--color-accent);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ach-toast__text strong {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+@keyframes ach-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ach-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-toast {
+    animation: ach-out 200ms ease 4400ms forwards;
+  }
+}

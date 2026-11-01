@@ -27,6 +27,8 @@ export interface RoomPropSpec {
   /** short name used in sentences ("Put it in <name>"), when it differs from the label */
   name?: string;
   secret?: boolean;
+  /** a picture drawn on the prop (a photo on an easel's canvas); sprite pixels, relative to the sprite's top-left */
+  overlay?: { src: string; x: number; y: number; w: number; h: number };
 }
 
 /** Wall/floor mood per folder; anything else gets the default room. */
@@ -40,8 +42,8 @@ const THEME_BY_FOLDER: Record<string, string> = {
 };
 export const themeFor = (folderId: string) => THEME_BY_FOLDER[folderId] ?? 'default';
 
-/** Hidden places that are still unfinished: never offered as a secret. */
-export const NEVER_REVEAL = new Set(['music-player-app']);
+/** Hidden places that are not ready yet and must never be offered as a secret (none at the moment). */
+export const NEVER_REVEAL = new Set<string>();
 
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const pickBy = <T,>(list: readonly T[], key: string): T => list[hash(key) % list.length];

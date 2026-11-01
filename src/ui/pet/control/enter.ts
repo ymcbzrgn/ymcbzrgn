@@ -10,6 +10,8 @@ import { openNodeWindow } from '../../../os/utils/openNode';
 import type { StringKey } from '../../../os/i18n/full';
 import type { PetApi } from './types';
 import { anim } from './moves';
+import { sfx } from '../../../os/sound/sfx';
+import { unlock } from '../../../os/achievements';
 
 export interface EnterCtx {
   api: PetApi;
@@ -28,7 +30,7 @@ export interface EnterResult {
 }
 
 /** Windows that have a room the twin can live in. */
-const ROOM_APPS = new Set(['file-explorer', 'github-projects']);
+const ROOM_APPS = new Set(['file-explorer', 'github-projects', 'photo-gallery-app']);
 
 const A_SIT = anim('sit', 'idle');
 export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -102,6 +104,7 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
     if (!alive()) return {};
 
     // 2. hop into the icon
+    sfx('whoosh');
     const intoGy = clamp(vh - TASKBAR - (iconRect.top + iconRect.height * 0.5), 0, maxGy);
     api.set({ anim: 'jump', fx: 'none' });
     await frames(
@@ -122,6 +125,8 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
     // 3. the icon opens its window
     flashIcon(node.id);
     const winId = openNodeWindow(node);
+    unlock('door');
+    sfx('door');
     await sleep(winId ? 160 : 420);
     if (!alive()) return {};
 
@@ -129,6 +134,7 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
     if (!winId) {
       api.set({ anim: 'wave', x: destX, gy: destGy });
       ctx.place(destX, destGy);
+      sfx('pop');
       await frames(320, (k) => show(lerp(0.12, 1, easeOutBack(k)), clamp(k * 2, 0, 1)), alive);
       show(1, 1);
       return {};
@@ -153,6 +159,7 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
     const x = r.left + dx - W / 2;
     const gy = clamp(vh - TASKBAR - (r.top + 3), 0, maxGy);
     ctx.place(x, gy, 1);
+    sfx('pop');
     api.set({ x, gy, jy: 0, facing: 1, anim: 'wave' });
     await frames(360, (k) => show(lerp(0.12, 1, easeOutBack(k)), clamp(k * 2.5, 0, 1)), alive);
     show(1, 1);

@@ -6,10 +6,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '../../os/i18n/full';
 import { useRoomStore } from './roomStore';
+import { addToSet, unlock } from '../../os/achievements';
 import { createRunner, type LaidOut } from './runner';
 import SceneSprite from './SceneSprite';
 import { SPRITES, THEMES, tileUrl } from './scene';
 import type { RoomPropSpec } from './rooms';
+import { timeOfDay } from '../pet/specialDays';
 import './rooms.css';
 
 const SCALE = 2;
@@ -92,6 +94,12 @@ export default function RoomStrip({ windowId, theme: themeId, specs, exit, title
     useRoomStore.getState().resize(worldW, view);
   }, [worldW, view]);
 
+  // achievements: being in a room, and how many different ones
+  useEffect(() => {
+    unlock('room');
+    if (addToSet('rooms', themeId) >= 5) unlock('rooms5');
+  }, [themeId]);
+
   // camera: follows the twin along the world, unless the visitor is looking around (wheel / arrows)
   const pan = useRef({ target: 0, until: 0 });
   const camNow = useRef(0);
@@ -154,6 +162,7 @@ export default function RoomStrip({ windowId, theme: themeId, specs, exit, title
       className="room"
       style={{ height: STRIP_H }}
       data-room-theme={themeId}
+      data-tod={timeOfDay()}
       data-room-window={windowId}
       onWheel={(e) => worldW > view && lookAround(e.deltaX + (Math.abs(e.deltaX) < 1 ? e.deltaY : 0))}
     >
@@ -193,6 +202,15 @@ export default function RoomStrip({ windowId, theme: themeId, specs, exit, title
             onClick={() => void useRoomStore.getState().runner?.use(spec.id)}
           >
             <SceneSprite name={openId === spec.id && spec.spriteOpen ? spec.spriteOpen : spec.sprite} scale={SCALE} fallback={emoji(spec.sprite, spec.secret)} />
+            {spec.overlay && (
+              <img
+                className="room__overlay"
+                src={spec.overlay.src}
+                alt=""
+                draggable={false}
+                style={{ left: spec.overlay.x * SCALE, top: spec.overlay.y * SCALE, width: spec.overlay.w * SCALE, height: spec.overlay.h * SCALE }}
+              />
+            )}
             <span className="room__tag">{spec.label}</span>
           </button>
         ))}

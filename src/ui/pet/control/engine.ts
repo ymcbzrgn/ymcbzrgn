@@ -24,6 +24,8 @@ import { markSeen, readSeen } from './seen';
 import { findIconNear, getIcon, isActivatable, isTypingTarget, type IconTarget } from './world';
 import { enterNode } from './enter';
 import { useRoomStore } from '../../rooms/roomStore';
+import { sfx } from '../../../os/sound/sfx';
+import { unlock } from '../../../os/achievements';
 
 const WALK = 190; // px/s
 const RUN = 380;
@@ -118,6 +120,7 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
   let fidgetAt = 0;
   let warned = false;
   let konami = 0;
+  let stepAcc = 0; // distance walked since the last footstep sound
   let nothingCount = 0;
   let lastSay = 0;
   let target: Target | null = null;
@@ -182,6 +185,9 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
       ui.onSeen(seen);
       const n = seen.size;
       const total = PALETTE.length;
+      if (n >= 10) unlock('move10');
+      if (n >= 25) unlock('move25');
+      if (n >= total) unlock('moveAll');
       const milestone: StringKey | null = n >= total ? 'ctrlFoundAll' : n === 50 ? 'ctrlFound50' : n === 25 ? 'ctrlFound25' : n === 10 ? 'ctrlFound10' : null;
       if (milestone) {
         startAct({ anim: A_CELEBRATE, fx: ui.reduced ? 'none' : 'hop', until: now + 2200, locked: true });
@@ -196,6 +202,7 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
     if (jumpT >= 0 || act?.locked || script || useRoomStore.getState().carrying) return;
     if (act) act = null;
     jumpT = 0;
+    sfx('jump');
     const now = performance.now();
     jumps = jumps.filter((t) => now - t < 6000);
     jumps.push(now);
@@ -203,6 +210,8 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
       jumps = [];
       startAct({ anim: A_DIZZY, fx: 'none', until: now + 2800, locked: true });
       markSeen('dizzy');
+      unlock('dizzy');
+      sfx('dizzy');
       say(ui.t('ctrlDizzy'), 2800);
     }
   }
@@ -376,6 +385,8 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
       dy = (UP.some((k) => keys.has(k)) ? 1 : 0) - (DOWN.some((k) => keys.has(k)) ? 1 : 0);
     }
     let moving = false;
+    const px = x;
+    const pgy = gy;
     if (dx || dy) {
       goal = null;
       pinned = null;
@@ -433,6 +444,13 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
 
     x = clamp(x, minX, maxX);
     gy = clamp(gy, 0, maxGy);
+    if (moving && jumpT < 0) {
+      stepAcc += Math.hypot(x - px, gy - pgy);
+      if (stepAcc > (runNow ? 80 : 54)) {
+        stepAcc = 0;
+        sfx(runNow ? 'run' : 'step');
+      }
+    }
     if (dx > 0.2) facing = 1;
     else if (dx < -0.2) facing = -1;
 
@@ -442,6 +460,7 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
       if (jumpT >= JUMP_MS) {
         jumpT = -1;
         jy = 0;
+        sfx('land');
       } else {
         const k = jumpT / JUMP_MS;
         jy = JUMP_H * 4 * k * (1 - k);
@@ -541,6 +560,8 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
           startAct({ anim: A_CELEBRATE, fx: ui.reduced ? 'none' : 'backflip', until: performance.now() + 2600, locked: true });
           say(ui.t('ctrlKonami'), 4200);
           markSeen('celebrate');
+          unlock('konami');
+          sfx('celebrate');
         }
       }
     } else {
@@ -675,6 +696,7 @@ export function createEngine(api: PetApi, ui: EngineUi): Engine {
         }
       });
       api.set({ anim: 'idle', fx: 'none' });
+      unlock('drive');
       say(ui.t('ctrlStart'), 4200);
       raf = requestAnimationFrame(tick);
     },

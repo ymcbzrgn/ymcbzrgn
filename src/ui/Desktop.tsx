@@ -37,6 +37,7 @@ import './Desktop.css';
 // Onboarding extras are not needed for the first paint: load them as separate chunks.
 const DesktopWidget = lazy(() => import('./widget/DesktopWidget'));
 const Pet = lazy(() => import('./pet/Pet'));
+const Extras = lazy(() => import('./extras/Extras')); // palette, toasts, small sounds
 
 export default function Desktop() {
   const { loadVFS, createNode } = useVFSActions();
@@ -309,6 +310,11 @@ export default function Desktop() {
           <Pet />
         </Suspense>
       )}
+
+      {/* Command palette, achievement toasts ... (lazy overlays) */}
+      <Suspense fallback={null}>
+        <Extras />
+      </Suspense>
 
       {/* Context Menu */}
       {contextMenu && contextMenu.targetNodeId === null && (

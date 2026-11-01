@@ -9,6 +9,7 @@ import { anim } from '../pet/control/moves';
 import { SPRITE_ANCHORS, SPRITE_ANIMS } from '../../assets/sprites/mascot.meta';
 import { useRoomStore, type RoomRunner, type RoomTarget } from './roomStore';
 import type { RoomPropSpec } from './rooms';
+import { sfx } from '../../os/sound/sfx';
 
 export interface LaidOut {
   spec: RoomPropSpec;
@@ -88,7 +89,16 @@ export function createRunner(ctx: RunnerCtx): RoomRunner {
     if (dist < 3) return;
     const dir: 1 | -1 = to >= from ? 1 : -1;
     api.set({ anim: store().carrying ? anim('carryWalk', 'walk') : 'walk', facing: dir, fx: 'none' });
-    await frames((dist / SPEED) * 1000, (k) => api.set({ x: from + (to - from) * k, gy: 0, jy: 0, facing: dir }));
+    let walked = 0;
+    await frames((dist / SPEED) * 1000, (k) => {
+      const x = from + (to - from) * k;
+      walked += Math.abs(x - api.get().x);
+      if (walked > 54) {
+        walked = 0;
+        sfx('step');
+      }
+      api.set({ x, gy: 0, jy: 0, facing: dir });
+    });
   }
 
   /**
@@ -126,6 +136,7 @@ export function createRunner(ctx: RunnerCtx): RoomRunner {
     await approach(api, item.x, toeOffset(api));
     // the item is lifted off the floor: it follows the hands frame by frame (see CarryItem)
     store().setCarrying({ nodeId: c.nodeId, name: item.spec.label, icon: c.item });
+    sfx('pick');
     api.set({ anim: anim('pickup', 'idle') });
     await sleep(lengthOf('pickup'));
   }
@@ -135,6 +146,7 @@ export function createRunner(ctx: RunnerCtx): RoomRunner {
     api.set({ anim: anim('putdown', 'idle') });
     await sleep(lengthOf('putdown'));
     store().setCarrying(null);
+    sfx('drop');
   }
 
   /** Back to where the carried thing came from, and put it down there. */
@@ -173,7 +185,9 @@ export function createRunner(ctx: RunnerCtx): RoomRunner {
     await approach(api, item.x, spec.knock ? 42 : 36);
     if (spec.knock) {
       api.set({ anim: anim('knock', 'wave') });
+      sfx('knock');
       await sleep(lengthOf('knock', 700));
+      sfx('door');
       ctx.open(spec.id);
       await sleep(280);
       await fade(api, 1, 0, 240);

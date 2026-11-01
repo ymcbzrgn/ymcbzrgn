@@ -29,7 +29,12 @@ import { SPRITE_FOOT_PAD, SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sp
 import { BEHAVIORS, type Behavior, type Fx, type Move } from '../../assets/sprites/mascot.behaviors';
 import type { PetApi } from './control/types';
 import { markSeen } from './control/seen';
-import { PET_CONTROL_EVENT } from './petEvents';
+import { PET_CONTROL_EVENT, PET_SCRIPT_EVENT, PET_TOUR_EVENT, requestTour, takeTourRequest, type PetScript } from './petEvents';
+import { onUnlock, unlock } from '../../os/achievements';
+import { specialDayFor } from './specialDays';
+import { MELTDOWN_EVENT } from '../../os/events';
+import { MUSIC_EVENT, getMusicState } from '../../apps/music-player/musicState';
+import { GAME_EVENT, type GameEventDetail } from '../../apps/games/gameEvents';
 import { useRoomStore } from '../rooms/roomStore';
 import './Pet.css';
 
@@ -207,6 +212,8 @@ export default function Pet() {
   const petRef = useRef<HTMLDivElement>(null);
   const liftRef = useRef<HTMLDivElement>(null); // carries the ground + jump offsets: its rect is where the twin visibly is
   const stopControlRef = useRef<(opts?: { silent?: boolean }) => void>(() => {});
+  const tourStartRef = useRef<() => void>(() => {});
+  const enteredRef = useRef(false); // the twin has made its entrance (a tour asked for earlier waits for it)
   const aliveRef = useRef(true);
   const timerRef = useRef(0);
   const bubbleTimerRef = useRef(0);
@@ -352,6 +359,7 @@ export default function Pet() {
   /* ----- start: run in from the left, wave, then live ----- */
   useEffect(() => {
     aliveRef.current = true;
+    enteredRef.current = false;
 
     // First visit: let the welcome window have the stage; otherwise enter right away.
     const delay = onboarded ? 1200 : 9000;
@@ -362,6 +370,8 @@ export default function Pet() {
         setTravelMs(0);
         setX(xRef.current);
         enter('idle');
+        enteredRef.current = true;
+        if (takeTourRequest()) window.setTimeout(() => tourStartRef.current(), 1200);
         return;
       }
       const target = Math.min(floorMax(), 72);
@@ -371,12 +381,27 @@ export default function Pet() {
       schedule(() => {
         setTravelMs(0);
         enter('wave');
+        enteredRef.current = true;
         const seen = readSeen();
         if (!seen.includes('hello')) {
           say(t('petHello'), 4800);
           writeSeen([...seen, 'hello']);
         }
-        schedule(next, 3000);
+        // a special day: say so, once that day
+        const today = specialDayFor(new Date(), new URLSearchParams(window.location.search).get('day'));
+        if (today && !readSeen().includes(`day-${today.id}-${new Date().getFullYear()}`)) {
+          writeSeen([...readSeen(), `day-${today.id}-${new Date().getFullYear()}`]);
+          unlock('holiday');
+          window.setTimeout(() => {
+            if (!aliveRef.current || controlRef.current) return;
+            setFx(today.solemn ? 'none' : 'hop');
+            enter(today.anim);
+            say(today[langRef.current], 7000);
+          }, seen.includes('hello') ? 400 : 5200);
+        }
+        // asked for the tour while it was still loading / running in (palette, welcome window ...)
+        if (takeTourRequest()) schedule(() => tourStartRef.current(), 2400);
+        else schedule(next, today ? 7600 : 3000);
       }, ms + 80);
     }, delay);
 
@@ -707,6 +732,136 @@ export default function Pet() {
   apiRef.current = api;
   nextRef.current = next;
 
+  /* ----- guided tour, terminal commands, reactions to what happens on the desktop ----- */
+  const tourRunning = useRef(false);
+  const scriptRunning = useRef(false);
+  const lastReactRef = useRef(0);
+
+  const startTour = useCallback(() => {
+    // still running in (first visit, or just switched on): the request stays pending and is picked up after the entrance
+    if (!enteredRef.current) return;
+    takeTourRequest();
+    if (tourRunning.current || scriptRunning.current) return;
+    if (controlRef.current) stopControlRef.current({ silent: true });
+    if (useRoomStore.getState().host) useRoomStore.getState().leave();
+    tourRunning.current = true;
+    void import('../tour/tour')
+      .then((m) => m.runTour(apiRef.current as PetApi))
+      .catch(() => {})
+      .finally(() => {
+        tourRunning.current = false;
+      });
+  }, []);
+  tourStartRef.current = startTour;
+
+  useEffect(() => {
+    window.addEventListener(PET_TOUR_EVENT, startTour);
+    return () => window.removeEventListener(PET_TOUR_EVENT, startTour);
+  }, [startTour]);
+
+  // `pet say | do | go` from the terminal
+  useEffect(() => {
+    const onScript = (e: Event) => {
+      const script = (e as CustomEvent<PetScript>).detail;
+      if (!script) return;
+      if (script.kind === 'say') {
+        say(script.text, 5200);
+        return;
+      }
+      if (tourRunning.current || scriptRunning.current) return;
+      if (controlRef.current) stopControlRef.current({ silent: true });
+      if (script.kind === 'go' && useRoomStore.getState().host) useRoomStore.getState().leave();
+      scriptRunning.current = true;
+      void import('./script')
+        .then((m) => m.runPetScript(apiRef.current as PetApi, script))
+        .catch(() => {})
+        .finally(() => {
+          scriptRunning.current = false;
+        });
+    };
+    window.addEventListener(PET_SCRIPT_EVENT, onScript);
+    return () => window.removeEventListener(PET_SCRIPT_EVENT, onScript);
+  }, [say]);
+
+  // A short reaction (cheer, facepalm ...), then back to whatever it was doing
+  const react = useCallback(
+    (a: SpriteAnim, text: string, ms = 1900) => {
+      if (controlRef.current || draggingRef.current || menuRef.current || modeRef.current === 'sleep' || lockRef.current > 0 || tourRunning.current) return;
+      lastReactRef.current = Date.now();
+      window.clearTimeout(timerRef.current);
+      setFx(a === 'celebrate' ? 'hop' : 'none');
+      enter(a);
+      markSeen(a);
+      say(text, ms + 1400);
+      schedule(() => {
+        // somebody grabbed the twin, opened its menu or took over meanwhile: leave it alone
+        if (draggingRef.current || menuRef.current || controlRef.current || lockRef.current > 0 || modeRef.current !== a) return;
+        setFx('none');
+        enter('idle');
+        schedule(next, 900);
+      }, ms);
+    },
+    [enter, next, say, schedule]
+  );
+
+  // The music player is playing: the twin dances (on the player's title bar when it can)
+  useEffect(() => {
+    let timer = 0;
+    const danceNow = () => {
+      window.clearTimeout(timer);
+      if (!aliveRef.current || !getMusicState().playing) return;
+      const free = !(controlRef.current || draggingRef.current || menuRef.current || lockRef.current > 0 || tourRunning.current || scriptRunning.current || modeRef.current === 'sleep');
+      if (free && !worldRef.current.inRoom && !reducedMotion.current && !autonomyRef.current) {
+        autonomyRef.current = true;
+        void import('./autonomy')
+          .then((m) => m.runDance(apiRef.current as PetApi))
+          .catch(() => {})
+          .finally(() => {
+            autonomyRef.current = false;
+          });
+      }
+      timer = window.setTimeout(danceNow, rand(16000, 26000));
+    };
+    const onMusic = (e: Event) => {
+      window.clearTimeout(timer);
+      if ((e as CustomEvent<{ playing: boolean }>).detail.playing) timer = window.setTimeout(danceNow, 1500);
+    };
+    window.addEventListener(MUSIC_EVENT, onMusic);
+    if (getMusicState().playing) timer = window.setTimeout(danceNow, 3000);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(MUSIC_EVENT, onMusic);
+    };
+  }, []);
+
+  useEffect(() => {
+    const cheer = { en: ['Achievement unlocked!', 'Look at you go!', 'Nice one!'], tr: ['Başarım kazandın!', 'Aferin sana!', 'Tam isabet!'] };
+    const oops = { en: ['Ouch!', 'So close!', 'Happens to the best of us.'], tr: ['Eyvah!', 'Ramak kaldı!', 'En iyilerin başına gelir.'] };
+    const win = { en: ['You did it!', 'Champion!'], tr: ['Başardın!', 'Şampiyon!'] };
+    const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
+    const offAch = onUnlock(() => react('celebrate', pick(cheer[langRef.current])), 1500);
+    const onGame = (e: Event) => {
+      const { kind } = (e as CustomEvent<GameEventDetail>).detail;
+      if (Date.now() - lastReactRef.current < 9000) return;
+      if (kind === 'over' && Math.random() < 0.6) react('facepalm', pick(oops[langRef.current]));
+      else if (kind === 'win') react('celebrate', pick(win[langRef.current]));
+    };
+    window.addEventListener(GAME_EVENT, onGame);
+    // after the terminal's `rm -rf /` prank
+    let melt = 0;
+    const onMelt = () => {
+      window.clearTimeout(melt);
+      melt = window.setTimeout(() => react('dizzy', langRef.current === 'tr' ? 'Vay… yeniden mi başladık?' : 'Whoa… did we just reboot?', 2600), 5600);
+    };
+    window.addEventListener(MELTDOWN_EVENT, onMelt);
+    return () => {
+      offAch();
+      window.clearTimeout(melt);
+      window.removeEventListener(GAME_EVENT, onGame);
+      window.removeEventListener(MELTDOWN_EVENT, onMelt);
+    };
+  }, [react]);
+
   /* ----- rooms: joining a folder window's room strip, coming back to the desktop ----- */
   const popIn = useCallback(() => {
     setVisAnim(false);
@@ -869,6 +1024,9 @@ export default function Pet() {
             <div className="pet__menu-title">{t('petMenuTitle')}</div>
             <button type="button" role="menuitem" className="pet__menu-control" onClick={act(controlOn ? () => stopControl() : startControl)}>
               {controlOn ? t('petMenuStopControl') : t('petMenuControl')}
+            </button>
+            <button type="button" role="menuitem" onClick={act(requestTour)}>
+              {t('petMenuTour')}
             </button>
             <button type="button" role="menuitem" onClick={act(() => launch('cv'))}>
               {t('petMenuCv')}

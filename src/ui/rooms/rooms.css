@@ -274,3 +274,35 @@
     transition: none;
   }
 }
+
+/* a photo hung on an easel's canvas */
+.room__overlay {
+  position: absolute;
+  object-fit: cover;
+  pointer-events: none;
+  filter: saturate(1.1) contrast(1.05);
+}
+
+/* the light follows the visitor's clock: the room dims at night and warms up at dusk */
+.room[data-tod='night']::after,
+.room[data-tod='dusk']::after,
+.room[data-tod='dawn']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.room[data-tod='night']::after {
+  background: linear-gradient(180deg, rgba(30, 41, 110, 0.5), rgba(15, 23, 60, 0.38));
+}
+
+.room[data-tod='dusk']::after {
+  background: linear-gradient(180deg, rgba(255, 150, 80, 0.22), rgba(255, 120, 90, 0.12));
+}
+
+.room[data-tod='dawn']::after {
+  background: linear-gradient(180deg, rgba(255, 190, 220, 0.2), rgba(255, 220, 170, 0.1));
+}

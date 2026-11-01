@@ -1,0 +1,184 @@
+/* Achievements window (light, like the other apps) */
+
+.ach {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f7f7f8;
+  color: #1e293b;
+  font-family: var(--font-family);
+}
+
+.ach__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #fff7e0, #ffe9c2);
+  border-bottom: 1px solid #f0d9a8;
+}
+
+.ach__cup {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 0 #f0d9a8;
+  font-size: 32px;
+}
+
+.ach__headtext {
+  flex: 1;
+  min-width: 0;
+}
+
+.ach__headtext h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ach__headtext p {
+  margin: 2px 0 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.ach__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.ach__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  transition: width 400ms ease;
+}
+
+.ach__bar--thin {
+  height: 5px;
+}
+
+.ach__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 14px 14px;
+}
+
+.ach__group h3 {
+  margin: 16px 8px 8px;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ach__moves {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 8px 10px;
+  color: #475569;
+  font-size: 12.5px;
+}
+
+.ach__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ach__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  opacity: 0.62;
+}
+
+.ach__row--on {
+  border-color: #f3d38f;
+  background: #fffaf0;
+  opacity: 1;
+}
+
+.ach__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #f1f5f9;
+  font-size: 20px;
+  filter: grayscale(1);
+}
+
+.ach__row--on .ach__icon {
+  background: #ffefc9;
+  filter: none;
+}
+
+.ach__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ach__text strong {
+  font-size: 13.5px;
+}
+
+.ach__text small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.ach__when {
+  flex: none;
+  color: #94a3b8;
+  font-size: 11.5px;
+}
+
+.ach__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.ach__reset {
+  padding: 5px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ach__reset:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.ach__reset--ask {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #b91c1c;
+}

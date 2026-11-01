@@ -162,6 +162,12 @@
   flex-shrink: 0;
 }
 
+.taskbar__extras {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 112px; /* room for the lazy tray extras, so nothing jumps when they arrive */
+}
+
 .taskbar__privacy {
   display: flex;
   align-items: center;

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { reportOver, reportScore, reportStart } from './gameEvents';
 import './Snake.css';
 
 interface SnakeProps {
@@ -31,6 +32,18 @@ export default function Snake({ windowId }: SnakeProps) {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  // achievements + the pixel twin's reactions
+  useEffect(() => {
+    reportStart('snake');
+  }, []);
+  useEffect(() => {
+    if (score > 0) reportScore('snake', score);
+  }, [score]);
+  useEffect(() => {
+    if (gameOver) reportOver('snake', score);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameOver]);
 
   // Generate random food position (empty cell)
   const generateFood = (currentSnake: Position[]): Position => {

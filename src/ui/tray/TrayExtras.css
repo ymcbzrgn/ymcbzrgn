@@ -1,0 +1,55 @@
+/* Taskbar tray extras (palette, achievements, sound) */
+
+.tray-x {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.tray-x__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity var(--transition-base), background var(--transition-base);
+}
+
+.tray-x__btn:hover,
+.tray-x__btn:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tray-x__btn[aria-pressed='true'] {
+  opacity: 0.9;
+  color: var(--color-accent);
+}
+
+.tray-x__kbd {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.tray-x__count {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .tray-x__kbd {
+    display: none;
+  }
+}

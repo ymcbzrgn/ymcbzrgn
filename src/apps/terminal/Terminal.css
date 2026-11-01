@@ -255,3 +255,57 @@
     animation: none;
   }
 }
+
+/* ========== neofetch ========== */
+.neofetch {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 6px 0 4px;
+  padding: 6px 0;
+}
+
+.neofetch__art {
+  flex: none;
+  filter: drop-shadow(0 4px 0 rgba(0, 255, 0, 0.12));
+}
+
+.neofetch__user {
+  color: #00ff00;
+  font-weight: 700;
+}
+
+.neofetch__rule {
+  color: #00aa00;
+}
+
+.neofetch__row {
+  display: flex;
+  gap: 12px;
+  line-height: 1.45;
+}
+
+.neofetch__key {
+  flex: none;
+  min-width: 78px;
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.neofetch__swatches {
+  display: flex;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.neofetch__swatches span {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 640px) {
+  .neofetch {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

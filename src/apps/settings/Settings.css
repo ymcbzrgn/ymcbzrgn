@@ -141,3 +141,16 @@
     height: 60px;
   }
 }
+
+/* ========== Volume slider ========== */
+.settings-app__radio--slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-app__radio--slider input[type='range'] {
+  flex: 1;
+  max-width: 240px;
+  accent-color: #6366f1;
+}

@@ -1,0 +1,123 @@
+/* Guided tour panel */
+
+.tour-hud {
+  position: fixed;
+  left: 50%;
+  bottom: 64px;
+  z-index: 190;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(620px, calc(100vw - 24px));
+  padding: 12px 14px;
+  border: 1px solid rgba(99, 102, 241, 0.55);
+  border-radius: var(--border-radius-xl);
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  transform: translateX(-50%);
+  animation: tour-in 260ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.tour-hud__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.25);
+  font-size: 22px;
+}
+
+.tour-hud__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tour-hud__top {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--color-text-tertiary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tour-hud__count {
+  font-family: var(--font-family-mono);
+  letter-spacing: 0;
+}
+
+.tour-hud__title {
+  display: block;
+  margin-top: 1px;
+  font-size: 14.5px;
+}
+
+.tour-hud__text {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.tour-hud__actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tour-hud__btn {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tour-hud__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.tour-hud__btn--go {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.tour-hud__btn--go:hover {
+  background: var(--color-primary-dark);
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+}
+
+@media (max-width: 560px) {
+  .tour-hud {
+    flex-wrap: wrap;
+  }
+  .tour-hud__actions {
+    flex-direction: row;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hud {
+    animation: none;
+  }
+}

@@ -32,6 +32,7 @@ export function getLang(): Lang {
 
 export function setLang(lang: Lang): void {
   useStore.getState().updateSettings({ langOverride: lang });
+  window.dispatchEvent(new Event('yb:lang')); // (the lazy overlay host awards an achievement for it)
 }
 
 export function toggleLang(): void {

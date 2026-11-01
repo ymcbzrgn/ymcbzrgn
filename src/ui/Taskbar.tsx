@@ -5,13 +5,16 @@
  * Shows open windows, allows switching between them
  */
 
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { useWindows, useFocusedWindow, useWindowActions } from '@os/store';
 import { getIconDisplay } from '../os/utils/iconMap';
 import { useLang, useT } from '../os/i18n';
 import { useLaunch } from '../os/hooks/useLaunch';
 import { openSimpleView } from '../os/view';
 import './Taskbar.css';
+
+// Palette, achievements and sound switch: lazy, so none of it weighs on the first paint
+const TrayExtras = lazy(() => import('./tray/TrayExtras'));
 
 const MAX_VISIBLE_WINDOWS = 10;
 
@@ -92,6 +95,11 @@ export default function Taskbar() {
 
       {/* System Tray / Clock */}
       <div className="taskbar__tray">
+        <div className="taskbar__extras">
+          <Suspense fallback={null}>
+            <TrayExtras />
+          </Suspense>
+        </div>
         <button
           type="button"
           className="taskbar__privacy"

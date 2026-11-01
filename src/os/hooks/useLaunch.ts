@@ -13,7 +13,7 @@ import { PROFILE } from '../content/profile';
 import { getInitialBounds } from '../utils/windowBounds';
 import { useAppOpener } from './useAppOpener';
 
-export type LaunchTarget = 'welcome' | 'cv' | 'projects' | 'terminal' | 'settings';
+export type LaunchTarget = 'welcome' | 'cv' | 'projects' | 'terminal' | 'settings' | 'achievements';
 
 interface LaunchSpec {
   appId: string;
@@ -38,6 +38,8 @@ function specFor(target: LaunchTarget): LaunchSpec {
       return { appId: 'terminal-app', title: 'Terminal', icon: '🖥️', singleton: false };
     case 'settings':
       return { appId: 'settings-app', title: tr ? 'Ayarlar' : 'Settings', icon: '⚙️', singleton: true };
+    case 'achievements':
+      return { appId: 'achievements-app', title: tr ? 'Başarımlar' : 'Achievements', icon: '🏆', singleton: true };
   }
 }
 

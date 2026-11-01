@@ -1,9 +1,13 @@
 /**
- * Music Player App
- * HTML5 Audio-based music player
+ * Music Player: four chiptune tracks that are synthesised live in the browser (see ./engine and
+ * ./tracks), with a spectrum display. Nothing is downloaded, nothing is a recording.
+ * The pixel twin dances to whatever plays.
  */
-
-import { useState, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useStore } from '../../os/store';
+import { useLang } from '../../os/i18n/full';
+import { destroyPlayer, getPlayer } from './engine';
+import { TRACKS } from './tracks';
 import './MusicPlayer.css';
 
 interface MusicPlayerProps {
@@ -11,248 +15,171 @@ interface MusicPlayerProps {
   nodeId?: string;
 }
 
-interface Track {
-  id: string;
-  title: string;
-  artist: string;
-  url: string;
-}
+const COPY = {
+  en: { playlist: 'Playlist', hint: 'Every sound here is synthesised live in your browser. No audio files, just maths.', volume: 'Volume', play: 'Play', pause: 'Pause', prev: 'Previous track', next: 'Next track', seek: 'Position' },
+  tr: { playlist: 'Çalma listesi', hint: 'Buradaki her ses tarayıcında canlı üretilir. Ses dosyası yok, sadece matematik.', volume: 'Ses düzeyi', play: 'Çal', pause: 'Duraklat', prev: 'Önceki parça', next: 'Sonraki parça', seek: 'Konum' },
+} as const;
 
-// Sample playlist (replace with actual audio files)
-const SAMPLE_PLAYLIST: Track[] = [
-  {
-    id: 'track-1',
-    title: 'Sample Track 1',
-    artist: 'Demo Artist',
-    url: '', // Placeholder - would be actual mp3 URL
-  },
-  {
-    id: 'track-2',
-    title: 'Sample Track 2',
-    artist: 'Demo Artist',
-    url: '', // Placeholder
-  },
-  {
-    id: 'track-3',
-    title: 'Sample Track 3',
-    artist: 'Demo Artist',
-    url: '', // Placeholder
-  },
-];
+const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+const BARS = 16;
 
 export default function MusicPlayer({ windowId }: MusicPlayerProps) {
-  const [playlist] = useState<Track[]>(SAMPLE_PLAYLIST);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const lang = useLang();
+  const c = COPY[lang];
+  const player = getPlayer();
+  const [index, setIndex] = useState(player.trackIndex());
+  const [playing, setPlaying] = useState(player.isPlaying());
+  const [started, setStarted] = useState(player.isPlaying() || player.position().seconds > 0);
+  const [pos, setPos] = useState(player.position());
   const [volume, setVolume] = useState(70);
+  const [failed, setFailed] = useState(false);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const indexRef = useRef(index);
+  indexRef.current = index;
 
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const play = useCallback(
+    (i: number) => {
+      const ok = player.start(i);
+      setFailed(!ok);
+      if (!ok) return;
+      setIndex(player.trackIndex());
+      setPlaying(true);
+      setStarted(true);
+    },
+    [player]
+  );
 
-  const currentTrack = playlist[currentTrackIndex];
-
-  // Update audio volume
+  // when a track has run its course, the next one starts
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
+    player.onEnd(() => play(indexRef.current + 1));
+    return () => player.onEnd(null);
+  }, [player, play]);
 
-  // Audio event handlers
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
+  // minimised: the window still exists, the music goes on. Closed: it is gone, so is the music.
+  useEffect(
+    () => () => {
+      if (!useStore.getState().windows.some((w) => w.id === windowId)) destroyPlayer();
+    },
+    [windowId]
+  );
 
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
-  };
-
-  const handleEnded = () => {
-    // Auto-play next track
-    nextTrack();
-  };
-
-  // Play/Pause
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      // Note: In a real app, we'd check if URL exists
-      if (currentTrack.url) {
-        audioRef.current.play();
-        setIsPlaying(true);
-      } else {
-        alert('No audio file available. This is a demo placeholder.');
+  // progress + spectrum
+  useEffect(() => {
+    let raf = 0;
+    let last = 0;
+    const draw = (now: number) => {
+      raf = requestAnimationFrame(draw);
+      if (now - last < 50 || document.hidden) return;
+      last = now;
+      setPos(player.position());
+      setPlaying(player.isPlaying());
+      const el = canvas.current;
+      const g = el?.getContext('2d');
+      if (!el || !g) return;
+      const w = el.width;
+      const h = el.height;
+      g.clearRect(0, 0, w, h);
+      const an = player.analyser();
+      const data = new Uint8Array(an ? an.frequencyBinCount : 0);
+      if (an && player.isPlaying()) an.getByteFrequencyData(data);
+      const gap = 4;
+      const bw = Math.floor((w - gap * (BARS - 1)) / BARS);
+      const block = 6;
+      for (let i = 0; i < BARS; i += 1) {
+        const v = data.length ? data[Math.min(data.length - 1, Math.floor(i * 0.9))] / 255 : 0;
+        const rows = Math.max(1, Math.round((v * h) / block));
+        for (let r = 0; r < rows; r += 1) {
+          g.fillStyle = r > rows - 3 ? '#fbbf24' : r > 8 ? '#f472b6' : '#818cf8';
+          g.fillRect(i * (bw + gap), h - (r + 1) * block + 1, bw, block - 1);
+        }
       }
-    }
+    };
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [player]);
+
+  const toggle = () => {
+    if (playing) {
+      player.pause();
+      setPlaying(false);
+    } else if (started && player.resume()) {
+      setPlaying(true);
+    } else play(index);
   };
 
-  // Stop
-  const stop = () => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-    setCurrentTime(0);
-    setIsPlaying(false);
-  };
-
-  // Previous track
-  const prevTrack = () => {
-    const newIndex = currentTrackIndex > 0 ? currentTrackIndex - 1 : playlist.length - 1;
-    setCurrentTrackIndex(newIndex);
-    setIsPlaying(false);
-    setCurrentTime(0);
-  };
-
-  // Next track
-  const nextTrack = () => {
-    const newIndex = currentTrackIndex < playlist.length - 1 ? currentTrackIndex + 1 : 0;
-    setCurrentTrackIndex(newIndex);
-    setIsPlaying(false);
-    setCurrentTime(0);
-  };
-
-  // Seek
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
-    }
-  };
-
-  // Format time (seconds to MM:SS)
-  const formatTime = (seconds: number): string => {
-    if (isNaN(seconds)) return '00:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
+  const track = TRACKS[index];
   return (
-    <div className="music-player-app">
-      {/* Hidden audio element */}
-      <audio
-        ref={audioRef}
-        src={currentTrack.url}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleEnded}
-      />
+    <div className="mp">
+      <div className="mp__screen">
+        <canvas ref={canvas} width={320} height={78} aria-hidden="true" />
+        <span className={`mp__led${playing ? ' mp__led--on' : ''}`} aria-hidden="true" />
+      </div>
 
-      {/* Album Art Placeholder */}
-      <div className="music-player-app__artwork">
-        <div className="music-player-app__artwork-placeholder">
-          🎵
+      <div className="mp__info" aria-live="polite">
+        <div className="mp__title">{track.title}</div>
+        <div className="mp__artist">
+          {track.artist} · {track.bpm} BPM
         </div>
+        <div className="mp__note">{track.note[lang]}</div>
       </div>
 
-      {/* Track Info */}
-      <div className="music-player-app__info">
-        <div className="music-player-app__title">{currentTrack.title}</div>
-        <div className="music-player-app__artist">{currentTrack.artist}</div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="music-player-app__progress-section">
-        <span className="music-player-app__time">{formatTime(currentTime)}</span>
+      <div className="mp__progress">
+        <span>{fmt(pos.seconds)}</span>
         <input
           type="range"
-          className="music-player-app__progress"
-          min="0"
-          max={duration || 0}
-          value={currentTime}
-          onChange={handleSeek}
-          step="0.1"
+          min={0}
+          max={1000}
+          value={Math.round((pos.seconds / pos.total) * 1000) || 0}
+          aria-label={c.seek}
+          onChange={(e) => {
+            player.seek(Number(e.target.value) / 1000);
+            setPos(player.position());
+          }}
         />
-        <span className="music-player-app__time">{formatTime(duration)}</span>
+        <span>{fmt(pos.total)}</span>
       </div>
 
-      {/* Controls */}
-      <div className="music-player-app__controls">
-        <button
-          onClick={prevTrack}
-          className="music-player-app__button music-player-app__button--control"
-          title="Previous"
-        >
+      <div className="mp__controls">
+        <button type="button" onClick={() => play(index - 1)} aria-label={c.prev} title={c.prev}>
           ⏮
         </button>
-
-        <button
-          onClick={togglePlay}
-          className="music-player-app__button music-player-app__button--play"
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? '⏸' : '▶'}
+        <button type="button" className="mp__play" onClick={toggle} aria-label={playing ? c.pause : c.play} title={playing ? c.pause : c.play}>
+          {playing ? '⏸' : '▶'}
         </button>
-
-        <button
-          onClick={stop}
-          className="music-player-app__button music-player-app__button--control"
-          title="Stop"
-        >
-          ⏹
-        </button>
-
-        <button
-          onClick={nextTrack}
-          className="music-player-app__button music-player-app__button--control"
-          title="Next"
-        >
+        <button type="button" onClick={() => play(index + 1)} aria-label={c.next} title={c.next}>
           ⏭
         </button>
-      </div>
-
-      {/* Volume Control */}
-      <div className="music-player-app__volume">
-        <span className="music-player-app__volume-icon">🔊</span>
-        <input
-          type="range"
-          className="music-player-app__volume-slider"
-          min="0"
-          max="100"
-          value={volume}
-          onChange={(e) => setVolume(parseInt(e.target.value))}
-        />
-        <span className="music-player-app__volume-value">{volume}%</span>
-      </div>
-
-      {/* Playlist */}
-      <div className="music-player-app__playlist">
-        <div className="music-player-app__playlist-header">Playlist</div>
-        {playlist.map((track, index) => (
-          <div
-            key={track.id}
-            className={`music-player-app__playlist-item ${
-              index === currentTrackIndex ? 'music-player-app__playlist-item--active' : ''
-            }`}
-            onClick={() => {
-              setCurrentTrackIndex(index);
-              setIsPlaying(false);
-              setCurrentTime(0);
+        <label className="mp__volume">
+          <span aria-hidden="true">🔊</span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={volume}
+            aria-label={c.volume}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setVolume(v);
+              player.setVolume(v / 100);
             }}
-          >
-            <span className="music-player-app__playlist-number">{index + 1}</span>
-            <div className="music-player-app__playlist-info">
-              <div className="music-player-app__playlist-title">{track.title}</div>
-              <div className="music-player-app__playlist-artist">{track.artist}</div>
-            </div>
-          </div>
+          />
+        </label>
+      </div>
+
+      {failed && <p className="mp__error">{lang === 'tr' ? 'Bu tarayıcı ses çalamıyor.' : 'This browser cannot play audio.'}</p>}
+
+      <div className="mp__list" role="list" aria-label={c.playlist}>
+        {TRACKS.map((t, i) => (
+          <button key={t.id} type="button" role="listitem" className={`mp__row${i === index ? ' mp__row--on' : ''}`} onClick={() => play(i)}>
+            <span className="mp__num">{i === index && playing ? '♪' : i + 1}</span>
+            <span className="mp__name">{t.title}</span>
+            <span className="mp__bpm">{t.bpm}</span>
+          </button>
         ))}
       </div>
 
-      {/* Demo Notice */}
-      <div className="music-player-app__notice">
-        ℹ️ Demo mode - Audio files not included
-      </div>
+      <p className="mp__hint">{c.hint}</p>
     </div>
   );
 }

@@ -3,7 +3,7 @@
  * Interactive command-line interface with VFS integration
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useVFSNodes, useVFSActions } from '../../os/store';
 import type { VFSNode } from '../../os/types';
 import { useLang, useT } from '../../os/i18n/full';
@@ -13,6 +13,18 @@ import { useStore } from '../../os/store';
 import { requestPetControl } from '../../ui/pet/petEvents';
 import { PROFILE } from '../../os/content/profile';
 import { PROFILE_TEXT } from '../../os/content/profileText';
+import { SPRITE_ANIMS } from '../../assets/sprites/mascot.meta';
+import { ACHIEVEMENT_IDS, unlock, unlockedAt } from '../../os/achievements';
+import { DEFS } from '../../os/achievementDefs';
+import { setSoundOn, soundOn } from '../../os/sound/ctx';
+import { sfx } from '../../os/sound/sfx';
+import { requestMeltdown } from '../../os/events';
+import { openNodeWindow } from '../../os/utils/openNode';
+import { fold } from '../../os/utils/text';
+import { requestTour, sendPetScript } from '../../ui/pet/petEvents';
+import { FILTERS, drawTree, isMeltdown, runFilter, splitPipes, tokenize, type TreeNode } from './shell';
+import Neofetch from './Neofetch';
+import { neofetchText } from './neofetchData';
 import './Terminal.css';
 
 interface TerminalProps {
@@ -24,6 +36,8 @@ interface CommandOutput {
   command: string;
   output: string;
   type: 'success' | 'error';
+  /** rich output (neofetch); `output` is its plain-text version, used by pipes */
+  node?: ReactNode;
 }
 
 export default function Terminal({ windowId }: TerminalProps) {
@@ -175,7 +189,8 @@ export default function Terminal({ windowId }: TerminalProps) {
     if (node.targetUrl?.startsWith('data:')) {
       try {
         const base64Data = node.targetUrl.split(',')[1];
-        const decoded = atob(base64Data);
+        const bytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+        const decoded = new TextDecoder().decode(bytes); // (UTF-8: Turkish letters survive)
         return { command: input, output: decoded, type: 'success' };
       } catch (err) {
         return { command: input, output: 'Error: Failed to read file', type: 'error' };
@@ -403,6 +418,20 @@ export default function Terminal({ windowId }: TerminalProps) {
       whoami: 'whoami - Current user\nUsage: whoami\nDisplays the current user name.',
       date: 'date - Current date/time\nUsage: date\nDisplays the current date and time.',
       help: 'help - Show all commands\nUsage: help\nLists all available commands with examples.',
+      tour: 'tour - Guided tour\nUsage: tour\nThe pixel twin shows you around: CV, projects, games, terminal, links.',
+      neofetch: 'neofetch - System info\nUsage: neofetch\nThe twin next to the specs of this machine.',
+      achievements: 'achievements - Trophies\nUsage: achievements\nLists what you unlocked and opens the Achievements window.',
+      sound: 'sound - Sound effects\nUsage: sound [on|off]\nTurns the chiptune sound effects and music on or off.',
+      pet: 'pet - Boss the twin around\nUsage: pet say <text> | pet do <move> | pet go <place> | pet list\nThe pixel assistant must be switched on.',
+      tree: 'tree - Folder tree\nUsage: tree\nDraws the folders and files below the current directory.',
+      open: 'open - Open a file or app\nUsage: open <name>\nOpens it in a window, like a double-click.',
+      git: 'git - Version history\nUsage: git log [--oneline] [-n N]\nThe real recent history of this site.',
+      grep: 'grep - Search lines\nUsage: grep [-i] [-v] [-c] [-n] <pattern> [file]\nWorks on a file or behind a pipe.',
+      head: 'head - First lines\nUsage: head [-n N] [file]\nWorks on a file or behind a pipe.',
+      tail: 'tail - Last lines\nUsage: tail [-n N] [file]\nWorks on a file or behind a pipe.',
+      wc: 'wc - Count\nUsage: wc [-l|-w|-c] [file]\nLines, words and characters.',
+      sort: 'sort - Sort lines\nUsage: sort [-r] [file]',
+      uniq: 'uniq - Drop repeated neighbours\nUsage: uniq [file]',
     };
 
     const manual = manPages[cmd];
@@ -488,6 +517,179 @@ export default function Terminal({ windowId }: TerminalProps) {
     return { command: input, output: '', type: 'success' };
   };
 
+  // ---- Extras: tour, neofetch, pet, git log, pipes ... ----
+  const ok = (output: string, node?: ReactNode): CommandOutput => ({ command: input, output, type: 'success', node });
+  const fail = (output: string): CommandOutput => ({ command: input, output, type: 'error' });
+  const tr = lang === 'tr';
+
+  const cmdTour = (): CommandOutput => {
+    window.setTimeout(requestTour, 350);
+    return ok(tr ? 'Tur başlıyor… (Esc ile durdurabilirsin)' : 'Starting the tour… (Esc stops it)');
+  };
+
+  const cmdNeofetch = (): CommandOutput => {
+    unlock('neofetch');
+    return ok(neofetchText(), <Neofetch />);
+  };
+
+  const cmdAchievements = (): CommandOutput => {
+    const got = unlockedAt();
+    const rows = DEFS.filter((d) => got[d.id]).map((d) => `${d.icon} ${d[lang][0]}`);
+    launch('achievements');
+    return ok([`${Object.keys(got).length}/${ACHIEVEMENT_IDS.length}`, ...rows].join('\n'));
+  };
+
+  const cmdSound = (args: string[]): CommandOutput => {
+    const arg = args[0]?.toLowerCase();
+    if (arg && arg !== 'on' && arg !== 'off') return fail('Usage: sound [on|off]');
+    const next = arg ? arg === 'on' : !soundOn();
+    setSoundOn(next); // (inside the Enter key press: lets the browser start the audio)
+    if (next) {
+      unlock('sound');
+      sfx('ok');
+    }
+    return ok(next ? (tr ? 'Ses açık.' : 'Sound is on.') : tr ? 'Ses kapalı.' : 'Sound is off.');
+  };
+
+  const childrenOf = (id: string) =>
+    getChildren(id)
+      .filter((n) => !n.hidden && n.parentId !== 'trash')
+      .sort((a, b) => ((a.type === 'folder') !== (b.type === 'folder') ? (a.type === 'folder' ? -1 : 1) : a.name.localeCompare(b.name)));
+
+  const cmdTree = (): CommandOutput => {
+    const dir = getCurrentDir();
+    if (!dir) return fail('Error: Current directory not found');
+    const build = (n: VFSNode, depth: number): TreeNode => ({
+      name: n.name,
+      folder: n.type === 'folder',
+      children: n.type === 'folder' && depth < 3 ? childrenOf(n.id).map((c) => build(c, depth + 1)) : [],
+    });
+    return ok(drawTree({ ...build(dir, 0), name: currentPath }));
+  };
+
+  const cmdOpen = (args: string[]): CommandOutput => {
+    if (!args.length) return fail('Usage: open <name>');
+    const node = findNode(args.join(' '));
+    if (!node || node.hidden) return fail(`Error: '${args.join(' ')}' not found`);
+    openNodeWindow(node);
+    return ok(tr ? `${node.name} açılıyor…` : `Opening ${node.name}…`);
+  };
+
+  const cmdPet = (args: string[]): CommandOutput => {
+    const sub = args[0]?.toLowerCase();
+    const places = vfsNodes.filter((n) => n.parentId === 'root' && !n.hidden);
+    if (!sub || sub === 'help') {
+      return ok(
+        [
+          'pet say <text>      ' + (tr ? 'ikiz bir şey söyler' : 'the twin says something'),
+          'pet do <move>       ' + (tr ? 'bir hareket yapar (pet list: hepsi)' : 'it performs a move (pet list: all of them)'),
+          'pet go <place>      ' + (tr ? 'masaüstündeki bir yere koşar ve içine girer' : 'it runs to a desktop icon and hops in'),
+          'pet list            ' + (tr ? 'hareketleri listeler' : 'list the moves'),
+        ].join('\n')
+      );
+    }
+    if (sub === 'list') {
+      const skip = new Set(['idle', 'drag', 'walk', 'run', 'walkUp', 'walkDown', 'carryIdle', 'carryWalk', 'pickup', 'putdown']);
+      return ok(Object.keys(SPRITE_ANIMS).filter((a) => !skip.has(a)).join(' '));
+    }
+    if (useStore.getState().settings.assistantHidden) return fail(t('termControlOff'));
+    if (sub === 'say') {
+      const text = args.slice(1).join(' ').trim();
+      if (!text) return fail('Usage: pet say <text>');
+      sendPetScript({ kind: 'say', text: text.slice(0, 140) });
+      return ok('');
+    }
+    if (sub === 'do') {
+      const name = args[1];
+      if (!name) return fail('Usage: pet do <move>   (pet list)');
+      const real = Object.keys(SPRITE_ANIMS).find((a) => a.toLowerCase() === name.toLowerCase());
+      if (!real) return fail(`pet: ${tr ? 'böyle bir hareket yok' : 'no such move'}: ${name}`);
+      sendPetScript({ kind: 'do', anim: real });
+      return ok('');
+    }
+    if (sub === 'go') {
+      const name = args.slice(1).join(' ');
+      if (!name) return ok((tr ? 'Gidilebilecek yerler: ' : 'Places: ') + places.map((n) => n.name).join(', '));
+      const q = fold(name);
+      const hit = places.find((n) => fold(n.name) === q) ?? places.find((n) => fold(n.name).startsWith(q)) ?? places.find((n) => fold(n.name).includes(q));
+      if (!hit) return fail(`pet: ${tr ? 'masaüstünde yok' : 'not on the desktop'}: ${name}`);
+      sendPetScript({ kind: 'go', target: hit.id });
+      return ok(tr ? `${hit.name} yoluna çıktı…` : `On its way to ${hit.name}…`);
+    }
+    return fail(`pet: ${tr ? 'bilinmeyen alt komut' : 'unknown subcommand'}: ${sub}`);
+  };
+
+  const cmdGit = (args: string[]): CommandOutput => {
+    if (args[0] !== 'log') return fail(tr ? "git: bu terminalde yalnızca 'git log' var." : "git: only 'git log' is available here.");
+    if (!__GIT_LOG__.length) return fail(tr ? '(bu sürümde geçmiş yok)' : '(no history in this build)');
+    const oneline = args.includes('--oneline');
+    const nIdx = args.indexOf('-n');
+    const nArg = nIdx >= 0 ? args[nIdx + 1] : args.find((a) => /^-\d+$/.test(a))?.slice(1);
+    const n = Math.max(1, parseInt(nArg ?? '', 10) || __GIT_LOG__.length);
+    const rows = __GIT_LOG__.slice(0, n);
+    const text = oneline
+      ? rows.map((r) => `${r[0]} ${r[3]}`).join('\n')
+      : rows.map((r) => `commit ${r[0]}\nAuthor: ${r[1]}\nDate:   ${r[2]}\n\n    ${r[3]}`).join('\n\n');
+    return ok(text);
+  };
+
+  const cmdSudo = (args: string[]): CommandOutput => {
+    unlock('sudo');
+    const rest = args.join(' ').toLowerCase().replace(/[\s_]+/g, '-');
+    if (rest === 'hire-me' || rest === 'hire-yamac') {
+      sendPetScript({ kind: 'do', anim: 'celebrate' });
+      sfx('celebrate');
+      return ok(`[sudo] password for visitor: ********\n${tr ? 'İzin verildi.' : 'Permission granted.'}\n${PROFILE.email}`);
+    }
+    return fail(tr ? 'visitor, sudoers dosyasında değil. Bu olay rapor edilecek.' : 'visitor is not in the sudoers file. This incident will be reported.');
+  };
+
+  const cmdExit = (): CommandOutput => {
+    window.setTimeout(() => useStore.getState().closeWindow(windowId), 250);
+    return ok('logout');
+  };
+
+  /** rm -rf / : the desktop "crashes" and comes back; nothing is touched. */
+  const cmdMeltdown = (): CommandOutput => {
+    unlock('oops');
+    window.setTimeout(requestMeltdown, 700);
+    return fail(tr ? "rm: '/' siliniyor…\nrm: çekirdek paniği tetiklendi" : "rm: removing '/' …\nrm: kernel panic triggered");
+  };
+
+  /** grep / head / tail ... with a file instead of a pipe */
+  const cmdFilter = (command: string, args: string[]): CommandOutput => {
+    const file = [...args].reverse().find((a) => !a.startsWith('-') && findNode(a)?.type === 'file');
+    if (!file) return fail(`${command}: ${tr ? 'bir dosya ver ya da boru (|) kullan' : 'give it a file, or use a pipe'}`);
+    const content = cmdCat([file]);
+    if (content.type === 'error') return content;
+    const result = runFilter(command, args.filter((a) => a !== file), content.output);
+    return result.ok ? ok(result.out) : fail(result.out);
+  };
+
+  const extrasHelp = tr
+    ? `Eğlence ve portfolyo:
+    tour            piksel ikizle rehberli tur
+    neofetch        bu makinenin özellikleri
+    achievements    başarımların
+    sound [on|off]  ses efektleri
+    pet <say|do|go> piksel ikizi yönet
+    tree            klasör ağacını çiz
+    open <ad>       dosya ya da uygulama aç
+    git log         bu sitenin gerçek geçmişi
+    cat About-Me.md | grep -i ai     (grep head tail wc sort uniq)
+`
+    : `Fun & portfolio extras:
+    tour            guided tour with the pixel twin
+    neofetch        specs of this machine
+    achievements    your trophies
+    sound [on|off]  sound effects
+    pet <say|do|go> boss the pixel twin around
+    tree            draw the folder tree
+    open <name>     open a file or an app
+    git log         the real history of this site
+    cat About-Me.md | grep -i ai     (grep head tail wc sort uniq)
+`;
+
   // Command: help - show available commands
   const cmdHelp = (args: string[]): CommandOutput => {
     const helpText = `
@@ -499,6 +701,7 @@ ${t('termHelpTitle')}:
     simple          ${t('termHelpSimple')}
     control         ${t('termHelpControl')}
 
+${extrasHelp}
 Available Commands:
   File Navigation:
     ls              List directory contents
@@ -539,14 +742,12 @@ Examples:
     return { command: input, output: helpText, type: 'success' };
   };
 
-  // Command dispatcher
-  const executeCommand = (cmd: string): CommandOutput => {
-    const trimmed = cmd.trim();
-    if (!trimmed) {
+  // One command (no pipes)
+  const runOne = (cmd: string): CommandOutput => {
+    const parts = tokenize(cmd.trim());
+    if (!parts.length) {
       return { command: '', output: '', type: 'success' };
     }
-
-    const parts = trimmed.split(/\s+/);
     const command = parts[0].toLowerCase();
     const args = parts.slice(1);
 
@@ -598,13 +799,63 @@ Examples:
         return cmdControl();
       case 'welcome':
         return cmdWelcome();
+      case 'tour':
+        return cmdTour();
+      case 'neofetch':
+        return cmdNeofetch();
+      case 'achievements':
+      case 'trophies':
+        return cmdAchievements();
+      case 'sound':
+        return cmdSound(args);
+      case 'tree':
+        return cmdTree();
+      case 'open':
+        return cmdOpen(args);
+      case 'pet':
+        return cmdPet(args);
+      case 'git':
+        return cmdGit(args);
+      case 'sudo':
+        return cmdSudo(args);
+      case 'exit':
+      case 'quit':
+        return cmdExit();
       default:
+        if (FILTERS.has(command)) return cmdFilter(command, args);
         return {
           command: input,
           output: `Command not found: ${command}\nType 'help' for available commands.`,
           type: 'error'
         };
     }
+  };
+
+  // Command dispatcher: rm -rf / is a joke, `a | b | c` is a pipeline, everything else runs as is
+  const executeCommand = (cmd: string): CommandOutput => {
+    const trimmed = cmd.trim();
+    if (!trimmed) {
+      return { command: '', output: '', type: 'success' };
+    }
+    if (isMeltdown(trimmed)) return cmdMeltdown();
+
+    const segments = splitPipes(trimmed);
+    if (segments.length < 2) return runOne(trimmed);
+
+    let current = runOne(segments[0]);
+    if (current.type === 'error') return { ...current, command: input };
+    let text = current.output;
+    for (const segment of segments.slice(1)) {
+      const [name, ...args] = tokenize(segment);
+      const filter = name?.toLowerCase() ?? '';
+      if (!FILTERS.has(filter)) return fail(`${name || '|'}: ${tr ? 'borudan sonra kullanılamaz (grep, head, tail, wc, sort, uniq, tac, nl)' : 'cannot be used after a pipe (grep, head, tail, wc, sort, uniq, tac, nl)'}`);
+      const result = runFilter(filter, args, text);
+      if (!result.ok) return fail(result.out);
+      text = result.out;
+    }
+    unlock('pipe');
+    current = ok(text);
+    return current;
   };
 
   // Handle command submission
@@ -685,10 +936,14 @@ Examples:
                 <span className="terminal-app__prompt">{currentPath}$</span> {entry.command}
               </div>
             )}
-            {entry.output && (
-              <div className={`terminal-app__result terminal-app__result--${entry.type}`}>
-                {entry.output}
-              </div>
+            {entry.node ? (
+              <div className="terminal-app__result terminal-app__result--success">{entry.node}</div>
+            ) : (
+              entry.output && (
+                <div className={`terminal-app__result terminal-app__result--${entry.type}`}>
+                  {entry.output}
+                </div>
+              )
             )}
           </div>
         ))}

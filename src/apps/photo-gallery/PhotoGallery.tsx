@@ -3,10 +3,17 @@
  * Slideshow viewer with VFS integration
  */
 
-import { useState, useEffect } from 'react';
-import { useVFSNodes } from '../../os/store';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { useStore, useVFSNodes } from '../../os/store';
 import type { VFSNode } from '../../os/types';
+import { useT } from '../../os/i18n/full';
+import { useIsMobile } from '../../os/hooks/useDeviceType';
+import { useRoomStore } from '../../ui/rooms/roomStore';
+import '../../ui/rooms/roomToggle.css';
 import './PhotoGallery.css';
+
+// The gallery hall (the pixel twin living in this window) is loaded only when somebody asks for it
+const PhotosRoom = lazy(() => import('../../ui/rooms/PhotosRoom'));
 
 interface PhotoGalleryProps {
   windowId: string;
@@ -14,6 +21,10 @@ interface PhotoGalleryProps {
 }
 
 export default function PhotoGallery({ windowId }: PhotoGalleryProps) {
+  const t = useT();
+  const isMobile = useIsMobile();
+  const assistantHidden = useStore((s) => s.settings.assistantHidden);
+  const roomOn = useRoomStore((s) => s.windowId === windowId);
   const [images, setImages] = useState<VFSNode[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -88,6 +99,27 @@ export default function PhotoGallery({ windowId }: PhotoGalleryProps) {
 
   return (
     <div className="photo-gallery-app">
+      {!isMobile && !assistantHidden && (
+        <div className="photo-gallery-app__bar">
+          <span className="photo-gallery-app__bar-title">🖼️ {currentImage?.name ?? ''}</span>
+          <button
+            type="button"
+            className="room-toggle"
+            aria-pressed={roomOn}
+            title={t('roomToggle')}
+            onClick={() => (roomOn ? useRoomStore.getState().leave() : useRoomStore.getState().enter(windowId))}
+          >
+            🏠
+          </button>
+        </div>
+      )}
+
+      {roomOn && !isMobile && (
+        <Suspense fallback={null}>
+          <PhotosRoom windowId={windowId} images={images} onShow={goToImage} />
+        </Suspense>
+      )}
+
       {/* Main Image Display */}
       <div className="photo-gallery-app__viewer">
         {currentImage && (

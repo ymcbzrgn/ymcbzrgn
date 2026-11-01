@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { reportOver, reportScore, reportStart, reportWin } from './gameEvents';
 import './Game2048.css';
 
 interface Game2048Props {
@@ -44,8 +45,8 @@ const addRandomTile = (grid: number[][]): number[][] => {
 // Slide and merge a single row to the left
 const slideRow = (row: number[]): { row: number[]; merged: number } => {
   // Filter out zeros
-  let nonZero = row.filter(n => n !== 0);
-  let result: number[] = [];
+  const nonZero = row.filter(n => n !== 0);
+  const result: number[] = [];
   let merged = 0;
   let skip = false;
 
@@ -130,6 +131,22 @@ export default function Game2048({ windowId }: Game2048Props) {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+
+  // achievements + the pixel twin's reactions
+  useEffect(() => {
+    reportStart('2048');
+  }, []);
+  useEffect(() => {
+    reportScore('2048', Math.max(...tiles.flat()));
+  }, [tiles]);
+  useEffect(() => {
+    if (won) reportWin('2048', score);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [won]);
+  useEffect(() => {
+    if (gameOver) reportOver('2048', score);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameOver]);
 
   const resetGame = () => {
     let grid = createEmptyGrid();

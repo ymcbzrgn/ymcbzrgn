@@ -5,6 +5,9 @@
 
 import { useStore } from '../../os/store';
 import { setLang, useLang, useT } from '../../os/i18n/full';
+import { audio, setSoundOn, soundVolume } from '../../os/sound/ctx';
+import { sfx } from '../../os/sound/sfx';
+import { unlock } from '../../os/achievements';
 import './Settings.css';
 
 interface SettingsProps {
@@ -107,6 +110,44 @@ export default function Settings({ windowId }: SettingsProps) {
                 />
                 <span>{t('setAssistant')}</span>
                 <small className="settings-app__radio-hint">{t('setAssistantHint')}</small>
+              </label>
+            </div>
+          </div>
+
+          {/* Sound */}
+          <div className="settings-app__group">
+            <div className="settings-app__radio-group">
+              <label className="settings-app__radio">
+                <input
+                  type="checkbox"
+                  checked={settings.soundOn === true}
+                  onChange={(e) => {
+                    setSoundOn(e.target.checked); // inside the click: lets the browser start the audio
+                    if (e.target.checked) {
+                      unlock('sound');
+                      sfx('ok');
+                    }
+                  }}
+                />
+                <span>{t('setSound')}</span>
+                <small className="settings-app__radio-hint">{t('setSoundHint')}</small>
+              </label>
+              <label className="settings-app__radio settings-app__radio--slider">
+                <span>{t('setVolume')}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={Math.round((settings.soundVolume ?? soundVolume()) * 100)}
+                  disabled={settings.soundOn !== true}
+                  aria-label={t('setVolume')}
+                  onChange={(e) => updateSettings({ soundVolume: Number(e.target.value) / 100 })}
+                  onPointerUp={() => {
+                    audio();
+                    sfx('pop');
+                  }}
+                />
               </label>
             </div>
           </div>

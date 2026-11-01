@@ -1,0 +1,127 @@
+/* rm -rf / prank */
+
+.melt {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a1633;
+  color: #f1f5f9;
+  font-family: var(--font-family-mono);
+  cursor: pointer;
+  transition: opacity 360ms ease;
+}
+
+/* a console prints from the top left, line after line */
+.melt--panic {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 9vh 7vw;
+}
+
+.melt--clear {
+  background: transparent;
+  pointer-events: none;
+}
+
+.melt--out {
+  opacity: 0;
+}
+
+.melt__panic {
+  width: min(760px, 92vw);
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.melt__panic strong {
+  color: #86efac;
+}
+
+.melt__cursor {
+  animation: melt-blink 0.8s steps(1) infinite;
+}
+
+.melt__boot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.melt__logo {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.melt__bar {
+  width: 240px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.melt__bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #f59e0b);
+  transform-origin: left;
+  animation: melt-load 1.6s ease-out both;
+}
+
+.melt__msg {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.desktop--melt {
+  animation: melt-shake 0.09s linear infinite;
+  filter: saturate(1.6) contrast(1.15);
+}
+
+@keyframes melt-shake {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-4px, 3px) rotate(-0.25deg);
+  }
+  50% {
+    transform: translate(5px, -3px) rotate(0.2deg);
+  }
+  75% {
+    transform: translate(-3px, -4px) rotate(-0.15deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes melt-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes melt-load {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .melt__bar span {
+    animation-duration: 0.6s;
+  }
+}

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { reportOver, reportScore, reportStart } from './gameEvents';
 import './Tetris.css';
 
 interface TetrisProps {
@@ -112,6 +113,18 @@ export default function Tetris({ windowId }: TetrisProps) {
   const [linesCleared, setLinesCleared] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  // achievements + the pixel twin's reactions
+  useEffect(() => {
+    reportStart('tetris');
+  }, []);
+  useEffect(() => {
+    if (linesCleared > 0) reportScore('tetris', linesCleared);
+  }, [linesCleared]);
+  useEffect(() => {
+    if (gameOver) reportOver('tetris', linesCleared);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameOver]);
 
   // Check collision
   const checkCollision = (
@@ -234,7 +247,7 @@ export default function Tetris({ windowId }: TetrisProps) {
   const hardDrop = () => {
     if (gameOver || paused) return;
 
-    let newPos = { ...position };
+    const newPos = { ...position };
     while (!checkCollision(currentPiece.piece.shape, { x: newPos.x, y: newPos.y + 1 }, grid)) {
       newPos.y++;
     }

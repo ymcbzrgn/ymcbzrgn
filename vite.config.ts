@@ -2,6 +2,33 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { resolve } from 'path';
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+
+type LogRow = [hash: string, author: string, date: string, subject: string];
+
+/**
+ * The site's own recent history for the terminal's `git log`. Cloudflare may clone with a shallow
+ * history, so with fewer than 8 commits available it falls back to a committed snapshot
+ * (src/assets/gitlog.fallback.json, refreshed with `npm run gitlog`).
+ */
+function readGitLog(): LogRow[] {
+  try {
+    const out = execSync('git log -n 15 --pretty=format:%h%x09%an%x09%ad%x09%s --date=short', {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const rows = out.split('\n').filter(Boolean).map((line) => line.split('\t') as LogRow);
+    if (rows.length >= 8) return rows;
+  } catch {
+    /* no git here (a source copy, or git is missing) */
+  }
+  try {
+    return JSON.parse(readFileSync(resolve(__dirname, 'src/assets/gitlog.fallback.json'), 'utf8')) as LogRow[];
+  } catch {
+    return [];
+  }
+}
 
 // New portfolio Vite configuration
 export default defineConfig({
@@ -49,6 +76,10 @@ export default defineConfig({
 
     // Performance budgets (warnings only)
     chunkSizeWarningLimit: 500, // KB
+  },
+
+  define: {
+    __GIT_LOG__: JSON.stringify(readGitLog()),
   },
 
   resolve: {

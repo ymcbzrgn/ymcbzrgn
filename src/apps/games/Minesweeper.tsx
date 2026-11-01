@@ -4,7 +4,8 @@
  * Left-click to reveal, right-click to flag
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { reportOver, reportStart, reportWin } from './gameEvents';
 import './Minesweeper.css';
 
 interface MinesweeperProps {
@@ -83,6 +84,17 @@ export default function Minesweeper({ windowId }: MinesweeperProps) {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [flagCount, setFlagCount] = useState(0);
+
+  // achievements + the pixel twin's reactions
+  useEffect(() => {
+    reportStart('minesweeper');
+  }, []);
+  useEffect(() => {
+    if (won) reportWin('minesweeper');
+  }, [won]);
+  useEffect(() => {
+    if (gameOver) reportOver('minesweeper');
+  }, [gameOver]);
 
   const resetGame = () => {
     setCells(initializeGrid());

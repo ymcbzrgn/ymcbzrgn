@@ -10,6 +10,7 @@ import { toggleLang, useT } from '../../os/i18n/full';
 import { useLaunch, type LaunchTarget } from '../../os/hooks/useLaunch';
 import { useIsMobile } from '../../os/hooks/useDeviceType';
 import { openSimpleView } from '../../os/view';
+import { requestTour } from '../../ui/pet/petEvents';
 import { PROFILE } from '../../os/content/profile';
 import Sprite, { type SpriteAnim } from '../../ui/mascot/Sprite';
 import './Welcome.css';
@@ -118,6 +119,18 @@ export default function Welcome({ windowId }: WelcomeProps) {
             <button type="button" className="welcome__btn welcome__btn--secondary" onClick={() => go('projects')}>
               {t('ctaProjects')}
             </button>
+            {!isMobile && (
+              <button
+                type="button"
+                className="welcome__btn welcome__btn--secondary"
+                onClick={() => {
+                  close();
+                  window.setTimeout(requestTour, 250); // after the window is gone
+                }}
+              >
+                🧭 {t('ctaTour')}
+              </button>
+            )}
             <button
               type="button"
               className="welcome__btn welcome__btn--secondary"
