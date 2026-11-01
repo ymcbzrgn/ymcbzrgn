@@ -286,6 +286,8 @@ export default function Window({
   return (
     <div
       ref={windowRef}
+      data-window-id={window.id}
+      data-app-id={window.appId}
       className={windowClasses}
       style={{
         transform,

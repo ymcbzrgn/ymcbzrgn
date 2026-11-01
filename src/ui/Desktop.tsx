@@ -26,7 +26,7 @@ import {
 } from '@os/store';
 import type { VFSNode } from '@os/types';
 import { getUniqueFolderName, getUniqueTextFileName } from '@os/utils/naming';
-import { getInitialBounds } from '@os/utils/windowBounds';
+import { openNodeWindow } from '@os/utils/openNode';
 import { useLaunch } from '@os/hooks/useLaunch';
 import Window from './Window';
 import Taskbar from './Taskbar';
@@ -138,58 +138,9 @@ export default function Desktop() {
     snapToGrid(nodeId);
   };
 
-  // Open window for icon
+  // Open window for icon (shared with the pixel assistant, which opens things by walking up to them)
   const handleIconDoubleClick = (node: VFSNode) => {
-    // External links: Open directly in new tab
-    if (node.type === 'link' && node.targetUrl) {
-      const url = node.targetUrl;
-      // Check if external URL (starts with http/https)
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-        return;
-      }
-    }
-
-    // Determine app ID
-    let appId = 'placeholder';
-    let meta: Record<string, any> = {};
-
-    // IMPORTANT: Check special folders BEFORE generic folder check!
-    if (node.id === 'projects') {
-      // Projects folder → GitHub Projects viewer (not file-explorer!)
-      appId = 'github-projects';
-    } else if (node.type === 'folder') {
-      // Other folders → File Explorer
-      appId = 'file-explorer';
-    } else if (node.type === 'file' && node.mimeType === 'application/pdf') {
-      appId = 'pdf-viewer';
-      meta.fileUrl = node.targetUrl || '';
-    } else if (node.type === 'file' && node.mimeType === 'application/x-browser-pdf') {
-      appId = 'browser';
-      meta.url = node.targetUrl || '';
-    } else if (node.type === 'link') {
-      // Internal links (same-origin) → Browser app
-      appId = 'browser';
-      meta.url = node.targetUrl;
-    } else if (node.type === 'app') {
-      appId = node.appId || 'placeholder';
-    } else if (node.mimeType === 'application/x-legacy-site') {
-      // Legacy site easter egg
-      appId = 'browser';
-      meta.url = node.targetUrl || '/legacy/index.html';
-    }
-
-    openWindow({
-      id: uuidv4(),
-      appId,
-      nodeId: node.id,
-      title: node.name,
-      icon: node.icon || (node.type === 'folder' ? '📁' : '📄'),
-      bounds: getInitialBounds(appId),
-      state: 'normal',
-      createdAt: Date.now(),
-      meta,
-    });
+    openNodeWindow(node);
   };
 
   // Click desktop to clear selection

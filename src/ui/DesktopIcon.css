@@ -179,3 +179,112 @@
 @media (prefers-reduced-motion: reduce) {
   .desktop-icon__hint { animation: none; }
 }
+
+/* ---- Living icons ---------------------------------------------------------------------------
+   They react to the pointer, glow while a window of theirs is open, and pop when something opens
+   from them (a double-click, or the pixel twin hopping in). */
+.desktop-icon__image {
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 200ms ease;
+}
+
+.desktop-icon:hover .desktop-icon__image {
+  transform: translateY(-3px) scale(1.08);
+}
+
+.desktop-icon[data-node-type='folder']:hover .desktop-icon__image {
+  animation: icon-wiggle 560ms ease-in-out;
+}
+
+.desktop-icon--dragging .desktop-icon__image {
+  transform: none;
+  animation: none;
+}
+
+.desktop-icon--open .desktop-icon__image {
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.6));
+}
+
+.desktop-icon--open::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
+  pointer-events: none;
+}
+
+.desktop-icon--opening .desktop-icon__image {
+  animation: icon-open 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.desktop-icon--opening::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: icon-ring 800ms ease-out forwards;
+}
+
+@keyframes icon-wiggle {
+  0%,
+  100% {
+    transform: translateY(-3px) scale(1.08) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-4px) scale(1.1) rotate(-7deg);
+  }
+  60% {
+    transform: translateY(-4px) scale(1.1) rotate(6deg);
+  }
+}
+
+@keyframes icon-open {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.32) rotate(-6deg);
+  }
+  50% {
+    transform: scale(0.92) rotate(4deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes icon-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-icon__image {
+    transition: none;
+  }
+  .desktop-icon:hover .desktop-icon__image {
+    transform: none;
+  }
+  .desktop-icon[data-node-type='folder']:hover .desktop-icon__image,
+  .desktop-icon--opening .desktop-icon__image,
+  .desktop-icon--opening::before {
+    animation: none;
+  }
+}

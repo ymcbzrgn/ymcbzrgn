@@ -45,6 +45,9 @@ export default function DesktopIcon({
   // First-time hint: a single click only selects an icon on desktop, which looks "broken" to newcomers
   const [hintVisible, setHintVisible] = useState(false);
   const iconHintSeen = useStore((state) => state.settings.iconHintSeen);
+  // Living icons: lit while a window of theirs is open, they pop when something opens from them
+  const isOpen = useStore((state) => state.windows.some((w) => w.nodeId === node.id));
+  const [popping, setPopping] = useState(false);
   const t = useT();
   const mouseDownPos = useRef({ x: 0, y: 0 });
   const iconRef = useRef<HTMLDivElement>(null);
@@ -95,6 +98,7 @@ export default function DesktopIcon({
       onDoubleClick(node);
       setLastClickTime(0); // Reset to prevent triple-click
       setHintVisible(false);
+      setPopping(true);
       if (!iconHintSeen) useStore.getState().updateSettings({ iconHintSeen: true });
     } else {
       // Single click
@@ -104,6 +108,13 @@ export default function DesktopIcon({
       if (!iconHintSeen && !moved) setHintVisible(true);
     }
   };
+
+  // The pop animation ends on its own
+  useEffect(() => {
+    if (!popping) return;
+    const timer = window.setTimeout(() => setPopping(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [popping]);
 
   // Auto-hide the hint
   useEffect(() => {
@@ -369,7 +380,9 @@ export default function DesktopIcon({
     <>
       <div
         ref={iconRef}
-        className={`desktop-icon ${isSelected ? 'desktop-icon--selected' : ''} ${isDragging ? 'desktop-icon--dragging' : ''} ${isRenaming ? 'desktop-icon--renaming' : ''} ${isDropTarget ? 'desktop-icon--drop-target' : ''}`}
+        data-node-id={node.id}
+        data-node-type={node.type}
+        className={`desktop-icon${isSelected ? 'desktop-icon--selected' : ''} ${isDragging ? 'desktop-icon--dragging' : ''} ${isRenaming ? 'desktop-icon--renaming' : ''} ${isDropTarget ? 'desktop-icon--drop-target' : ''} ${isOpen ? 'desktop-icon--open' : ''} ${popping ? 'desktop-icon--opening' : ''}`}
         style={{
           position: 'absolute',
           left: `${position.x}px`,

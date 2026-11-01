@@ -12,10 +12,13 @@
  *   - falls asleep when nobody is around and wakes up when the mouse moves
  * plus tips, the click menu, drag & drop, reduced motion and the Settings off switch.
  *
+ * "Control me" (click menu) hands the twin to the visitor: while it is on, this engine sleeps and the
+ * lazily loaded control engine (./control) drives the twin through the PetApi object defined below.
+ *
  * Cost: no render loop. Frames are stepped by a CSS animation, travel is a single CSS transform
  * transition, body effects are CSS keyframes, and one timeout at a time drives the behaviours.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useStore } from '../../os/store';
 import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
@@ -23,7 +26,11 @@ import { openSimpleView } from '../../os/view';
 import Sprite, { type SpriteAnim } from '../mascot/Sprite';
 import { SPRITE_FOOT_PAD, SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sprites/mascot.meta';
 import { BEHAVIORS, type Behavior, type Fx, type Move } from '../../assets/sprites/mascot.behaviors';
+import type { PetApi } from './control/types';
+import { markSeen } from './control/seen';
 import './Pet.css';
+
+const PetControl = lazy(() => import('./control/PetControl'));
 
 const SCALE = 3;
 const W = SPRITE_FRAME_W * SCALE;
@@ -136,12 +143,23 @@ export default function Pet() {
   const [bubble, setBubble] = useState<{ text: string; id: number } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [vw, setVw] = useState(() => window.innerWidth);
+  const [vh, setVh] = useState(() => window.innerHeight);
+  const [gy, setGy] = useState(0); // where it stands on the desktop plane, px above the taskbar (control mode)
+  const [groundFall, setGroundFall] = useState(false);
+  const [controlOn, setControlOn] = useState(false);
+  const [vis, setVis] = useState({ scale: 1, opacity: 1 }); // shrink + fade (hopping into an icon)
 
   // Mutable engine state (kept out of React state: it changes without needing a render)
   const xRef = useRef(-W - 24);
   const modeRef = useRef<SpriteAnim>('idle');
   const draggingRef = useRef(false);
   const menuRef = useRef(false);
+  const controlRef = useRef(false);
+  const gyRef = useRef(0);
+  const yRef = useRef(0);
+  const facingRef = useRef<1 | -1>(1);
+  const petRef = useRef<HTMLDivElement>(null);
+  const stopControlRef = useRef<(opts?: { silent?: boolean }) => void>(() => {});
   const aliveRef = useRef(true);
   const timerRef = useRef(0);
   const bubbleTimerRef = useRef(0);
@@ -153,6 +171,9 @@ export default function Pet() {
   const recentRef = useRef<string[]>([]);
   const langRef = useRef(lang);
   langRef.current = lang;
+  gyRef.current = gy;
+  yRef.current = y;
+  facingRef.current = facing;
   const appsRef = useRef<Set<string>>(new Set());
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -190,7 +211,7 @@ export default function Pet() {
   const next = useCallback(() => {
     if (!aliveRef.current) return;
     // Busy being dragged / talked to: check again shortly
-    if (draggingRef.current || menuRef.current) {
+    if (draggingRef.current || menuRef.current || controlRef.current) {
       schedule(next, 800);
       return;
     }
@@ -212,6 +233,8 @@ export default function Pet() {
 
     setFx(b.fx ?? 'none');
     enter(b.anim);
+    markSeen(b.anim);
+    if (b.arrive) markSeen(b.arrive);
 
     // Speech bubble (rate limited so a chatty table can't spam)
     const lines = b.lines;
@@ -320,6 +343,7 @@ export default function Pet() {
 
     const onResize = () => {
       setVw(window.innerWidth);
+      setVh(window.innerHeight);
       const max = floorMax();
       if (xRef.current > max) {
         xRef.current = max;
@@ -341,7 +365,7 @@ export default function Pet() {
   useEffect(() => {
     const tryTip = () => {
       if (!aliveRef.current) return;
-      const busy = draggingRef.current || menuRef.current || modeRef.current === 'sleep' || modeRef.current === 'drag';
+      const busy = draggingRef.current || menuRef.current || controlRef.current || modeRef.current === 'sleep' || modeRef.current === 'drag';
       if (!busy) {
         const seen = readSeen();
         const ctx: TipContext = { apps: appsRef.current, iconHintSeen: !!useStore.getState().settings.iconHintSeen };
@@ -384,7 +408,9 @@ export default function Pet() {
       setMenuOpen(false);
       menuRef.current = false;
       setFall(false);
+      setGroundFall(false);
       setFx('none');
+      setGy(0); // from here on `y` is the whole height above the taskbar
       enter('drag');
     }
     if (d.moved) {
@@ -415,6 +441,23 @@ export default function Pet() {
         enter('idle');
         schedule(next, 1500);
       }
+      return;
+    }
+    // Dropped in control mode: it stays where it was put down
+    if (controlRef.current) {
+      draggingRef.current = false;
+      const lift = yRef.current;
+      yRef.current = 0;
+      gyRef.current = lift;
+      setY(0);
+      setGy(lift);
+      setFacing(1);
+      setFx('hop');
+      enter('jump');
+      schedule(() => {
+        setFx('none');
+        enter('idle');
+      }, 600);
       return;
     }
     // Dropped: fall to the floor, land, carry on
@@ -461,7 +504,101 @@ export default function Pet() {
     closeMenu();
   };
 
+  /* ----- control mode ----- */
+  const startControl = useCallback(() => {
+    if (controlRef.current) return;
+    window.clearTimeout(timerRef.current);
+    // Freeze where it visually is right now (it may be mid-walk)
+    const left = petRef.current?.getBoundingClientRect().left ?? xRef.current;
+    xRef.current = left;
+    setX(left);
+    setTravelMs(0);
+    controlRef.current = true;
+    setControlOn(true);
+    setFx('none');
+    setFall(false);
+    enter('idle');
+  }, [enter]);
+
+  const stopControl = useCallback(
+    (opts?: { silent?: boolean }) => {
+      if (!controlRef.current) return;
+      controlRef.current = false;
+      setControlOn(false);
+      setVis({ scale: 1, opacity: 1 });
+      setTravelMs(0);
+      window.clearTimeout(timerRef.current);
+      if (!opts?.silent) say(t('ctrlBye'), 3200);
+      if (gyRef.current > 2 || yRef.current > 2) {
+        // gravity: it drops back down to the taskbar
+        setGroundFall(true);
+        gyRef.current = 0;
+        yRef.current = 0;
+        setGy(0);
+        setY(0);
+        setFx('hop');
+        enter('jump');
+        schedule(() => {
+          setGroundFall(false);
+          setFx('none');
+          enter('idle');
+          schedule(next, 900);
+        }, 720);
+      } else {
+        setFx('none');
+        enter('idle');
+        schedule(next, 900);
+      }
+    },
+    [enter, next, say, schedule, t]
+  );
+  stopControlRef.current = stopControl;
+
+  const api = useMemo<PetApi>(
+    () => ({
+      W,
+      H,
+      FEET,
+      TASKBAR,
+      get: () => ({
+        x: xRef.current,
+        gy: gyRef.current,
+        jy: yRef.current,
+        facing: facingRef.current,
+        anim: modeRef.current,
+        busy: draggingRef.current || menuRef.current,
+      }),
+      set: (p) => {
+        if (p.x !== undefined) {
+          xRef.current = p.x;
+          setX(p.x);
+        }
+        if (p.gy !== undefined) {
+          gyRef.current = p.gy;
+          setGy(p.gy);
+        }
+        if (p.jy !== undefined) {
+          yRef.current = p.jy;
+          setY(p.jy);
+        }
+        if (p.facing !== undefined) {
+          facingRef.current = p.facing;
+          setFacing(p.facing);
+        }
+        if (p.fx !== undefined) setFx(p.fx);
+        if (p.vis) setVis(p.vis);
+        if (p.anim !== undefined && p.anim !== modeRef.current) enter(p.anim);
+        setTravelMs(0);
+      },
+      say,
+      exit: (opts) => stopControlRef.current(opts),
+    }),
+    [enter, say]
+  );
+
   /* ----- render ----- */
+  const spriteTop = vh - TASKBAR + FEET - H - gy - y; // top edge of the frame in viewport px
+  const bubbleBelow = spriteTop < 90; // standing near the top of the screen: speak downwards
   const alignClass = x < 120 ? 'pet__bubble--left' : x > vw - W - 120 ? 'pet__bubble--right' : '';
   // Peeking over a screen edge puts half of the sprite off-screen: keep the bubble (and menu) on-screen
   const bubbleStyle: CSSProperties | undefined =
@@ -472,7 +609,9 @@ export default function Pet() {
         : undefined;
 
   return (
+    <>
     <div
+      ref={petRef}
       className="pet"
       style={{
         width: W,
@@ -482,6 +621,13 @@ export default function Pet() {
         transition: travelMs ? `transform ${travelMs}ms linear` : 'none',
       }}
     >
+     <div
+      className="pet__ground"
+      style={{
+        transform: `translate3d(0, ${-gy}px, 0)`,
+        transition: groundFall ? 'transform 420ms cubic-bezier(0.5, 0, 1, 0.6)' : 'none',
+      }}
+     >
       <div className="pet__shadow" />
       <div
         className="pet__lift"
@@ -490,6 +636,10 @@ export default function Pet() {
           transition: fall ? 'transform 380ms cubic-bezier(0.5, 0, 1, 0.6)' : 'none',
         }}
       >
+       <div
+        className="pet__vis"
+        style={vis.scale === 1 && vis.opacity === 1 ? undefined : { transform: `scale(${vis.scale})`, opacity: vis.opacity }}
+       >
         <div ref={bodyRef} className={`pet__body pet__fx pet__fx--${fx}`}>
           <button
             type="button"
@@ -512,16 +662,20 @@ export default function Pet() {
             </div>
           )}
         </div>
+       </div>
 
         {bubble && !menuOpen && (
-          <div key={bubble.id} className={`pet__bubble ${alignClass}`} style={bubbleStyle} role="status">
+          <div key={bubble.id} className={`pet__bubble ${alignClass} ${bubbleBelow ? 'pet__bubble--below' : ''}`} style={bubbleStyle} role="status">
             {bubble.text}
           </div>
         )}
 
         {menuOpen && (
-          <div className={`pet__bubble pet__menu ${alignClass}`} style={bubbleStyle} role="menu">
+          <div className={`pet__bubble pet__menu ${alignClass} ${bubbleBelow ? 'pet__bubble--below' : ''}`} style={bubbleStyle} role="menu">
             <div className="pet__menu-title">{t('petMenuTitle')}</div>
+            <button type="button" role="menuitem" className="pet__menu-control" onClick={act(controlOn ? () => stopControl() : startControl)}>
+              {controlOn ? t('petMenuStopControl') : t('petMenuControl')}
+            </button>
             <button type="button" role="menuitem" onClick={act(() => launch('cv'))}>
               {t('petMenuCv')}
             </button>
@@ -545,6 +699,13 @@ export default function Pet() {
           </div>
         )}
       </div>
+     </div>
     </div>
+    {controlOn && (
+      <Suspense fallback={null}>
+        <PetControl api={api} />
+      </Suspense>
+    )}
+    </>
   );
 }

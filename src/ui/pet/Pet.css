@@ -9,11 +9,25 @@
   will-change: transform;
 }
 
+.pet__ground {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
 .pet__lift {
   position: relative;
   width: 100%;
   height: 100%;
   will-change: transform;
+}
+
+/* shrink + fade while hopping into an icon (set inline by the control engine) */
+.pet__vis {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 80%;
 }
 
 .pet__body {
@@ -121,6 +135,21 @@
   border-top-color: #fff;
 }
 
+/* standing near the top of the screen: the bubble opens downwards */
+.pet__bubble--below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.pet__bubble--below::after {
+  bottom: auto;
+  top: -7px;
+  border-top-width: 0;
+  border-bottom-width: 7px;
+  border-top-color: transparent;
+  border-bottom-color: #fff;
+}
+
 .pet__bubble--left {
   left: 0;
   transform: none;
@@ -170,6 +199,15 @@
 
 .pet__menu button:hover {
   background: #e0e7ff;
+}
+
+.pet__menu .pet__menu-control {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+}
+
+.pet__menu .pet__menu-control:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
 }
 
 .pet__menu .pet__menu-hide {
