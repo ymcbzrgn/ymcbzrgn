@@ -4,6 +4,7 @@
  * window stays in front. All of it is a scripted sequence run by the control engine.
  */
 import { useStore } from '../../../os/store';
+import { useRoomStore } from '../../rooms/roomStore';
 import type { VFSNode } from '../../../os/types';
 import { openNodeWindow } from '../../../os/utils/openNode';
 import type { StringKey } from '../../../os/i18n/full';
@@ -22,15 +23,20 @@ export interface EnterCtx {
 export interface EnterResult {
   /** Keep sitting on this window's title bar, `dx` px from its left edge. */
   perch?: { winId: string; dx: number };
+  /** The twin went into the window's room instead. */
+  room?: boolean;
 }
 
+/** Windows that have a room the twin can live in. */
+const ROOM_APPS = new Set(['file-explorer', 'github-projects']);
+
 const A_SIT = anim('sit', 'idle');
-const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-const ease = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
-const easeOutBack = (k: number) => 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2);
+export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+export const ease = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+export const easeOutBack = (k: number) => 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2);
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
-function frames(ms: number, fn: (k: number) => void, alive: () => boolean): Promise<void> {
+export function frames(ms: number, fn: (k: number) => void, alive: () => boolean): Promise<void> {
   return new Promise((resolve) => {
     const t0 = performance.now();
     const step = (now: number) => {
@@ -44,7 +50,7 @@ function frames(ms: number, fn: (k: number) => void, alive: () => boolean): Prom
   });
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 async function waitFor<T>(find: () => T | null, ms: number): Promise<T | null> {
   const t0 = performance.now();
@@ -56,7 +62,7 @@ async function waitFor<T>(find: () => T | null, ms: number): Promise<T | null> {
   }
 }
 
-function flashIcon(id: string) {
+export function flashIcon(id: string) {
   const el = document.querySelector<HTMLElement>(`.desktop-icon[data-node-id="${CSS.escape(id)}"]`);
   if (!el) return;
   el.classList.add('desktop-icon--opening');
@@ -70,6 +76,7 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
   const maxGy = Math.max(0, vh - TASKBAR - (H - FEET) - 4);
   const alive = ctx.alive;
   const show = (scale: number, opacity: number) => api.set({ vis: { scale, opacity } });
+  let joinedRoom = false;
 
   try {
     // 1. walk up to the icon
@@ -127,7 +134,18 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
       return {};
     }
 
-    // 4b. appear on the title bar of the new window
+    // 4b. a folder or the projects window: the twin walks into its room
+    const created = useStore.getState().windows.find((w) => w.id === winId);
+    if (created && ROOM_APPS.has(created.appId) && !window.matchMedia('(max-width: 700px)').matches) {
+      useRoomStore.getState().enter(winId);
+      const host = await waitFor(() => useRoomStore.getState().host, 4000);
+      if (host) {
+        joinedRoom = true; // Pet.tsx pops it in on the other side
+        return { room: true };
+      }
+    }
+
+    // 4c. any other window: appear on its title bar
     const bar = await waitFor(() => document.querySelector<HTMLElement>(`[data-window-id="${winId}"] .window__titlebar`), 1500);
     if (!bar || !alive()) return {};
     const r = bar.getBoundingClientRect();
@@ -143,6 +161,6 @@ export async function enterNode(ctx: EnterCtx, node: VFSNode, iconRect: DOMRect)
     const w = useStore.getState().windows.find((win) => win.id === winId);
     return w && w.state === 'normal' ? { perch: { winId, dx } } : {};
   } finally {
-    show(1, 1);
+    if (!joinedRoom) show(1, 1);
   }
 }

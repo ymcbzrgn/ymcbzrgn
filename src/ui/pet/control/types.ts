@@ -15,13 +15,19 @@ export interface PetPose {
 
 /** What the control engine may do to the twin (implemented by Pet.tsx). */
 export interface PetApi {
-  /** Frame size in CSS px, transparent rows below the shoes, taskbar height. */
+  /** Frame size in CSS px and transparent rows below the shoes (they change with the world's scale), taskbar height. */
   readonly W: number;
   readonly H: number;
   readonly FEET: number;
   readonly TASKBAR: number;
+  /** The world the twin is in: the desktop (viewport px) or a room strip (world px). */
+  world(): { kind: 'desktop' | 'room'; width: number };
+  /** Screen rect of the twin's frame. */
+  rect(): DOMRect | null;
+  /** Pause / resume the twin's own life (tips, behaviours) while a script drives it. */
+  lock(on: boolean): void;
   /** Current pose; `busy` while the visitor is dragging the twin or has its menu open. */
-  get(): PetPose & { busy: boolean };
+  get(): PetPose & { busy: boolean; controlled: boolean };
   /** Instant pose update (no CSS transition): position, facing, animation, body effect. */
   set(p: Partial<PetPose> & { fx?: Fx; vis?: { scale: number; opacity: number } }): void;
   say(text: string, ms?: number): void;

@@ -97,6 +97,12 @@
   border-color: #0f172a;
 }
 
+.pet-ctl-hint__extra {
+  margin-left: 10px;
+  color: #475569;
+  font-weight: 600;
+}
+
 /* Move palette */
 .pet-ctl-palette {
   position: fixed;

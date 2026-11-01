@@ -9,6 +9,12 @@
   will-change: transform;
 }
 
+/* Inside a room strip (portalled into the strip's world): positioned within it, below the props' labels */
+.pet.pet--room {
+  position: absolute;
+  z-index: 3;
+}
+
 .pet__ground {
   position: relative;
   width: 100%;

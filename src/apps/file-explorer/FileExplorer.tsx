@@ -20,9 +20,11 @@
  * Implementation: Uses isMobile hook for conditional event handlers and className.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { lazy, Suspense, useState, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useVFSNodes, useVFSNodesByParent, useVFSActions } from '../../os/store';
+import { useVFSNodes, useVFSNodesByParent, useVFSActions, useStore } from '../../os/store';
+import { useT } from '../../os/i18n/full';
+import { useRoomStore } from '../../ui/rooms/roomStore';
 import { getIconDisplay } from '../../os/utils/iconMap';
 import { getInitialBounds } from '../../os/utils/windowBounds';
 import {
@@ -36,7 +38,11 @@ import { useIsMobile } from '../../os/hooks/useDeviceType';
 import { useLongPress } from '../../os/hooks/useLongPress';
 import { useAppOpener } from '../../os/hooks/useAppOpener';
 import ContextMenu, { type MenuItem } from '../../ui/ContextMenu';
+import '../../ui/rooms/roomToggle.css';
 import './FileExplorer.css';
+
+// The room view (the pixel twin living in this window) is loaded only when somebody asks for it
+const ExplorerRoom = lazy(() => import('../../ui/rooms/ExplorerRoom'));
 
 interface FileExplorerProps {
   windowId: string;
@@ -57,6 +63,9 @@ export default function FileExplorer({ windowId, nodeId }: FileExplorerProps) {
   const openApp = useAppOpener();
   const { createNode, updateNode, deleteNode, moveNode } = useVFSActions();
   const isMobile = useIsMobile();
+  const t = useT();
+  const roomOn = useRoomStore((state) => state.windowId === windowId);
+  const assistantHidden = useStore((state) => state.settings.assistantHidden);
 
   // DEBUG: Log FileExplorer mount and mobile detection
   useEffect(() => {
@@ -633,7 +642,32 @@ export default function FileExplorer({ windowId, nodeId }: FileExplorerProps) {
             </span>
           ))}
         </div>
+
+        {!isMobile && !assistantHidden && (
+          <button
+            type="button"
+            className="room-toggle"
+            aria-pressed={roomOn}
+            title={t('roomToggle')}
+            onClick={() => (roomOn ? useRoomStore.getState().leave() : useRoomStore.getState().enter(windowId))}
+          >
+            🏠
+          </button>
+        )}
       </div>
+
+      {roomOn && !isMobile && (
+        <Suspense fallback={null}>
+          <ExplorerRoom
+            windowId={windowId}
+            folderId={currentFolderId}
+            parentId={path.length > 1 ? path[path.length - 2] : undefined}
+            goUp={goBack}
+            goInto={(id) => setPath((prev) => [...prev, id])}
+            openNode={handleOpen}
+          />
+        </Suspense>
+      )}
 
       {/* Content Area */}
       <div

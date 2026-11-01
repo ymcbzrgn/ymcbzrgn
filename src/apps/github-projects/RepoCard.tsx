@@ -5,9 +5,11 @@
  * Shows all languages sorted by usage + fork badge
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type CSSProperties } from 'react';
 
 interface RepoCardProps {
+  /** position in the grid: cards pop in one after another */
+  index?: number;
   repo: {
     name: string;
     description: string | null;
@@ -25,7 +27,7 @@ interface RepoCardProps {
   };
 }
 
-export default function RepoCard({ repo }: RepoCardProps) {
+export default function RepoCard({ repo, index = 0 }: RepoCardProps) {
   const [previewImage, setPreviewImage] = useState<string>('/legacy/LOGO.png');
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -107,6 +109,8 @@ export default function RepoCard({ repo }: RepoCardProps) {
       target="_blank"
       rel="noopener noreferrer"
       className="repo-card"
+      data-repo={repo.name}
+      style={{ '--i': index } as CSSProperties}
       title={`${repo.name} - View on GitHub`}
     >
       {/* Preview Image */}

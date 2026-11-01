@@ -179,6 +179,20 @@
   line-height: 1;
   margin-bottom: 8px;
   pointer-events: none; /* Allow drag events to bubble to parent */
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.file-explorer__item:hover .file-explorer__item-icon {
+  transform: translateY(-3px) scale(1.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-explorer__item-icon {
+    transition: none;
+  }
+  .file-explorer__item:hover .file-explorer__item-icon {
+    transform: none;
+  }
 }
 
 .file-explorer__item-name {

@@ -382,7 +382,7 @@ export default function DesktopIcon({
         ref={iconRef}
         data-node-id={node.id}
         data-node-type={node.type}
-        className={`desktop-icon${isSelected ? 'desktop-icon--selected' : ''} ${isDragging ? 'desktop-icon--dragging' : ''} ${isRenaming ? 'desktop-icon--renaming' : ''} ${isDropTarget ? 'desktop-icon--drop-target' : ''} ${isOpen ? 'desktop-icon--open' : ''} ${popping ? 'desktop-icon--opening' : ''}`}
+        className={`desktop-icon ${isSelected ? 'desktop-icon--selected' : ''} ${isDragging ? 'desktop-icon--dragging' : ''} ${isRenaming ? 'desktop-icon--renaming' : ''} ${isDropTarget ? 'desktop-icon--drop-target' : ''} ${isOpen ? 'desktop-icon--open' : ''} ${popping ? 'desktop-icon--opening' : ''}`}
         style={{
           position: 'absolute',
           left: `${position.x}px`,

@@ -9,6 +9,8 @@ import type { VFSNode } from '../../os/types';
 import { useLang, useT } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
 import { openSimpleView } from '../../os/view';
+import { useStore } from '../../os/store';
+import { requestPetControl } from '../../ui/pet/petEvents';
 import { PROFILE } from '../../os/content/profile';
 import { PROFILE_TEXT } from '../../os/content/profileText';
 import './Terminal.css';
@@ -472,6 +474,15 @@ export default function Terminal({ windowId }: TerminalProps) {
     return { command: input, output: t('termOpeningSimple'), type: 'success' };
   };
 
+  const cmdControl = (): CommandOutput => {
+    if (useStore.getState().settings.assistantHidden) {
+      return { command: input, output: t('termControlOff'), type: 'error' };
+    }
+    // Let the output render first; the twin then hands the keyboard over to itself
+    window.setTimeout(requestPetControl, 350);
+    return { command: input, output: t('termControlOn'), type: 'success' };
+  };
+
   const cmdWelcome = (): CommandOutput => {
     launch('welcome');
     return { command: input, output: '', type: 'success' };
@@ -486,6 +497,7 @@ ${t('termHelpTitle')}:
     cv              ${t('termHelpCv')}
     contact         ${t('termHelpContact')}
     simple          ${t('termHelpSimple')}
+    control         ${t('termHelpControl')}
 
 Available Commands:
   File Navigation:
@@ -581,6 +593,9 @@ Examples:
         return cmdContact();
       case 'simple':
         return cmdSimple();
+      case 'control':
+      case 'drive':
+        return cmdControl();
       case 'welcome':
         return cmdWelcome();
       default:

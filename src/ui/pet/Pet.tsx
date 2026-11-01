@@ -19,6 +19,7 @@
  * transition, body effects are CSS keyframes, and one timeout at a time drives the behaviours.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../os/store';
 import { useLang, useT, type StringKey } from '../../os/i18n/full';
 import { useLaunch } from '../../os/hooks/useLaunch';
@@ -28,14 +29,17 @@ import { SPRITE_FOOT_PAD, SPRITE_FRAME_H, SPRITE_FRAME_W } from '../../assets/sp
 import { BEHAVIORS, type Behavior, type Fx, type Move } from '../../assets/sprites/mascot.behaviors';
 import type { PetApi } from './control/types';
 import { markSeen } from './control/seen';
+import { PET_CONTROL_EVENT } from './petEvents';
+import { useRoomStore } from '../rooms/roomStore';
 import './Pet.css';
 
+let roomWelcomed = false; // the twin greets its room once per visit
 const PetControl = lazy(() => import('./control/PetControl'));
+const CarryItem = lazy(() => import('../rooms/CarryItem'));
 
-const SCALE = 3;
-const W = SPRITE_FRAME_W * SCALE;
-const H = SPRITE_FRAME_H * SCALE;
-const FEET = SPRITE_FOOT_PAD * SCALE; // transparent pixels below the shoes
+const SCALE = 3; // on the desktop
+const ROOM_SCALE = 2; // inside a room strip (the scene art is drawn for 2x)
+const D_W = SPRITE_FRAME_W * SCALE; // frame width on the desktop (the room scale is derived per render)
 const TASKBAR = 48;
 const EDGE = 8;
 const SPEED = { walk: 70, run: 190, dash: 340, toCursor: 230, fromCursor: 260, toEdge: 190 } as const; // px/s
@@ -48,9 +52,10 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 /* ---------- behaviour selection ---------- */
 type Tier = 0 | 1 | 2; // calm, bored, sleepy
 
-function pickBehavior(tier: Tier, recent: string[]): Behavior {
-  let pool = BEHAVIORS.filter((b) => b.weight[tier] > 0 && !recent.includes(b.id));
-  if (pool.length === 0) pool = BEHAVIORS.filter((b) => b.weight[tier] > 0);
+function pickBehavior(tier: Tier, recent: string[], inRoom: boolean): Behavior {
+  const usable = (b: Behavior) => b.weight[tier] > 0 && !(inRoom && b.move === 'toEdge');
+  let pool = BEHAVIORS.filter((b) => usable(b) && !recent.includes(b.id));
+  if (pool.length === 0) pool = BEHAVIORS.filter(usable);
   const total = pool.reduce((sum, b) => sum + b.weight[tier], 0);
   let r = Math.random() * total;
   for (const b of pool) {
@@ -61,7 +66,7 @@ function pickBehavior(tier: Tier, recent: string[]): Behavior {
 }
 
 /** Where a travelling behaviour goes, which way it faces and how fast. */
-function travelPlan(move: Exclude<Move, 'none'>, fromX: number, pointerX: number | null, vw: number) {
+function travelPlan(move: Exclude<Move, 'none'>, fromX: number, pointerX: number | null, vw: number, W: number) {
   const max = Math.max(EDGE, vw - W - EDGE);
 
   if (move === 'toCursor' && pointerX != null) {
@@ -89,6 +94,8 @@ function travelPlan(move: Exclude<Move, 'none'>, fromX: number, pointerX: number
 interface TipContext {
   apps: Set<string>;
   iconHintSeen: boolean;
+  controlUsed: boolean;
+  roomUsed: boolean;
 }
 interface Tip {
   id: string;
@@ -100,10 +107,29 @@ const TIPS: Tip[] = [
   { id: 'terminal', key: 'petTipTerminal', when: (c) => !c.apps.has('terminal-app') },
   { id: 'cv', key: 'petTipCv', when: (c) => !c.apps.has('pdf-viewer') },
   { id: 'drag', key: 'petTipDrag' },
+  { id: 'control', key: 'petTipControl', when: (c) => !c.controlUsed },
+  { id: 'room', key: 'petTipRoom', when: (c) => c.apps.has('file-explorer') && !c.roomUsed },
   { id: 'games', key: 'petTipGames', when: (c) => ![...c.apps].some((a) => a.endsWith('-game')) },
   { id: 'simple', key: 'petTipSimple' },
   { id: 'wallpaper', key: 'petTipWallpaper', when: (c) => !c.apps.has('settings-app') },
 ];
+
+/** Remembers (across visits) that the visitor has tried a feature, so the tips stop mentioning it. */
+const FLAG_PREFIX = 'yb-used-';
+function hasFlag(name: string): boolean {
+  try {
+    return localStorage.getItem(FLAG_PREFIX + name) === '1';
+  } catch {
+    return false;
+  }
+}
+function setFlag(name: string) {
+  try {
+    localStorage.setItem(FLAG_PREFIX + name, '1');
+  } catch {
+    /* fine: the tip may show again */
+  }
+}
 
 function readSeen(): string[] {
   try {
@@ -129,13 +155,32 @@ export default function Pet() {
   const launch = useLaunch();
   const onboarded = useStore((s) => s.settings.onboarded);
 
+  // Which world the twin is in: the desktop, or a room strip inside a folder window (smaller, portalled)
+  const roomHost = useRoomStore((s) => s.host);
+  const roomWidth = useRoomStore((s) => s.width);
+  const roomContact = useRoomStore((s) => s.contact);
+  const carrying = useRoomStore((s) => s.carrying);
+  const inRoom = !!roomHost;
+  const scale = inRoom ? ROOM_SCALE : SCALE;
+  const W = SPRITE_FRAME_W * scale;
+  const H = SPRITE_FRAME_H * scale;
+  const FEET = SPRITE_FOOT_PAD * scale;
+  const worldW = inRoom ? roomWidth : typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const worldRef = useRef({ inRoom, width: worldW, W, H, FEET, scale });
+  worldRef.current = { inRoom, width: worldW, W, H, FEET, scale };
+  const lockRef = useRef(0);
+  const autonomyRef = useRef(false);
+  const apiRef = useRef<PetApi | null>(null);
+  const nextRef = useRef<() => void>(() => {});
+  const travelRef = useRef(0); // ms of the CSS travel in progress (0 = none)
+
   const reducedMotion = useRef(
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   );
 
   const [mode, setMode] = useState<SpriteAnim>('idle');
   const [fx, setFx] = useState<Fx>('none');
-  const [x, setX] = useState(-W - 24); // starts off-screen, runs in
+  const [x, setX] = useState(-D_W - 24); // starts off-screen, runs in
   const [y, setY] = useState(0);
   const [facing, setFacing] = useState<1 | -1>(1);
   const [travelMs, setTravelMs] = useState(0);
@@ -148,9 +193,10 @@ export default function Pet() {
   const [groundFall, setGroundFall] = useState(false);
   const [controlOn, setControlOn] = useState(false);
   const [vis, setVis] = useState({ scale: 1, opacity: 1 }); // shrink + fade (hopping into an icon)
+  const [visAnim, setVisAnim] = useState(false); // animate vis changes (popping in and out)
 
   // Mutable engine state (kept out of React state: it changes without needing a render)
-  const xRef = useRef(-W - 24);
+  const xRef = useRef(-D_W - 24);
   const modeRef = useRef<SpriteAnim>('idle');
   const draggingRef = useRef(false);
   const menuRef = useRef(false);
@@ -159,6 +205,7 @@ export default function Pet() {
   const yRef = useRef(0);
   const facingRef = useRef<1 | -1>(1);
   const petRef = useRef<HTMLDivElement>(null);
+  const liftRef = useRef<HTMLDivElement>(null); // carries the ground + jump offsets: its rect is where the twin visibly is
   const stopControlRef = useRef<(opts?: { silent?: boolean }) => void>(() => {});
   const aliveRef = useRef(true);
   const timerRef = useRef(0);
@@ -173,11 +220,12 @@ export default function Pet() {
   langRef.current = lang;
   gyRef.current = gy;
   yRef.current = y;
+  travelRef.current = travelMs;
   facingRef.current = facing;
   const appsRef = useRef<Set<string>>(new Set());
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  const floorMax = useCallback(() => Math.max(EDGE, window.innerWidth - W - EDGE), []);
+  const floorMax = useCallback(() => Math.max(EDGE, worldRef.current.width - worldRef.current.W - EDGE), []);
 
   /* ----- helpers ----- */
   const say = useCallback((text: string, ms = 4200) => {
@@ -209,9 +257,9 @@ export default function Pet() {
 
   /* ----- behaviour loop (generic: plays the data table) ----- */
   const next = useCallback(() => {
-    if (!aliveRef.current) return;
+    if (!aliveRef.current || reducedMotion.current) return; // (reduced motion: it stays where it is parked)
     // Busy being dragged / talked to: check again shortly
-    if (draggingRef.current || menuRef.current || controlRef.current) {
+    if (draggingRef.current || menuRef.current || controlRef.current || lockRef.current > 0) {
       schedule(next, 800);
       return;
     }
@@ -228,7 +276,20 @@ export default function Pet() {
 
     const idleFor = (Date.now() - lastActivityRef.current) / 1000;
     const tier: Tier = idleFor > 60 ? 2 : idleFor > 20 ? 1 : 0;
-    const b = pickBehavior(tier, recentRef.current);
+
+    // Now and then it does something with the desktop itself (sits on a window, sneaks into an icon)
+    if (!worldRef.current.inRoom && !reducedMotion.current && tier < 2 && Math.random() < 0.07 && !autonomyRef.current) {
+      autonomyRef.current = true;
+      void import('./autonomy')
+        .then((m) => m.runAutonomy(apiRef.current as PetApi))
+        .catch(() => {})
+        .finally(() => {
+          autonomyRef.current = false;
+        });
+      schedule(next, 2500);
+      return;
+    }
+    const b = pickBehavior(tier, recentRef.current, worldRef.current.inRoom);
     recentRef.current = [...recentRef.current.slice(-5), b.id];
 
     setFx(b.fx ?? 'none');
@@ -269,7 +330,12 @@ export default function Pet() {
     }
 
     // Travelling behaviour
-    const plan = travelPlan(move, xRef.current, pointerXRef.current, window.innerWidth);
+    const world = worldRef.current;
+    const pointer =
+      pointerXRef.current == null || !world.inRoom
+        ? pointerXRef.current
+        : pointerXRef.current - (useRoomStore.getState().host?.getBoundingClientRect().left ?? 0);
+    const plan = travelPlan(move, xRef.current, pointer, world.width, world.W);
     const ms = travel(plan.target, plan.facing, plan.speed);
     if (b.arrive) {
       const arrive = b.arrive;
@@ -365,10 +431,15 @@ export default function Pet() {
   useEffect(() => {
     const tryTip = () => {
       if (!aliveRef.current) return;
-      const busy = draggingRef.current || menuRef.current || controlRef.current || modeRef.current === 'sleep' || modeRef.current === 'drag';
+      const busy = draggingRef.current || menuRef.current || controlRef.current || lockRef.current > 0 || modeRef.current === 'sleep' || modeRef.current === 'drag';
       if (!busy) {
         const seen = readSeen();
-        const ctx: TipContext = { apps: appsRef.current, iconHintSeen: !!useStore.getState().settings.iconHintSeen };
+        const ctx: TipContext = {
+          apps: appsRef.current,
+          iconHintSeen: !!useStore.getState().settings.iconHintSeen,
+          controlUsed: hasFlag('control'),
+          roomUsed: hasFlag('room'),
+        };
         const tip = TIPS.find((c) => !seen.includes(c.id) && (!c.when || c.when(ctx)));
         if (tip) {
           say(t(tip.key), 5200);
@@ -401,7 +472,7 @@ export default function Pet() {
   const onPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
     const d = dragRef.current;
     if (!d) return;
-    if (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
+    if (!d.moved && !worldRef.current.inRoom && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) {
       d.moved = true;
       draggingRef.current = true;
       window.clearTimeout(timerRef.current);
@@ -509,7 +580,9 @@ export default function Pet() {
     if (controlRef.current) return;
     window.clearTimeout(timerRef.current);
     // Freeze where it visually is right now (it may be mid-walk)
-    const left = petRef.current?.getBoundingClientRect().left ?? xRef.current;
+    const rect = petRef.current?.getBoundingClientRect();
+    const host = useRoomStore.getState().host;
+    const left = rect ? (host ? rect.left - host.getBoundingClientRect().left : rect.left) : xRef.current;
     xRef.current = left;
     setX(left);
     setTravelMs(0);
@@ -518,7 +591,18 @@ export default function Pet() {
     setFx('none');
     setFall(false);
     enter('idle');
+    setFlag('control');
   }, [enter]);
+
+  // Something else (the terminal) asked for the controls: hand the keyboard to the twin
+  useEffect(() => {
+    const onRequest = () => {
+      if (document.activeElement instanceof HTMLElement && document.activeElement.closest('.window')) document.activeElement.blur();
+      startControl();
+    };
+    window.addEventListener(PET_CONTROL_EVENT, onRequest);
+    return () => window.removeEventListener(PET_CONTROL_EVENT, onRequest);
+  }, [startControl]);
 
   const stopControl = useCallback(
     (opts?: { silent?: boolean }) => {
@@ -556,10 +640,33 @@ export default function Pet() {
 
   const api = useMemo<PetApi>(
     () => ({
-      W,
-      H,
-      FEET,
+      get W() {
+        return worldRef.current.W;
+      },
+      get H() {
+        return worldRef.current.H;
+      },
+      get FEET() {
+        return worldRef.current.FEET;
+      },
       TASKBAR,
+      world: () => ({ kind: worldRef.current.inRoom ? 'room' : 'desktop', width: worldRef.current.width }) as const,
+      rect: () => liftRef.current?.getBoundingClientRect() ?? null,
+      lock: (on) => {
+        lockRef.current = Math.max(0, lockRef.current + (on ? 1 : -1));
+        if (on) {
+          window.clearTimeout(timerRef.current);
+          // a stroll is a CSS transition whose target is already in xRef: stop it where the twin visibly is
+          if (travelRef.current > 0 && petRef.current) {
+            const r = petRef.current.getBoundingClientRect();
+            const host = worldRef.current.inRoom ? useRoomStore.getState().host : null;
+            const vx = host ? r.left - host.getBoundingClientRect().left : r.left;
+            xRef.current = vx;
+            setX(vx);
+            setTravelMs(0);
+          }
+        } else if (lockRef.current === 0 && !controlRef.current) schedule(() => nextRef.current(), 1200);
+      },
       get: () => ({
         x: xRef.current,
         gy: gyRef.current,
@@ -567,6 +674,7 @@ export default function Pet() {
         facing: facingRef.current,
         anim: modeRef.current,
         busy: draggingRef.current || menuRef.current,
+        controlled: controlRef.current,
       }),
       set: (p) => {
         if (p.x !== undefined) {
@@ -593,30 +701,101 @@ export default function Pet() {
       say,
       exit: (opts) => stopControlRef.current(opts),
     }),
-    [enter, say]
+    [enter, say, schedule]
   );
+
+  apiRef.current = api;
+  nextRef.current = next;
+
+  /* ----- rooms: joining a folder window's room strip, coming back to the desktop ----- */
+  const popIn = useCallback(() => {
+    setVisAnim(false);
+    setVis({ scale: 0.12, opacity: 0 });
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setVisAnim(true);
+        setVis({ scale: 1, opacity: 1 });
+        window.setTimeout(() => setVisAnim(false), 460);
+      })
+    );
+  }, []);
+
+  const prevHostRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const was = prevHostRef.current;
+    prevHostRef.current = roomHost;
+    if (was === roomHost) return;
+    window.clearTimeout(timerRef.current);
+    setFx('none');
+    setTravelMs(0);
+    setFall(false);
+    setGroundFall(false);
+    if (roomHost && !was) {
+      // joining a room: remember where it stood on the desktop, appear next to the entrance door
+      useRoomStore.getState().setReturnTo({ x: xRef.current, gy: gyRef.current });
+      setFlag('room');
+      xRef.current = 70;
+      setX(70);
+      gyRef.current = 0;
+      setGy(0);
+      yRef.current = 0;
+      setY(0);
+      setFacing(1);
+      enter('wave');
+      popIn();
+      if (!roomWelcomed) {
+        roomWelcomed = true;
+        window.setTimeout(() => say(t('roomWelcome'), 4200), 900);
+      }
+    } else if (!roomHost && was) {
+      // the room closed: back on the desktop, where it came from
+      const back = useRoomStore.getState().returnTo;
+      const desk = clamp(back?.x ?? 72, EDGE, Math.max(EDGE, window.innerWidth - D_W - EDGE));
+      xRef.current = desk;
+      setX(desk);
+      gyRef.current = back?.gy ?? 0;
+      setGy(back?.gy ?? 0);
+      yRef.current = 0;
+      setY(0);
+      enter('wave');
+      popIn();
+    }
+    if (!controlRef.current) schedule(next, 2200);
+    // only the world changing matters here
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomHost]);
+
+  // Strips drive the twin through the store (they never import this component)
+  useEffect(() => {
+    useRoomStore.getState().setApi(api);
+    return () => {
+      const st = useRoomStore.getState();
+      st.setApi(null);
+      st.leave();
+    };
+  }, [api]);
 
   /* ----- render ----- */
   const spriteTop = vh - TASKBAR + FEET - H - gy - y; // top edge of the frame in viewport px
-  const bubbleBelow = spriteTop < 90; // standing near the top of the screen: speak downwards
-  const alignClass = x < 120 ? 'pet__bubble--left' : x > vw - W - 120 ? 'pet__bubble--right' : '';
+  const bubbleBelow = inRoom ? menuOpen : spriteTop < 90; // near the top of the screen / the menu in a room: speak downwards
+  const alignClass = inRoom ? '' : x < 120 ? 'pet__bubble--left' : x > vw - W - 120 ? 'pet__bubble--right' : '';
   // Peeking over a screen edge puts half of the sprite off-screen: keep the bubble (and menu) on-screen
-  const bubbleStyle: CSSProperties | undefined =
-    x < 8
+  const bubbleStyle: CSSProperties | undefined = inRoom
+    ? undefined
+    : x < 8
       ? { left: 8 - x, transform: 'none' }
       : x > vw - W - 8
         ? { left: 'auto', right: x - (vw - W - 8), transform: 'none' }
         : undefined;
 
-  return (
-    <>
+  const petNode = (
     <div
       ref={petRef}
-      className="pet"
+      className={`pet${inRoom ? ' pet--room' : ''}`}
       style={{
         width: W,
         height: H,
-        bottom: TASKBAR - FEET,
+        bottom: (inRoom ? roomContact : TASKBAR) - FEET,
         transform: `translate3d(${x}px, 0, 0)`,
         transition: travelMs ? `transform ${travelMs}ms linear` : 'none',
       }}
@@ -630,6 +809,7 @@ export default function Pet() {
      >
       <div className="pet__shadow" />
       <div
+        ref={liftRef}
         className="pet__lift"
         style={{
           transform: `translate3d(0, ${-y}px, 0)`,
@@ -638,9 +818,20 @@ export default function Pet() {
       >
        <div
         className="pet__vis"
-        style={vis.scale === 1 && vis.opacity === 1 ? undefined : { transform: `scale(${vis.scale})`, opacity: vis.opacity }}
+        style={
+          vis.scale === 1 && vis.opacity === 1 && !visAnim
+            ? undefined
+            : {
+                transform: `scale(${vis.scale})`,
+                opacity: vis.opacity,
+                transition: visAnim ? 'transform 340ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease' : undefined,
+              }
+        }
        >
         <div ref={bodyRef} className={`pet__body pet__fx pet__fx--${fx}`}>
+          {/* key: every behaviour starts its animation from the first frame */}
+          <Sprite key={mode} anim={mode} scale={scale} flip={facing === -1} />
+          {/* the click area is an overlay on the body (not the sprite's parent, or the sprite would start at its left edge) */}
           <button
             type="button"
             className="pet__hit"
@@ -650,10 +841,7 @@ export default function Pet() {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-          >
-            {/* key: every behaviour starts its animation from the first frame */}
-            <Sprite key={mode} anim={mode} scale={SCALE} flip={facing === -1} />
-          </button>
+          />
           {mode === 'sleep' && (
             <div className="pet__zzz" aria-hidden="true">
               <span>z</span>
@@ -663,6 +851,12 @@ export default function Pet() {
           )}
         </div>
        </div>
+
+        {carrying && (
+          <Suspense fallback={null}>
+            <CarryItem icon={carrying.icon} anim={mode} scale={scale} facing={facing} />
+          </Suspense>
+        )}
 
         {bubble && !menuOpen && (
           <div key={bubble.id} className={`pet__bubble ${alignClass} ${bubbleBelow ? 'pet__bubble--below' : ''}`} style={bubbleStyle} role="status">
@@ -701,11 +895,16 @@ export default function Pet() {
       </div>
      </div>
     </div>
-    {controlOn && (
-      <Suspense fallback={null}>
-        <PetControl api={api} />
-      </Suspense>
-    )}
+  );
+
+  return (
+    <>
+      {inRoom && roomHost ? createPortal(petNode, roomHost) : petNode}
+      {controlOn && (
+        <Suspense fallback={null}>
+          <PetControl api={api} />
+        </Suspense>
+      )}
     </>
   );
 }

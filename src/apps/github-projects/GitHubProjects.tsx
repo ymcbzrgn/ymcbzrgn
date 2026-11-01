@@ -5,9 +5,17 @@
  * Features: Cache fallback, 403 error handling, cooldown mechanism
  */
 
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { useStore } from '../../os/store';
+import { useT } from '../../os/i18n/full';
+import { useIsMobile } from '../../os/hooks/useDeviceType';
+import { useRoomStore } from '../../ui/rooms/roomStore';
 import RepoCard from './RepoCard';
+import '../../ui/rooms/roomToggle.css';
 import './GitHubProjects.css';
+
+// The workshop room (the pixel twin living in this window) is loaded only when somebody asks for it
+const ProjectsRoom = lazy(() => import('../../ui/rooms/ProjectsRoom'));
 
 interface Repo {
   id: number;
@@ -112,6 +120,10 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorState | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const t = useT();
+  const isMobile = useIsMobile();
+  const roomOn = useRoomStore((state) => state.windowId === windowId);
+  const assistantHidden = useStore((state) => state.settings.assistantHidden);
 
   useEffect(() => {
     fetchRepos();
@@ -293,7 +305,24 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="github-projects__search"
         />
+        {!isMobile && !assistantHidden && (
+          <button
+            type="button"
+            className="room-toggle"
+            aria-pressed={roomOn}
+            title={t('roomToggle')}
+            onClick={() => (roomOn ? useRoomStore.getState().leave() : useRoomStore.getState().enter(windowId))}
+          >
+            🏠
+          </button>
+        )}
       </div>
+
+      {roomOn && !isMobile && (
+        <Suspense fallback={null}>
+          <ProjectsRoom windowId={windowId} repos={filteredRepos} />
+        </Suspense>
+      )}
 
       {/* Content Area */}
       <div className="github-projects__content">
@@ -356,8 +385,8 @@ export default function GitHubProjects({ windowId }: GitHubProjectsProps) {
         {/* Repo Grid (show even with stale error) */}
         {!loading && filteredRepos.length > 0 && (
           <div className="github-projects__grid">
-            {filteredRepos.map((repo) => (
-              <RepoCard key={repo.id} repo={repo} />
+            {filteredRepos.map((repo, i) => (
+              <RepoCard key={repo.id} repo={repo} index={i} />
             ))}
           </div>
         )}
