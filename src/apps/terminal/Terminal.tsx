@@ -422,7 +422,7 @@ export default function Terminal({ windowId }: TerminalProps) {
       neofetch: 'neofetch - System info\nUsage: neofetch\nThe twin next to the specs of this machine.',
       achievements: 'achievements - Trophies\nUsage: achievements\nLists what you unlocked and opens the Achievements window.',
       sound: 'sound - Sound effects\nUsage: sound [on|off]\nTurns the chiptune sound effects and music on or off.',
-      pet: 'pet - Boss the twin around\nUsage: pet say <text> | pet do <move> | pet go <place> | pet list\nThe pixel assistant must be switched on.',
+      pet: 'pet - Boss the twin around\nUsage: pet say <text> | pet do <move> | pet go <place> | pet list\nThe pixel twin must be switched on.',
       tree: 'tree - Folder tree\nUsage: tree\nDraws the folders and files below the current directory.',
       open: 'open - Open a file or app\nUsage: open <name>\nOpens it in a window, like a double-click.',
       git: 'git - Version history\nUsage: git log [--oneline] [-n N]\nThe real recent history of this site.',
@@ -969,7 +969,7 @@ Examples:
           <div className="terminal-app__welcome">
             Welcome to Yamac's Portfolio Terminal!
             <br />
-            Start with 'about' - or type 'help' for all commands.
+            Start with 'about', or type 'help' for all commands.
             <br />
             <br />
           </div>

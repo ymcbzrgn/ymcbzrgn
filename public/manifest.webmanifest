@@ -1,7 +1,7 @@
 {
-  "name": "Yamaç Bezirgan - Interactive Desktop Portfolio",
+  "name": "Yamaç Bezirgan | Interactive Desktop Portfolio",
   "short_name": "YB Portfolio",
-  "description": "Interactive desktop OS portfolio showcasing full-stack development, AI/ML integration, and creative engineering",
+  "description": "The portfolio of Yamaç Bezirgan, a software engineer: a desktop OS in the browser with a CV, projects and a pixel-art twin.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

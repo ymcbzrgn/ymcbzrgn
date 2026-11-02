@@ -36,9 +36,7 @@ export default function FolderPlaceholder({ nodeId }: FolderPlaceholderProps) {
           This folder contains {children.length} {children.length === 1 ? 'item' : 'items'}
         </p>
         <p className="folder-placeholder__message">
-          File Explorer is coming soon.
-          <br />
-          Stay tuned!
+          Open this folder in File Explorer to see what is inside.
         </p>
       </div>
     </div>

@@ -89,7 +89,7 @@ export const BEHAVIORS = [
 
   /* ---------------- sudden surprises (rare while you are busy, common when you are not) ---------------- */
   { id: 'pushup', anim: 'pushup', weight: [3, 6, 0], duration: [3500, 6000], face: 'random',
-    lines: say(0.5, ['Out of nowhere: push-ups!', 'Pushing to main. Get it?'], ['Birden bire: şınav!', 'Şınav çekiyorum. Main\'e de push.']) },
+    lines: say(0.5, ['Out of nowhere: push-ups!', 'Pushing to main.'], ['Birden bire: şınav!', 'Şınav çekiyorum. Main\'e de push.']) },
   { id: 'sneeze', anim: 'sneeze', weight: [3, 3, 1], duration: [2700, 2700],
     lines: say(0.4, ['Achoo! Sorry, allergic to legacy code.'], ['Hapşu! Pardon, legacy koda alerjim var.']) },
   { id: 'hiccup', anim: 'hiccup', weight: [2, 3, 0], duration: [2500, 4000],
@@ -130,7 +130,7 @@ export const BEHAVIORS = [
   { id: 'celebrate', anim: 'celebrate', weight: [2, 3, 0], duration: [2500, 4000], fx: 'bounce',
     lines: say(0.5, ['All tests passed!', 'Green CI! Party time!'], ['Bütün testler geçti!', 'CI yeşil! Parti zamanı!']) },
   { id: 'flex', anim: 'flex', weight: [2, 3, 0], duration: [2500, 4000],
-    lines: say(0.4, ['Strong typing. Get it?'], ['Güçlü tipleme. Anladın mı?']) },
+    lines: say(0.4, ['Strong typing.'], ['Güçlü tipleme.']) },
   { id: 'angry', anim: 'angry', weight: [2, 3, 0], duration: [2500, 3500], fx: 'shake',
     lines: say(0.5, ["Why won't you compile?!"], ['Neden derlenmiyorsun?!']) },
   { id: 'dizzy', anim: 'dizzy', weight: [2, 3, 0], duration: [2500, 4000], fx: 'wobble',
@@ -150,7 +150,7 @@ export const BEHAVIORS = [
   { id: 'headstand', anim: 'headstand', weight: [2, 4, 0], duration: [3000, 5000],
     lines: say(0.45, ['Debugging from a new angle.'], ['Bug\'a farklı bir açıdan bakıyorum.']) },
   { id: 'headspin', anim: 'headspin', weight: [2, 4, 0], duration: [2400, 3200], fx: 'spin',
-    lines: say(0.4, ['A truly head-spinning feature.'], ['Gerçekten baş döndürücü bir özellik.']) },
+    lines: say(0.4, ['A head-spinning feature.'], ['Baş döndürücü bir özellik.']) },
   { id: 'pirouette', anim: 'ballet', weight: [2, 4, 0], duration: [2400, 3200], fx: 'spin',
     lines: say(0.4, ['Spinning up a new server!'], ['Yeni bir sunucu ayağa kaldırıyorum!']) },
   { id: 'cartwheel', anim: 'cartwheel', weight: [2, 4, 0], duration: [0, 0], move: 'run',

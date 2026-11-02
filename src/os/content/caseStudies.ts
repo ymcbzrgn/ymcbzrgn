@@ -65,8 +65,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'What it is', tr: 'Nedir' },
         paragraphs: [
           {
-            en: 'HydraQuant is an AI-assisted trading engine for cryptocurrency markets. It combines a rule-based signal engine, a multi-agent language-model debate, adaptive learning that updates from every closed trade, and Bayesian position sizing. It runs on free-tier LLM providers and free data sources. It is alpha software and a research project, not investment advice.',
-            tr: 'HydraQuant, kripto para piyasaları için yapay zeka destekli bir ticaret motoru. Kural tabanlı bir sinyal motorunu, çok ajanlı bir dil modeli tartışmasını, kapanan her işlemden öğrenen uyarlanabilir öğrenmeyi ve Bayes pozisyon boyutlandırmasını birleştirir. Ücretsiz katmandaki LLM sağlayıcıları ve ücretsiz veri kaynaklarıyla çalışır. Alfa aşamasında bir yazılım ve araştırma projesidir, yatırım tavsiyesi değildir.',
+            en: 'HydraQuant is an AI-assisted trading engine for cryptocurrency markets. It has four main parts: a rule-based signal engine, a debate between language-model agents, adaptive learning that updates after every closed trade, and Bayesian position sizing. It runs on free-tier LLM providers and free data sources. It is alpha software for research, and nothing it produces is investment advice.',
+            tr: 'HydraQuant, kripto para piyasaları için yapay zeka destekli bir ticaret motoru. Dört ana parçası var: kural tabanlı bir sinyal motoru, dil modeli ajanları arasında bir tartışma, kapanan her işlemden sonra güncellenen uyarlanabilir öğrenme ve Bayes pozisyon boyutlandırması. Ücretsiz LLM sağlayıcıları ve ücretsiz veri kaynaklarıyla çalışır. Alfa aşamasında, araştırma amaçlı bir yazılım. Ürettiği hiçbir şey yatırım tavsiyesi değil.',
           },
         ],
       },
@@ -74,28 +74,28 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'Design decisions', tr: 'Tasarım kararları' },
         bullets: [
           {
-            en: 'Rules first, models second. A rule-based Evidence Engine scores each trade in about 50 ms at no API cost. Language models are consulted only when the remaining uncertainty justifies it, so most decisions never touch one.',
-            tr: 'Önce kurallar, sonra modeller. Kural tabanlı Kanıt Motoru her işlemi yaklaşık 50 ms içinde, API maliyeti olmadan puanlar. Dil modellerine yalnızca kalan belirsizlik buna değdiğinde başvurulur; kararların çoğu hiçbirine uğramaz.',
+            en: 'A rule-based Evidence Engine scores each trade in about 50 ms and costs nothing in API calls. It asks a language model only when the remaining uncertainty is worth the cost, so most decisions never reach one.',
+            tr: 'Kural tabanlı Kanıt Motoru her işlemi yaklaşık 50 ms’de puanlar ve API maliyeti çıkarmaz. Dil modeline yalnızca kalan belirsizlik maliyete değdiğinde sorar, bu yüzden kararların çoğu hiçbirine uğramaz.',
           },
           {
-            en: 'Six questions, scored independently. Trend, momentum, crowd positioning, historical evidence, macro conditions and risk are each scored on their own. When the scores disagree the engine becomes more cautious instead of averaging the disagreement away.',
-            tr: 'Altı soru, ayrı ayrı puanlanır. Trend, momentum, kalabalığın konumu, tarihsel kanıt, makro koşullar ve risk tek tek puanlanır. Puanlar çeliştiğinde motor, çelişkiyi ortalamayla yok etmek yerine daha temkinli davranır.',
+            en: 'Six questions are scored on their own: trend, momentum, crowd positioning, historical evidence, macro conditions and risk. When the scores disagree, the engine gets more cautious and keeps the disagreement as a signal.',
+            tr: 'Altı soru ayrı ayrı puanlanır: trend, momentum, kalabalığın konumu, tarihsel kanıt, makro koşullar ve risk. Puanlar çeliştiğinde motor daha temkinli davranır ve çelişkiyi bir sinyal olarak tutar.',
           },
           {
-            en: 'A debate when it is needed. Four to seven specialist agents, picked from twelve for the current market regime, argue in up to three rounds. Cross-examination is skipped when the first round already agrees, to save cost.',
-            tr: 'Gerektiğinde tartışma. On ikisi arasından mevcut piyasa rejimine göre seçilen dört ila yedi uzman ajan, en fazla üç turda tartışır. İlk tur zaten uzlaşıyorsa maliyeti azaltmak için çapraz sorgu atlanır.',
+            en: 'When the engine needs a second opinion, a debate runs. Four to seven specialist agents, picked from twelve for the current market regime, argue for up to three rounds. If the first round already agrees, the engine skips the cross-examination to save cost.',
+            tr: 'Motorun ikinci bir görüşe ihtiyacı olduğunda tartışma başlar. On iki uzman arasından mevcut piyasa rejimine göre seçilen dört ila yedi ajan en fazla üç tur tartışır. İlk tur zaten uzlaşıyorsa motor, maliyeti düşürmek için çapraz sorguyu atlar.',
           },
           {
-            en: 'Parameters that learn. Learning rates, risk thresholds and exit multipliers are not constants: they are adaptive parameters that are updated after every closed trade.',
-            tr: 'Öğrenen parametreler. Öğrenme oranları, risk eşikleri ve çıkış çarpanları sabit değildir; kapanan her işlemden sonra güncellenen uyarlanabilir parametrelerdir.',
+            en: 'Learning rates, risk thresholds and exit multipliers are adaptive parameters. The engine updates them after every closed trade.',
+            tr: 'Öğrenme oranları, risk eşikleri ve çıkış çarpanları uyarlanabilir parametrelerdir. Motor onları kapanan her işlemden sonra günceller.',
           },
           {
-            en: 'Confidence sizes a position, it does not block one. A weak signal becomes a shadow trade that is studied later. A ledger records what skipped signals would have earned, and thresholds loosen when caution costs too much.',
-            tr: 'Güven, pozisyonu boyutlandırır, engellemez. Zayıf bir sinyal, sonradan incelenen bir gölge işlem olur. Bir defter, atlanan sinyallerin ne kazandıracağını kaydeder; temkin fazla pahalıya mal olduğunda eşikler gevşer.',
+            en: 'Confidence decides the size of a position. A weak signal becomes a shadow trade that the engine studies later, and a ledger records what the skipped signals would have earned. Thresholds loosen when caution costs too much.',
+            tr: 'Güven, pozisyonun boyutunu belirler. Zayıf bir sinyal, motorun sonradan incelediği bir gölge işlem olur. Bir defter, atlanan sinyallerin ne kazandıracağını kaydeder. Temkin fazla pahalıya mal olduğunda eşikler gevşer.',
           },
           {
-            en: 'No single point of failure. Seven LLM providers sit behind a bandit-based router with a circuit breaker, macro data arrives through three fallback cascades, and five independent risk guardrails stand in front of the exchange.',
-            tr: 'Tek hata noktası yok. Yedi LLM sağlayıcısı, devre kesicili bir bandit yönlendiricinin arkasında durur; makro veri üç yedekli kademeden gelir ve borsanın önünde beş bağımsız risk koruması bulunur.',
+            en: 'Seven LLM providers sit behind a bandit-based router with a circuit breaker. Macro data arrives through three fallback cascades, and five independent risk guardrails stand in front of the exchange.',
+            tr: 'Yedi LLM sağlayıcısı, devre kesicili ve bandit tabanlı bir yönlendiricinin arkasında durur. Makro veri üç yedekli kademeden gelir, borsanın önünde de beş bağımsız risk koruması vardır.',
           },
         ],
       },
@@ -103,8 +103,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'Architecture', tr: 'Mimari' },
         paragraphs: [
           {
-            en: 'Six layers. A Vue 3 dashboard (an extended FreqUI) and a Telegram notifier on top; a FastAPI read API; an APScheduler layer for training, evolution and consolidation jobs; the cognition layer (evidence engine, debate, agent pool, LLM router, adaptive parameters); the decision layer (Bayesian Kelly sizing, hard risk limits, graduated autonomy); and execution, which is delegated to freqtrade through CCXT.',
-            tr: 'Altı katman. Üstte Vue 3 panosu (genişletilmiş FreqUI) ve bir Telegram bildiricisi; bir FastAPI okuma API’si; eğitim, evrim ve pekiştirme işleri için bir APScheduler katmanı; biliş katmanı (kanıt motoru, tartışma, ajan havuzu, LLM yönlendirici, uyarlanabilir parametreler); karar katmanı (Bayes Kelly boyutlandırma, katı risk limitleri, kademeli özerklik) ve CCXT üzerinden freqtrade’e devredilen yürütme.',
+            en: 'The system has six layers. At the top are a Vue 3 dashboard (an extended FreqUI) and a Telegram notifier. Below them sit a FastAPI read API, an APScheduler layer for training, evolution and consolidation jobs, the cognition layer (evidence engine, debate, agent pool, LLM router, adaptive parameters) and the decision layer (Bayesian Kelly sizing, hard risk limits, graduated autonomy). Execution goes to freqtrade through CCXT.',
+            tr: 'Sistemin altı katmanı var. En üstte bir Vue 3 panosu (genişletilmiş FreqUI) ve bir Telegram bildiricisi duruyor. Altında bir FastAPI okuma API’si, eğitim, evrim ve pekiştirme işleri için bir APScheduler katmanı, biliş katmanı (kanıt motoru, tartışma, ajan havuzu, LLM yönlendirici, uyarlanabilir parametreler) ve karar katmanı (Bayes Kelly boyutlandırma, katı risk limitleri, kademeli özerklik) geliyor. Yürütme CCXT üzerinden freqtrade’e gidiyor.',
           },
         ],
       },
@@ -113,8 +113,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         bullets: [
           { en: 'A candle arrives and the strategy callback fires.', tr: 'Bir mum gelir ve strateji geri çağrısı çalışır.' },
           {
-            en: 'Three forecasters run in parallel (Tiny Time Mixer embeddings, Chronos-Bolt quantiles and a CatBoost classifier) and are fused into a direction estimate.',
-            tr: 'Üç tahminci paralel çalışır (Tiny Time Mixer gömmeleri, Chronos-Bolt kantilleri ve bir CatBoost sınıflandırıcısı) ve tek bir yön tahmininde birleştirilir.',
+            en: 'Three forecasters run in parallel (Tiny Time Mixer embeddings, Chronos-Bolt quantiles and a CatBoost classifier), and the engine fuses them into one direction estimate.',
+            tr: 'Üç tahminci paralel çalışır (Tiny Time Mixer gömmeleri, Chronos-Bolt kantilleri ve bir CatBoost sınıflandırıcısı) ve motor çıktılarını tek bir yön tahmininde birleştirir.',
           },
           { en: 'The Evidence Engine scores the six questions.', tr: 'Kanıt Motoru altı soruyu puanlar.' },
           {
@@ -131,14 +131,14 @@ export const CASE_STUDIES: CaseStudy[] = [
 
   {
     id: 'portfolio',
-    title: { en: 'A desktop OS in the browser: this portfolio', tr: 'Tarayıcıda masaüstü işletim sistemi: bu portföy' },
+    title: { en: 'A desktop OS in the browser: this portfolio', tr: 'Tarayıcıda masaüstü işletim sistemi: portfolyom' },
     description: {
       en: 'How this portfolio is built: a desktop OS in the browser with React, TypeScript and Vite, a virtual file system, a pixel-art twin and a phone mode. No backend.',
-      tr: 'Bu portföy nasıl yapıldı: React, TypeScript ve Vite ile tarayıcıda masaüstü işletim sistemi, sanal dosya sistemi, piksel ikiz ve telefon modu. Backend yok.',
+      tr: 'Bu portfolyo nasıl yapıldı: React, TypeScript ve Vite ile tarayıcıda masaüstü işletim sistemi, sanal dosya sistemi, piksel ikiz ve telefon modu. Backend yok.',
     },
     tagline: {
       en: 'A portfolio built as an operating system: windows, a file system, a terminal, a pixel-art twin and a phone mode, with no backend.',
-      tr: 'İşletim sistemi olarak kurulmuş bir portföy: pencereler, dosya sistemi, terminal, piksel ikiz ve telefon modu; backend yok.',
+      tr: 'İşletim sistemi olarak kurulmuş bir portfolyo: pencereler, dosya sistemi, terminal, piksel ikiz ve telefon modu. Backend yok.',
     },
     repo: 'https://github.com/ymcbzrgn/ymcbzrgn',
     demo: 'https://yamacbezirgan.com/',
@@ -147,7 +147,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     facts: [
       { label: { en: 'Stack', tr: 'Teknoloji' }, value: { en: 'React 18, TypeScript, Vite, Zustand', tr: 'React 18, TypeScript, Vite, Zustand' } },
       { label: { en: 'First screen', tr: 'İlk ekran' }, value: { en: '{firstScreenKB} KB gzip', tr: '{firstScreenKB} KB gzip' } },
-      { label: { en: 'Scripts', tr: 'Script' }, value: { en: '{scripts}, all but the first loaded on demand', tr: '{scripts} adet, ilki dışında hepsi istenince yüklenir' } },
+      { label: { en: 'Scripts', tr: 'Script' }, value: { en: '{scripts}; only the entry and a few vendor chunks load up front', tr: '{scripts} adet; açılışta yalnızca giriş betiği ve birkaç vendor parçası yüklenir' } },
       { label: { en: 'Browser test suites', tr: 'Tarayıcı test paketi' }, value: { en: '{suites}, run on every push', tr: '{suites} adet, her push’ta çalışır' } },
       { label: { en: 'Hosting', tr: 'Barındırma' }, value: { en: 'Cloudflare Pages, static files only', tr: 'Cloudflare Pages, yalnızca statik dosyalar' } },
     ],
@@ -156,8 +156,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'What it is', tr: 'Nedir' },
         paragraphs: [
           {
-            en: 'The desktop runs in the browser with no backend: windows you can drag, a virtual file system kept in IndexedDB, and built-in apps (a PDF viewer, a terminal with pipes and git log, a Markdown reader, a GitHub project explorer, a music player, four games, notes, a calculator, a calendar and photos). There is a command palette, a guided tour and achievements. On a phone it becomes a phone: a lock screen, a home screen with widgets, and the same apps in a full-screen shell.',
-            tr: 'Masaüstü, backend olmadan tarayıcıda çalışır: sürüklenebilir pencereler, IndexedDB’de tutulan sanal dosya sistemi ve yerleşik uygulamalar (PDF görüntüleyici, boru hatlı ve git log’lu terminal, Markdown okuyucu, GitHub proje gezgini, müzik çalar, dört oyun, notlar, hesap makinesi, takvim ve fotoğraflar). Komut paleti, rehberli tur ve başarımlar var. Telefonda bir telefona dönüşür: kilit ekranı, widget’lı ana ekran ve aynı uygulamalar tam ekran kabukta.',
+            en: 'The desktop runs in the browser with no backend. You can drag its windows, and a virtual file system kept in IndexedDB remembers your changes. The built-in apps are a PDF viewer, a terminal with pipes and git log, a Markdown reader, a GitHub project explorer, a music player, four games, notes, a calculator, a calendar and photos. There is also a command palette, a guided tour and achievements. On a phone it turns into a phone: a lock screen, a home screen with widgets, and the same apps in a full-screen shell.',
+            tr: 'Masaüstü backend olmadan tarayıcıda çalışıyor. Pencerelerini sürükleyebilirsin, IndexedDB’de tutulan sanal dosya sistemi de yaptığın değişiklikleri hatırlıyor. Yerleşik uygulamalar şunlar: PDF görüntüleyici, pipe ve git log destekli terminal, Markdown okuyucu, GitHub proje gezgini, müzik çalar, dört oyun, notlar, hesap makinesi, takvim ve fotoğraflar. Komut paleti, rehberli tur ve başarımlar da var. Telefonda bir telefona dönüşüyor: kilit ekranı, widget’lı ana ekran ve aynı uygulamalar tam ekran bir kabukta.',
           },
         ],
       },
@@ -165,26 +165,26 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'The pixel twin', tr: 'Piksel ikiz' },
         paragraphs: [
           {
-            en: 'A pixel-art character walks around the desktop, sits on window title bars, moves into folders as rooms and reacts to what you do. Every sprite, tile, room prop and app icon is drawn in code (scripts/sprites): ASCII bitmaps and shapes with automatic outlines, packed into indexed PNG sheets of a few kilobytes each. Sound is synthesised with the Web Audio API, so there are no audio files.',
-            tr: 'Piksel-art bir karakter masaüstünde dolaşır, pencere başlık çubuklarına oturur, klasörlere oda olarak taşınır ve yaptıklarına tepki verir. Her sprite, karo, oda eşyası ve uygulama ikonu kodla çizilir (scripts/sprites): otomatik kenarlıklı ASCII bitmap’ler ve şekiller, her biri birkaç kilobaytlık indeksli PNG sayfalarına paketlenir. Ses Web Audio API ile sentezlenir; ses dosyası yoktur.',
+            en: 'A pixel-art character walks around the desktop, sits on window title bars, moves into folders as rooms and reacts to what you do. I draw every sprite, tile, room prop and app icon in code (scripts/sprites): ASCII bitmaps and shapes with automatic outlines, packed into indexed PNG sheets of a few kilobytes each. The Web Audio API synthesises the sound, so there are no audio files.',
+            tr: 'Piksel-art bir karakter masaüstünde dolaşıyor, pencere başlık çubuklarına oturuyor, klasörlere oda olarak taşınıyor ve yaptıklarına tepki veriyor. Her sprite’ı, karoyu, oda eşyasını ve uygulama ikonunu kodla çiziyorum (scripts/sprites): otomatik kenarlıklı ASCII bitmap’ler ve şekiller, her biri birkaç kilobaytlık indeksli PNG sayfalarına paketleniyor. Sesi Web Audio API sentezliyor, ses dosyası yok.',
           },
         ],
       },
       {
-        title: { en: 'Performance is a budget', tr: 'Performans bir bütçedir' },
+        title: { en: 'The size budget', tr: 'Boyut bütçesi' },
         paragraphs: [
           {
-            en: 'The first screen is {firstScreenKB} KB gzip, measured by the build, and a script fails the build when it grows past its budget. Every app, the twin, the palette and the story load when asked for. The phone UI, with its animation library, is a separate chunk that desktop visitors never download.',
-            tr: 'İlk ekran {firstScreenKB} KB gzip; bunu derleme ölçer ve bütçeyi aşarsa bir betik derlemeyi düşürür. Her uygulama, ikiz, palet ve hikâye istenince yüklenir. Animasyon kütüphanesiyle birlikte telefon arayüzü ayrı bir parçadır ve masaüstü ziyaretçileri onu hiç indirmez.',
+            en: 'The first screen is {firstScreenKB} KB gzip, measured by the build. A script fails the build when it grows past its budget. Every app, the twin, the palette and the story load when you ask for them. The phone UI and its animation library are a separate chunk that desktop visitors never download.',
+            tr: 'İlk ekran {firstScreenKB} KB gzip ve bunu derleme ölçüyor. Bütçeyi aşarsa bir betik derlemeyi düşürüyor. Her uygulama, ikiz, palet ve hikâye istenince yükleniyor. Telefon arayüzü animasyon kütüphanesiyle birlikte ayrı bir parça, masaüstü ziyaretçileri onu hiç indirmiyor.',
           },
         ],
       },
       {
-        title: { en: 'Findable by search engines and assistants', tr: 'Arama motorları ve asistanlar için bulunabilir' },
+        title: { en: 'Search engines and assistants', tr: 'Arama motorları ve asistanlar' },
         paragraphs: [
           {
             en: 'A client-rendered app is an empty div to a crawler, so a Vite plugin writes the facts into the HTML at build time: head tags, structured data, a plain boot block, a static résumé in two languages, Markdown copies, a sitemap, llms.txt and one page per project, like this one.',
-            tr: 'İstemcide çizilen bir uygulama, tarayıcı robotu için boş bir div’dir; bu yüzden bir Vite eklentisi bilgileri derleme sırasında HTML’e yazar: head etiketleri, yapılandırılmış veri, düz bir açılış bloğu, iki dilde statik özgeçmiş, Markdown kopyaları, site haritası, llms.txt ve her proje için bir sayfa; bu sayfa gibi.',
+            tr: 'İstemcide çizilen bir uygulama arama robotuna boş bir div görünür. Bu yüzden bir Vite eklentisi bilgileri derleme sırasında HTML’e yazıyor: head etiketleri, yapılandırılmış veri, düz bir açılış bloğu, iki dilde statik özgeçmiş, Markdown kopyaları, site haritası, llms.txt ve her proje için bir sayfa, tıpkı bu sayfa gibi.',
           },
         ],
       },
@@ -192,8 +192,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'Quality', tr: 'Kalite' },
         paragraphs: [
           {
-            en: 'Type checking, ESLint, bundle budgets, an SEO audit and {suites} Playwright suites run against the production build on every push. The test server imitates the routing of Cloudflare Pages, which found requests that were silently answered by the single-page-app fallback.',
-            tr: 'Tip denetimi, ESLint, paket bütçeleri, SEO denetimi ve {suites} Playwright paketi her push’ta üretim derlemesine karşı çalışır. Test sunucusu Cloudflare Pages’in yönlendirmesini taklit eder; bu sayede tek sayfalık uygulama yedeği tarafından sessizce yanıtlanan istekler bulundu.',
+            en: 'Type checking, ESLint, bundle budgets, an SEO audit and {suites} Playwright suites run against the production build on every push. I made the test server imitate the routing of Cloudflare Pages, which exposed requests that the single-page-app fallback had been answering silently.',
+            tr: 'Tip denetimi, ESLint, paket bütçeleri, SEO denetimi ve {suites} Playwright paketi her push’ta üretim derlemesine karşı çalışıyor. Test sunucusunu Cloudflare Pages’in yönlendirmesini taklit edecek şekilde kurdum. Bu, tek sayfalık uygulama yedeğinin sessizce yanıtladığı istekleri ortaya çıkardı.',
           },
         ],
       },
@@ -225,8 +225,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'What it is', tr: 'Nedir' },
         paragraphs: [
           {
-            en: 'QuirkLLM is a terminal coding assistant in the spirit of Claude Code CLI and Gemini CLI, with one difference: it runs entirely on the developer’s own machine. It is a privacy-focused alternative to cloud developer tools for people who do not want their code to leave the laptop. It does not need a GPU, and uses one automatically when it finds one.',
-            tr: 'QuirkLLM, Claude Code CLI ve Gemini CLI ruhunda bir terminal kodlama asistanı; tek farkı tamamen geliştiricinin kendi makinesinde çalışması. Kodunun dizüstünden çıkmasını istemeyenler için bulut geliştirici araçlarına gizlilik odaklı bir alternatif. GPU gerektirmez, bulursa otomatik kullanır.',
+            en: 'QuirkLLM is a terminal coding assistant in the spirit of Claude Code CLI and Gemini CLI. It runs on the developer’s own machine, so the code never has to leave the laptop. It needs no GPU and uses one when it finds one.',
+            tr: 'QuirkLLM, Claude Code CLI ve Gemini CLI ruhunda bir terminal kodlama asistanı. Geliştiricinin kendi makinesinde çalışıyor, yani kod dizüstünden hiç çıkmak zorunda kalmıyor. GPU gerektirmiyor, bulursa kullanıyor.',
           },
         ],
       },
@@ -234,26 +234,32 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'RAM-aware profiles', tr: 'RAM duyarlı profiller' },
         paragraphs: [
           {
-            en: 'On start it detects the available RAM and picks one of four profiles. Survival (about 8 GB) uses a 16K context, 4-bit weights and the core features. Comfort (about 16 GB) uses a 32K context, 4-bit weights and every feature. Power (about 32 GB) uses a 64K context, 8-bit weights and parallel work. Beast (64 GB and up) uses a 128K context at 8 bits. Context length, cache sizes and quantisation follow the profile, and the profile can be overridden by hand.',
-            tr: 'Açılışta kullanılabilir RAM’i algılar ve dört profilden birini seçer. Survival (yaklaşık 8 GB) 16K bağlam, 4-bit ağırlık ve temel özellikleri kullanır. Comfort (yaklaşık 16 GB) 32K bağlam, 4-bit ağırlık ve tüm özellikleri kullanır. Power (yaklaşık 32 GB) 64K bağlam, 8-bit ağırlık ve paralel çalışmayı kullanır. Beast (64 GB ve üzeri) 8-bit ile 128K bağlam kullanır. Bağlam uzunluğu, önbellek boyutları ve nicemleme profile göre belirlenir; profil elle de değiştirilebilir.',
+            en: 'On start it detects the available RAM and picks one of four profiles. Context length, cache sizes and quantisation follow the profile, and you can override the profile by hand.',
+            tr: 'Açılışta kullanılabilir RAM’i algılar ve dört profilden birini seçer. Bağlam uzunluğu, önbellek boyutları ve nicemleme profile göre belirlenir, profili elle de değiştirebilirsin.',
           },
+        ],
+        bullets: [
+          { en: 'Survival (about 8 GB): 16K context, 4-bit weights, the core features.', tr: 'Survival (yaklaşık 8 GB): 16K bağlam, 4-bit ağırlık, temel özellikler.' },
+          { en: 'Comfort (about 16 GB): 32K context, 4-bit weights, every feature.', tr: 'Comfort (yaklaşık 16 GB): 32K bağlam, 4-bit ağırlık, tüm özellikler.' },
+          { en: 'Power (about 32 GB): 64K context, 8-bit weights, parallel work.', tr: 'Power (yaklaşık 32 GB): 64K bağlam, 8-bit ağırlık, paralel çalışma.' },
+          { en: 'Beast (64 GB and up): 128K context at 8 bits.', tr: 'Beast (64 GB ve üzeri): 8 bitte 128K bağlam.' },
         ],
       },
       {
         title: { en: 'Four working modes', tr: 'Dört çalışma modu' },
         bullets: [
-          { en: 'Chat (the default): asks for confirmation before anything critical.', tr: 'Chat (varsayılan): kritik her işlemden önce onay ister.' },
+          { en: 'Chat is the default. It asks for confirmation before anything critical.', tr: 'Chat varsayılan moddur. Kritik her işlemden önce onay ister.' },
           {
-            en: 'YAMI: “auto-accept”. It writes code, runs tests and fixes files without asking, apart from very risky commands.',
-            tr: 'YAMI: “otomatik kabul”. Çok riskli komutlar dışında sormadan kod yazar, test çalıştırır ve dosyaları düzeltir.',
+            en: 'YAMI is “auto-accept”. It writes code, runs tests and fixes files without asking, except for very risky commands.',
+            tr: 'YAMI “otomatik kabul” modudur. Çok riskli komutlar dışında sormadan kod yazar, test çalıştırır ve dosyaları düzeltir.',
           },
           {
-            en: 'Plan: read-only. It analyses the project and writes plans (TODO and architecture notes) without changing any code.',
-            tr: 'Plan: salt okunur. Projeyi inceler ve hiçbir kodu değiştirmeden planlar (TODO ve mimari notları) yazar.',
+            en: 'Plan is read-only. It analyses the project and writes plans (TODO and architecture notes) without changing any code.',
+            tr: 'Plan salt okunurdur. Projeyi inceler, hiçbir kodu değiştirmeden planlar (TODO ve mimari notları) yazar.',
           },
           {
-            en: 'Ghost: watches in the background. When you save a file it analyses the change and warns you if it broke another file.',
-            tr: 'Ghost: arka planda izler. Bir dosyayı kaydettiğinde değişikliği inceler ve başka bir dosyayı bozduysa uyarır.',
+            en: 'Ghost watches in the background. When you save a file, it analyses the change and warns you if it broke another file.',
+            tr: 'Ghost arka planda izler. Bir dosyayı kaydettiğinde değişikliği inceler, başka bir dosyayı bozduysa uyarır.',
           },
         ],
       },
@@ -261,8 +267,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'Knowledge and integration', tr: 'Bilgi ve entegrasyon' },
         paragraphs: [
           {
-            en: 'Knowledge Eater lets you point it at documentation, a URL or a PDF, and embeds the pages into a local vector store, so it can answer from documentation that is private or offline. Neural Link runs it as a Model Context Protocol (MCP) server, so MCP-capable tools such as Claude Desktop or Cursor can see the local repository.',
-            tr: 'Knowledge Eater, bir dokümantasyonu (URL ya da PDF) gösterdiğinde sayfaları yerel bir vektör deposuna gömer; böylece özel ya da çevrimdışı dokümanlardan yanıt verebilir. Neural Link, onu bir Model Context Protocol (MCP) sunucusu olarak çalıştırır; Claude Desktop ya da Cursor gibi MCP destekli araçlar yerel depoyu görebilir.',
+            en: 'Knowledge Eater takes a documentation URL or a PDF and embeds its pages into a local vector store, so QuirkLLM can answer from documentation that is private or offline. Neural Link runs QuirkLLM as a Model Context Protocol (MCP) server, which lets MCP-capable tools such as Claude Desktop or Cursor see the local repository.',
+            tr: 'Knowledge Eater, bir dokümantasyon URL’sini ya da PDF’ini alıp sayfalarını yerel bir vektör deposuna gömer, böylece QuirkLLM özel ya da çevrimdışı dokümanlardan yanıt verebilir. Neural Link, QuirkLLM’i bir Model Context Protocol (MCP) sunucusu olarak çalıştırır. Claude Desktop ya da Cursor gibi MCP destekli araçlar da yerel depoyu görebilir.',
           },
         ],
       },
@@ -270,8 +276,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'How it is put together', tr: 'Nasıl kurulu' },
         paragraphs: [
           {
-            en: 'The README describes a pipeline: a system detector (psutil), an interactive CLI with a REPL and session manager, a project analyser that detects frameworks and package managers, a conversation engine that manages the context window, compacts history and resolves references such as “it” and “that component”, and adaptive inference and RAG layers that follow the active profile. The base model it names is DeepSeek Coder 1.3B.',
-            tr: 'README şu hattı anlatır: bir sistem algılayıcı (psutil), REPL ve oturum yöneticili etkileşimli CLI, çatıları ve paket yöneticilerini algılayan proje analizcisi, bağlam penceresini yöneten, geçmişi sıkıştıran ve “bunu”, “şu bileşen” gibi göndermeleri çözen konuşma motoru ve etkin profili izleyen uyarlanabilir çıkarım ve RAG katmanları. Adını andığı temel model DeepSeek Coder 1.3B’dir.',
+            en: 'According to the README, the pipeline has a system detector (psutil), an interactive CLI with a REPL and session manager, a project analyser that detects frameworks and package managers, a conversation engine that manages the context window, compacts history and resolves references such as “it” and “that component”, and adaptive inference and RAG layers that follow the active profile. The base model it names is DeepSeek Coder 1.3B.',
+            tr: 'README’ye göre hattın parçaları şunlar: bir sistem algılayıcı (psutil), REPL ve oturum yöneticili etkileşimli CLI, çatıları ve paket yöneticilerini algılayan proje analizcisi, bağlam penceresini yöneten, geçmişi sıkıştıran ve “bunu”, “şu bileşen” gibi göndermeleri çözen konuşma motoru, bir de etkin profili izleyen uyarlanabilir çıkarım ve RAG katmanları. README’nin adını andığı temel model DeepSeek Coder 1.3B.',
           },
         ],
       },
@@ -280,7 +286,7 @@ export const CASE_STUDIES: CaseStudy[] = [
 
   {
     id: 'shiffy',
-    title: { en: 'Shiffy: AI shift scheduling built on Llama', tr: 'Shiffy: Llama ile yapay zekâlı vardiya planı' },
+    title: { en: 'Shiffy: AI shift scheduling built on Llama', tr: 'Shiffy: Llama destekli vardiya planlama' },
     description: {
       en: 'Shiffy: a mobile-first shift management app (Expo, Express, Supabase) in which Meta’s Llama drafts fair schedules from availability and manager notes.',
       tr: 'Shiffy: Llama’nın müsaitlik ve yönetici notlarından adil vardiya planı çıkardığı, mobil öncelikli vardiya yönetim uygulaması (Expo, Express, Supabase).',
@@ -310,8 +316,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'The problem', tr: 'Sorun' },
         paragraphs: [
           {
-            en: 'The README frames it like this: small businesses with part-time staff build shift schedules by hand, collect availability over WhatsApp or on paper, and end up with distributions that feel unfair, which costs managers hours every week.',
-            tr: 'README sorunu şöyle çerçeveler: yarı zamanlı çalışanı olan küçük işletmeler vardiya planını elle hazırlar, müsaitlikleri WhatsApp ya da kâğıt üzerinden toplar ve adil görünmeyen dağılımlarla karşılaşır; bu da yöneticilere her hafta saatlere mal olur.',
+            en: 'According to the README, small businesses with part-time staff build shift schedules by hand and collect availability over WhatsApp or on paper. The result feels unfair, and managers lose hours every week.',
+            tr: 'README’ye göre yarı zamanlı çalışanı olan küçük işletmeler vardiya planını elle hazırlıyor, müsaitlikleri WhatsApp ya da kâğıt üzerinden topluyor. Sonuç adil hissettirmiyor ve yöneticiler her hafta saatlerini kaybediyor.',
           },
         ],
       },
@@ -320,11 +326,11 @@ export const CASE_STUDIES: CaseStudy[] = [
         bullets: [
           {
             en: 'Managers sign up and set up a business themselves, add employee accounts with context notes, generate a schedule with the model in seconds, adjust it by drag and drop, then approve and distribute it in one tap. They can also track daily and weekly sales and tune deadlines, working days and shift lengths.',
-            tr: 'Yöneticiler kendi başlarına kayıt olup işletmeyi kurar, bağlam notlarıyla çalışan hesapları ekler, modelle saniyeler içinde plan üretir, sürükle-bırak ile düzeltir, tek dokunuşla onaylayıp dağıtır. Günlük ve haftalık satışları izleyebilir; son tarih, çalışma günleri ve vardiya sürelerini ayarlayabilir.',
+            tr: 'Yöneticiler kendi başlarına kayıt olup işletmeyi kurar, bağlam notlarıyla çalışan hesapları ekler, modelle saniyeler içinde plan üretir, sürükle-bırak ile düzeltir, tek dokunuşla onaylayıp dağıtır. Günlük ve haftalık satışları da izleyebilir, son tarihi, çalışma günlerini ve vardiya sürelerini ayarlayabilir.',
           },
           {
-            en: 'Employees sign in with a username (no email needed), pick their availability in 30-minute slots (available, unavailable or leave request), see approved schedules and past shifts, and get deadline reminders. Drafts are saved automatically, also offline.',
-            tr: 'Çalışanlar kullanıcı adıyla giriş yapar (e-posta gerekmez), müsaitliğini 30 dakikalık dilimlerde seçer (müsait, müsait değil ya da izin talebi), onaylanan planları ve geçmiş vardiyaları görür, son tarih hatırlatıcıları alır. Taslaklar, çevrimdışıyken de otomatik kaydedilir.',
+            en: 'Employees sign in with a username (no email needed), pick their availability in 30-minute slots (available, unavailable or leave request), see approved schedules and past shifts, and get deadline reminders. Drafts autosave, offline too.',
+            tr: 'Çalışanlar kullanıcı adıyla giriş yapar (e-posta gerekmez), müsaitliğini 30 dakikalık dilimlerde seçer (müsait, müsait değil ya da izin talebi), onaylanan planları ve geçmiş vardiyaları görür, son tarih hatırlatıcıları alır. Uygulama taslakları çevrimdışıyken de otomatik kaydeder.',
           },
         ],
       },
@@ -394,8 +400,8 @@ export const CASE_STUDIES: CaseStudy[] = [
         title: { en: 'What it is', tr: 'Nedir' },
         paragraphs: [
           {
-            en: 'An implementation of the Canny edge detection algorithm (John F. Canny, 1986), a classic of computer vision, wrapped in a Tkinter desktop app. You choose an image, set how much to blur it, press Submit and see the result. Writing the stages by hand rather than calling a library function makes each of them visible, and the app shows them one by one.',
-            tr: 'Bilgisayarlı görünün klasiklerinden Canny kenar algılama algoritmasının (John F. Canny, 1986) bir Tkinter masaüstü uygulamasına sarılmış gerçeklemesi. Bir görüntü seçersin, ne kadar bulanıklaştıracağını ayarlarsın, Submit’e basıp sonucu görürsün. Aşamaları hazır bir kütüphane fonksiyonunu çağırmak yerine elle yazmak her birini görünür kılar; uygulama da onları tek tek gösterir.',
+            en: 'I implemented the Canny edge detection algorithm (John F. Canny, 1986), a classic of computer vision, from scratch to strengthen my fundamentals, and put it in a Tkinter desktop app. You choose an image, set how much to blur it, press Submit and see the result. I wrote each stage by hand, so the app can show them one by one.',
+            tr: 'Canny kenar algılama algoritmasını (John F. Canny, 1986) bilgisayarlı görü temellerimi sağlamlaştırmak için sıfırdan yazdım ve bir Tkinter masaüstü uygulamasına koydum. Bir görüntü seçiyor, ne kadar bulanıklaştıracağını ayarlıyor, Submit’e basıp sonucu görüyorsun. Her aşamayı elle yazdığım için uygulama onları tek tek gösterebiliyor.',
           },
         ],
       },
@@ -406,7 +412,7 @@ export const CASE_STUDIES: CaseStudy[] = [
           { en: 'Sobel gradients for the strength and direction of every edge.', tr: 'Her kenarın gücü ve yönü için Sobel gradyanları.' },
           { en: 'Non-maximum suppression to thin edges to a single pixel.', tr: 'Kenarları tek piksele inceltmek için maksimum olmayan bastırma.' },
           { en: 'Double thresholding to separate strong edges, weak edges and non-edges.', tr: 'Güçlü kenarları, zayıf kenarları ve kenar olmayanları ayırmak için çift eşikleme.' },
-          { en: 'Hysteresis: weak edges are kept only when they connect to strong ones.', tr: 'Histerezis: zayıf kenarlar yalnızca güçlü kenarlara bağlandıklarında tutulur.' },
+          { en: 'Hysteresis keeps weak edges only when they connect to strong ones.', tr: 'Histerezis, zayıf kenarları yalnızca güçlü kenarlara bağlandıklarında tutar.' },
         ],
       },
     ],

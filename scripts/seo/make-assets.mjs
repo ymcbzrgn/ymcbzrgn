@@ -39,7 +39,7 @@ const TEXT = {
     window: 'Welcome',
   },
   tr: {
-    kicker: 'PORTFÖY · ETKİLEŞİMLİ MASAÜSTÜ',
+    kicker: 'PORTFOLYO · ETKİLEŞİMLİ MASAÜSTÜ',
     role: 'Yazılım Mühendisi',
     tagline: 'Yapay zeka platformları · backend · full-stack',
     company: 'Arketic AI',

@@ -16,8 +16,8 @@ interface MusicPlayerProps {
 }
 
 const COPY = {
-  en: { playlist: 'Playlist', hint: 'Every sound here is synthesised live in your browser. No audio files, just maths.', volume: 'Volume', play: 'Play', pause: 'Pause', prev: 'Previous track', next: 'Next track', seek: 'Position' },
-  tr: { playlist: 'Çalma listesi', hint: 'Buradaki her ses tarayıcında canlı üretilir. Ses dosyası yok, sadece matematik.', volume: 'Ses düzeyi', play: 'Çal', pause: 'Duraklat', prev: 'Önceki parça', next: 'Sonraki parça', seek: 'Konum' },
+  en: { playlist: 'Playlist', hint: 'Every sound here is synthesised live in your browser from maths. There are no audio files.', volume: 'Volume', play: 'Play', pause: 'Pause', prev: 'Previous track', next: 'Next track', seek: 'Position' },
+  tr: { playlist: 'Çalma listesi', hint: 'Buradaki her ses tarayıcında matematikle canlı üretilir. Ses dosyası yok.', volume: 'Ses düzeyi', play: 'Çal', pause: 'Duraklat', prev: 'Önceki parça', next: 'Sonraki parça', seek: 'Konum' },
 } as const;
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;

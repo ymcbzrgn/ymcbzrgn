@@ -44,7 +44,7 @@ const T = {
     contact: 'Email',
     indexTitle: `Projects and case studies | ${PROFILE.name}`,
     indexDescription: 'Case studies of the projects of Yamaç Bezirgan: an AI trading engine, a local coding assistant, an AI shift scheduler, a computer-vision app and this portfolio.',
-    indexIntro: 'What I have built, how it is put together and what each project is for. The code is on GitHub; these pages hold the story behind it.',
+    indexIntro: 'What I have built, how each project is put together and what it is for. The code is on GitHub, and these pages explain the decisions behind it.',
     moreGitHub: 'More repositories are on GitHub',
     updated: 'Updated',
     page: 'Page',
@@ -63,8 +63,8 @@ const T = {
     by: `${PROFILE.name}, ${'{role}'}.`,
     contact: 'E-posta',
     indexTitle: `Projeler ve vaka çalışmaları | ${PROFILE.name}`,
-    indexDescription: "Yamaç Bezirgan'ın projelerinin vaka çalışmaları: yapay zeka ticaret motoru, yerel kodlama asistanı, vardiya planlayıcı, görüntü işleme uygulaması ve bu portföy.",
-    indexIntro: 'Neler geliştirdim, nasıl kurulu ve her proje ne işe yarıyor. Kod GitHub’da; bu sayfalar onun arkasındaki hikâyeyi anlatıyor.',
+    indexDescription: "Yamaç Bezirgan'ın proje vaka çalışmaları: yapay zeka ticaret motoru, yerel kodlama asistanı, vardiya planlayıcı, görüntü işleme uygulaması ve bu portfolyo.",
+    indexIntro: 'Neler geliştirdim, her biri nasıl kurulu ve ne işe yarıyor. Kod GitHub’da, bu sayfalarda arkasındaki kararları anlatıyorum.',
     moreGitHub: 'Daha fazla depo GitHub’da',
     updated: 'Güncelleme',
     page: 'Sayfa',
@@ -166,7 +166,7 @@ export function projectPage(study: CaseStudy, lang: Lang, modified: string, info
     })
     .join('\n        ');
   const others = CASE_STUDIES.filter((s) => s.id !== study.id)
-    .map((s) => `<li><a href="${studyPath(s, lang)}">${esc(heading(s, lang))}</a> – ${esc(fill(s.tagline[lang], info))}</li>`)
+    .map((s) => `<li><a href="${studyPath(s, lang)}">${esc(heading(s, lang))}</a><br /><span class="stack">${esc(fill(s.tagline[lang], info))}</span></li>`)
     .join('\n          ');
 
   const main = `      <nav class="crumbs" aria-label="${L.crumbs}"><a href="${PATH.home[lang]}">${esc(PROFILE.name)}</a> › <a href="${PROJECTS_PATH[lang]}">${L.projects}</a> › ${esc(name)}</nav>

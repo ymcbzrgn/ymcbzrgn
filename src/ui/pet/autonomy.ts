@@ -17,11 +17,11 @@ const A_SIT = anim('sit', 'idle');
 
 const LINES = {
   perch: {
-    en: ['Nice window. I like the view from up here.', 'Best seat in the house.', 'Do not mind me. I am just supervising.', 'This title bar fits me perfectly.'],
+    en: ['Nice window. I like the view from up here.', 'Best seat in the house.', "Don't mind me. I'm just supervising.", 'This title bar fits me perfectly.'],
     tr: ['Güzel pencere. Buradan manzara harika.', 'Evin en iyi koltuğu.', 'Aldırma bana. Sadece denetliyorum.', 'Bu başlık çubuğu bana tam oldu.'],
   },
   visit: {
-    en: ['I did not open anything. I just looked.', 'Cozy in there. A bit dusty.', 'Nothing to see here. Move along.', 'Checked: it is still a folder.'],
+    en: ["I didn't open anything. I just looked.", 'Cozy in there. A bit dusty.', 'Nothing to see here. Move along.', "Checked: it's still a folder."],
     tr: ['Hiçbir şey açmadım. Sadece baktım.', 'İçerisi rahat. Biraz tozlu.', 'Burada görülecek bir şey yok.', 'Kontrol ettim: hâlâ bir klasör.'],
   },
 } as const;
@@ -223,7 +223,7 @@ const DANCES: Record<string, string[]> = {
 const ANY_DANCE = ['dance', 'disco', 'headbang', 'moonwalk', 'robot', 'hula'];
 
 const DANCE_LINES = {
-  en: ['This one is a banger.', 'Who needs a gym? I have this.', 'Keep it playing!', 'My feet have a mind of their own.'],
+  en: ['This one is a banger.', "Who needs a gym? I've got this.", 'Keep it playing!', 'My feet have a mind of their own.'],
   tr: ['Bu parça efsane.', 'Spor salonuna ne gerek, bende bu var.', 'Çalmaya devam et!', 'Ayaklarım kendi kendine oynuyor.'],
 } as const;
 

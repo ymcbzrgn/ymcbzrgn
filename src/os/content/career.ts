@@ -78,7 +78,7 @@ export const ROLES: Role[] = [
       },
       {
         en: 'Integrated business systems and team tools for fast rollout without rip-and-replace migrations.',
-        tr: 'Mevcut sistemleri sökmeden hızlıca devreye alınabilmesi için iş sistemlerini ve ekip araçlarını entegre ettim.',
+        tr: 'Mevcut sistemler yerinde kalırken platform hızla devreye girsin diye iş sistemlerini ve ekip araçlarını entegre ettim.',
       },
       {
         en: 'Acted as the de facto platform owner, shaping architecture, roadmap, and production delivery.',
@@ -100,15 +100,15 @@ export const ROLES: Role[] = [
       },
       {
         en: 'Improved UI responsiveness and scalability with optimized React patterns and state handling.',
-        tr: 'Optimize React kalıpları ve durum yönetimiyle arayüzün tepkiselliğini ve ölçeklenebilirliğini artırdım.',
+        tr: 'React kalıplarını ve durum yönetimini optimize ederek arayüzü daha hızlı tepki verir ve daha ölçeklenebilir hale getirdim.',
       },
       {
-        en: 'Wrote process documentation so the work could be reused and scaled across future projects.',
-        tr: 'Çalışmanın gelecek projelerde yeniden kullanılabilmesi için süreç dokümantasyonu yazdım.',
+        en: 'Wrote process documentation so other projects could reuse the work.',
+        tr: 'Başka projeler de kullanabilsin diye süreç dokümantasyonu yazdım.',
       },
       {
-        en: 'Worked closely with cross-functional teams to keep project integration seamless.',
-        tr: 'Projelerin sorunsuz entegrasyonu için farklı disiplinlerden ekiplerle yakın çalıştım.',
+        en: 'Worked with cross-functional teams to integrate the projects.',
+        tr: 'Projeleri entegre etmek için farklı disiplinlerden ekiplerle çalıştım.',
       },
     ],
   },
@@ -141,7 +141,7 @@ export const STUDIES: Study[] = [
 ];
 
 export const SKILLS: { group: L10n; items: string[] }[] = [
-  { group: { en: 'Languages', tr: 'Diller' }, items: ['Python', 'TypeScript', 'JavaScript', 'SQL'] },
+  { group: { en: 'Programming languages', tr: 'Programlama dilleri' }, items: ['Python', 'TypeScript', 'JavaScript', 'SQL'] },
   { group: { en: 'Front-end & mobile', tr: 'Front-end ve mobil' }, items: ['React', 'React Native'] },
   { group: { en: 'Backend & data', tr: 'Backend ve veri' }, items: ['Node.js', 'Express.js', 'REST APIs', 'PostgreSQL', 'Supabase', 'OAuth/JWT'] },
   { group: { en: 'AI & automation', tr: 'Yapay zeka ve otomasyon' }, items: ['LLM Integration', 'RAG', 'AI Agents', 'Automation', 'n8n'] },
@@ -156,8 +156,8 @@ export const SPOKEN: { code: string; name: L10n; level: L10n }[] = [
 ];
 
 export const MEDALS: Medal[] = [
-  { id: 'ideathon', name: "Ideathon'25", result: { en: '2nd place', tr: '2.lik' }, podium: true },
-  { id: 'llama', name: 'YTÜ Meta & YTU Llama Hackathon', result: { en: '6th place', tr: '6.lık' }, podium: true },
+  { id: 'ideathon', name: "Ideathon'25", result: { en: '2nd place', tr: 'İkincilik' }, podium: true },
+  { id: 'llama', name: 'YTÜ Meta & YTU Llama Hackathon', result: { en: '6th place', tr: 'Altıncılık' }, podium: true },
   { id: 'kkb', name: 'KKB Hackathon', result: { en: 'Participant', tr: 'Katılımcı' }, podium: false },
   { id: 'aimpact', name: 'AImpact Hackathon', result: { en: 'Participant', tr: 'Katılımcı' }, podium: false },
 ];
@@ -188,7 +188,7 @@ export const PROJECTS: Project[] = [
     repo: 'https://github.com/ymcbzrgn/ymcbzrgn',
     summary: {
       en: 'This site: an interactive portfolio that recreates a desktop operating system in the browser, with a persistent virtual file system and built-in apps (PDF viewer, terminal, markdown reader, GitHub explorer).',
-      tr: 'Bu site: tarayıcıda masaüstü işletim sistemini yeniden yaratan etkileşimli portföy; kalıcı sanal dosya sistemi ve yerleşik uygulamalar (PDF görüntüleyici, terminal, markdown okuyucu, GitHub gezgini).',
+      tr: 'Bu site: tarayıcıda masaüstü işletim sistemini yeniden yaratan etkileşimli portfolyo; kalıcı sanal dosya sistemi ve yerleşik uygulamalar (PDF görüntüleyici, terminal, markdown okuyucu, GitHub gezgini).',
     },
   },
   {
@@ -264,15 +264,15 @@ export const HIGHLIGHTS: Highlight[] = [
     title: { en: 'Competitions', tr: 'Yarışmalar' },
     text: {
       en: "2nd place at Ideathon'25 and 6th at the YTÜ Meta & YTU Llama Hackathon.",
-      tr: "Ideathon'25'te 2., YTÜ Meta & YTU Llama Hackathon'da 6. oldu.",
+      tr: "Ideathon'25 ikincisi, YTÜ Meta & YTU Llama Hackathon altıncısı.",
     },
   },
   {
     icon: '🎓',
     title: { en: 'Education', tr: 'Eğitim' },
     text: {
-      en: 'B.Sc. Computer Engineering (Altınbaş, 2025) with an Erasmus+ year in Milan focused on software and AI.',
-      tr: "Bilgisayar Mühendisliği lisansı (Altınbaş, 2025); Milano'da yazılım ve yapay zeka odaklı Erasmus+ dönemi.",
+      en: 'B.Sc. Computer Engineering (Altınbaş, 2025), with an Erasmus+ exchange in Milan (2022–2023) focused on software and AI.',
+      tr: "Bilgisayar Mühendisliği lisansı (Altınbaş, 2025), Milano'da yazılım ve yapay zeka odaklı Erasmus+ değişimi (2022–2023).",
     },
   },
   {
@@ -308,8 +308,8 @@ export const MILESTONES: Milestone[] = [
     icon: '🇮🇹',
     title: { en: 'Erasmus+ in Milan', tr: "Milano'da Erasmus+" },
     text: {
-      en: 'A year at the Università degli Studi di Milano: Intelligent Systems, Real-Time Graphics, Natural Interaction.',
-      tr: 'Milano Üniversitesi’nde bir dönem: Akıllı Sistemler, Gerçek Zamanlı Grafik, Doğal Etkileşim.',
+      en: 'Erasmus+ exchange at the Università degli Studi di Milano: Intelligent Systems, Real-Time Graphics, Natural Interaction.',
+      tr: 'Milano Üniversitesi’nde Erasmus+ değişimi: Akıllı Sistemler, Gerçek Zamanlı Grafik, Doğal Etkileşim.',
     },
   },
   {
@@ -323,8 +323,8 @@ export const MILESTONES: Milestone[] = [
     id: 'ideathon',
     year: '2025',
     icon: '🏆',
-    title: { en: "Ideathon'25, 2nd place", tr: "Ideathon'25, 2.lik" },
-    text: { en: 'Podium finish, plus the YTÜ Meta & YTU Llama Hackathon (6th).', tr: 'Kürsü; ayrıca YTÜ Meta & YTU Llama Hackathon (6.).' },
+    title: { en: "Ideathon'25, 2nd place", tr: "Ideathon'25, ikincilik" },
+    text: { en: 'Podium finish. Sixth at the YTÜ Meta & YTU Llama Hackathon.', tr: "Kürsü. YTÜ Meta & YTU Llama Hackathon'da altıncılık." },
   },
   {
     id: 'graduate',

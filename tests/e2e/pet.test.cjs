@@ -189,7 +189,7 @@ const onboardedInit = (extra = {}) => (s) => localStorage.setItem('ubuntu-xp-sto
   ok((await ps.locator('h1').innerText()) === 'Yamaç Bezirgan', 'resume sayfası açıldı');
   ok((await ps.locator('.desktop-container').count()) === 0, 'masaüstü yüklenmedi (statik sayfa)');
   ok((await ps.locator('a[href="/YAMAC_BEZIRGAN_CURRENT_CV.pdf"][download]').count()) === 1, 'CV indirme bağlantısı var');
-  ok((await ps.locator('.summary').innerText()).startsWith('I am a software engineer focused on AI platforms'), 'özet metni Hakkımda\'dan');
+  ok((await ps.locator('.summary').innerText()).startsWith("I'm a software engineer focused on AI platforms"), 'özet metni Hakkımda\'dan');
   ok((await ps.locator('#projects article.card').count()) >= 5, 'projeler bölümü dolu');
   await ps.screenshot({ path: `${OUT}/simple-1-en.png` });
   await ps.locator('a.pill').click();

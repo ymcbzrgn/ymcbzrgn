@@ -49,27 +49,27 @@ export interface PageMeta {
 export const META: Record<PageId, Record<Lang, PageMeta>> = {
   home: {
     en: {
-      title: 'Yamaç Bezirgan – Software Engineer · AI, Backend, Full-Stack',
+      title: 'Yamaç Bezirgan | Software Engineer · AI, Backend, Full-Stack',
       description:
         'Software Engineer at Arketic AI: LLM platforms, backend systems and full-stack products in Python and TypeScript. Interactive desktop portfolio, CV and projects.',
       alt: 'Yamaç Bezirgan, Software Engineer: AI platforms, backend, full-stack',
     },
     tr: {
-      title: 'Yamaç Bezirgan – Yazılım Mühendisi · AI, Backend, Full-Stack',
+      title: 'Yamaç Bezirgan | Yazılım Mühendisi · AI, Backend, Full-Stack',
       description:
-        "Arketic AI'da Yazılım Mühendisi: Python ve TypeScript ile LLM platformları, backend ve full-stack ürünler. Etkileşimli masaüstü portföy, CV ve projeler.",
+        "Arketic AI'da Yazılım Mühendisi: Python ve TypeScript ile LLM platformları, backend ve full-stack ürünler. Etkileşimli masaüstü portfolyo, CV ve projeler.",
       alt: 'Yamaç Bezirgan, Yazılım Mühendisi: yapay zeka platformları, backend, full-stack',
     },
   },
   resume: {
     en: {
-      title: 'Yamaç Bezirgan – Resume | Software Engineer, AI Platforms',
+      title: 'Yamaç Bezirgan | Resume, Software Engineer, AI Platforms',
       description:
         'Resume of Yamaç Bezirgan, Software Engineer at Arketic AI: experience, projects, education, skills and contact details on one page.',
       alt: 'Yamaç Bezirgan, Software Engineer: AI platforms, backend, full-stack',
     },
     tr: {
-      title: 'Yamaç Bezirgan – Özgeçmiş | Yazılım Mühendisi, AI Platformları',
+      title: 'Yamaç Bezirgan | Özgeçmiş, Yazılım Mühendisi, AI Platformları',
       description:
         "Arketic AI'da Yazılım Mühendisi Yamaç Bezirgan'ın özgeçmişi: deneyim, projeler, eğitim, yetenekler ve iletişim bilgileri tek sayfada.",
       alt: 'Yamaç Bezirgan, Yazılım Mühendisi: yapay zeka platformları, backend, full-stack',

@@ -98,8 +98,8 @@ const STEPS: Step[] = [
     icon: '🕹️',
     title: { en: 'Arcade', tr: 'Oyun salonu' },
     say: {
-      en: 'The arcade: Snake, Tetris, 2048 and Minesweeper. Those machines really work.',
-      tr: 'Oyun salonu: Snake, Tetris, 2048 ve Mayın Tarlası. Bu makineler gerçekten çalışıyor.',
+      en: 'The arcade: Snake, Tetris, 2048 and Minesweeper. Those machines work.',
+      tr: 'Oyun salonu: Snake, Tetris, 2048 ve Mayın Tarlası. Bu makineler çalışıyor.',
     },
     async run({ enter, pause, alive, say }) {
       await enter('games');

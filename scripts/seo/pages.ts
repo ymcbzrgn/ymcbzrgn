@@ -152,7 +152,7 @@ const LABELS: Record<
     privacy: 'Gizlilik',
     switchTo: 'EN',
     switchName: 'English',
-    intro: 'Bu, portföyün sade ve hızlı sürümü. Eğlenceli olan masaüstü.',
+    intro: 'Bu, portfolyonun sade ve hızlı sürümü. Eğlenceli olan masaüstü.',
   },
 };
 
@@ -226,7 +226,7 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
     .slice(0, 6)
     .map((r) => {
       const meta = [r.language, r.stargazers_count ? `★ ${r.stargazers_count}` : ''].filter(Boolean).join(' · ');
-      return `<li><a href="${esc(r.html_url)}" rel="noopener">${esc(r.name)}</a>${r.description ? ` – ${esc(r.description)}` : ''}${meta ? ` <span class="stack">(${esc(meta)})</span>` : ''}</li>`;
+      return `<li><a href="${esc(r.html_url)}" rel="noopener">${esc(r.name)}</a>${r.description ? `: ${esc(r.description)}` : ''}${meta ? ` <span class="stack">(${esc(meta)})</span>` : ''}</li>`;
     })
     .join('\n            ');
 
@@ -380,7 +380,7 @@ export function notFoundPage(): string {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>404 – ${esc(PROFILE.name)}</title>
+    <title>404 | ${esc(PROFILE.name)}</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <style>
       body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(160deg,#0f172a,#1e1b4b);color:#e2e8f0;font:16px/1.6 'Ubuntu',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}

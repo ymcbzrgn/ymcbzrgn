@@ -6,6 +6,7 @@
 import { createNode, getNode, updateNode } from './crud';
 import { isDBEmpty, deleteDB } from './db';
 import type { VFSNode } from '../types';
+import { aboutMeMarkdown } from '../content/profileText';
 
 /**
  * VFS Schema Version
@@ -82,74 +83,14 @@ export async function seedDefaultDesktop(): Promise<void> {
       true
     );
 
-    const aboutMeContent = `# Yamaç Bezirgan
-
-## Software Engineer
-
-I am a software engineer focused on AI platforms, backend architecture, and full-stack product development. I build production-ready systems across Python and TypeScript ecosystems, combining system design, automation, LLM workflows, and user-facing products.
-
-### Current Focus
-
-- Software Engineer at Arketic AI, contributing to enterprise AI products across backend services, LLM integrations, automation, and secure deployment workflows.
-- Interested in technical leadership, product thinking, and scalable systems that connect engineering execution with real business impact.
-
-### Areas of Work
-
-- **AI Platforms & Automation:** LLM integration, RAG, agent workflows, orchestration, and automation pipelines
-- **Full-Stack Engineering:** React, React Native, Node.js, Express, REST APIs, PostgreSQL, and Supabase
-- **Product & Architecture:** end-to-end ownership, system design, developer tooling, and performance-focused UX
-
-### About This Portfolio
-
-This portfolio is designed as a browser-based desktop environment rather than a conventional personal website. It includes a virtual file system, window management, built-in apps, PDF viewing, markdown rendering, terminal interactions, and adaptive mobile behavior. The goal is to make the portfolio itself a product and engineering artifact.
-
-### Working Style
-
-I enjoy building software that is technically solid, useful in practice, and clear in experience. I care about reliability, maintainability, thoughtful interfaces, and strong execution quality.
-
-### Contact
-
-- Email: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
-- LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
-- GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
+    const aboutMeContent = aboutMeMarkdown('en');
 
     await updateNode('about-me-md', {
       size: aboutMeContent.length,
       targetUrl: encodeMarkdownDataUrl(aboutMeContent),
     });
 
-    const aboutMeContentTR = `# Yamaç Bezirgan
-
-## Yazılım Mühendisi
-
-Yapay zeka platformları, backend mimarisi ve uçtan uca ürün geliştirme odağında çalışan bir yazılım mühendisiyim. Python ve TypeScript ekosistemlerinde üretim ortamına uygun sistemler geliştiriyor; LLM entegrasyonu, otomasyon, sistem tasarımı ve kullanıcıya dokunan deneyimleri bir araya getiriyorum.
-
-### Güncel Odağım
-
-- Arketic AI'da yazılım mühendisi olarak kurumsal AI ürünleri üzerinde backend servisleri, LLM akışları, otomasyon ve güvenli dağıtım süreçleri geliştiriyorum.
-- Uzun vadede mühendislik icrasını ürün ve iş etkisiyle buluşturan teknik liderlik rollerine ilerlemeyi hedefliyorum.
-
-### Çalışma Alanlarım
-
-- **AI Platformları ve Otomasyon:** LLM entegrasyonu, RAG, ajan tabanlı akışlar, orkestrasyon ve otomasyon süreçleri
-- **Full-Stack Geliştirme:** React, React Native, Node.js, Express, REST API'ler, PostgreSQL ve Supabase
-- **Ürün ve Mimari:** uçtan uca sahiplenme, sistem tasarımı, geliştirici araçları ve performans odaklı kullanıcı deneyimi
-
-### Bu Portfolyo Hakkında
-
-Bu portfolyo klasik bir kişisel web sitesi yerine tarayıcı içinde çalışan bir masaüstü ortamı olarak tasarlandı. Sanal dosya sistemi, pencere yönetimi, yerleşik uygulamalar, PDF görüntüleme, markdown okuma, terminal etkileşimleri ve mobil uyumlu bir kabuk içeriyor. Amacım portfolyoyu yalnızca bir vitrin değil, aynı zamanda bir ürün ve mühendislik çıktısı haline getirmek.
-
-### Çalışma Yaklaşımım
-
-Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısından özenli yazılımlar üretmeyi seviyorum. Benim için güvenilirlik, bakım kolaylığı, iyi düşünülmüş arayüzler ve güçlü teslim kalitesi çok önemli.
-
-### İletişim
-
-- E-posta: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
-- LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
-- GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
+    const aboutMeContentTR = aboutMeMarkdown('tr');
 
     await updateNode('about-me-tr-md', {
       size: aboutMeContentTR.length,
@@ -507,37 +448,7 @@ Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısınd
   };
 
   // About Me markdown file (English)
-  const aboutMeContent = `# Yamaç Bezirgan
-
-## Software Engineer
-
-I am a software engineer focused on AI platforms, backend architecture, and full-stack product development. I build production-ready systems across Python and TypeScript ecosystems, combining system design, automation, LLM workflows, and user-facing products.
-
-### Current Focus
-
-- Software Engineer at Arketic AI, contributing to enterprise AI products across backend services, LLM integrations, automation, and secure deployment workflows.
-- Interested in technical leadership, product thinking, and scalable systems that connect engineering execution with real business impact.
-
-### Areas of Work
-
-- **AI Platforms & Automation:** LLM integration, RAG, agent workflows, orchestration, and automation pipelines
-- **Full-Stack Engineering:** React, React Native, Node.js, Express, REST APIs, PostgreSQL, and Supabase
-- **Product & Architecture:** end-to-end ownership, system design, developer tooling, and performance-focused UX
-
-### About This Portfolio
-
-This portfolio is designed as a browser-based desktop environment rather than a conventional personal website. It includes a virtual file system, window management, built-in apps, PDF viewing, markdown rendering, terminal interactions, and adaptive mobile behavior. The goal is to make the portfolio itself a product and engineering artifact.
-
-### Working Style
-
-I enjoy building software that is technically solid, useful in practice, and clear in experience. I care about reliability, maintainability, thoughtful interfaces, and strong execution quality.
-
-### Contact
-
-- Email: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
-- LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
-- GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
+  const aboutMeContent = aboutMeMarkdown('en');
 
   const aboutMeFile: VFSNode = {
     id: 'about-me-md',
@@ -557,37 +468,7 @@ I enjoy building software that is technically solid, useful in practice, and cle
   };
 
   // About Me markdown file (Turkish)
-  const aboutMeContentTR = `# Yamaç Bezirgan
-
-## Yazılım Mühendisi
-
-Yapay zeka platformları, backend mimarisi ve uçtan uca ürün geliştirme odağında çalışan bir yazılım mühendisiyim. Python ve TypeScript ekosistemlerinde üretim ortamına uygun sistemler geliştiriyor; LLM entegrasyonu, otomasyon, sistem tasarımı ve kullanıcıya dokunan deneyimleri bir araya getiriyorum.
-
-### Güncel Odağım
-
-- Arketic AI'da yazılım mühendisi olarak kurumsal AI ürünleri üzerinde backend servisleri, LLM akışları, otomasyon ve güvenli dağıtım süreçleri geliştiriyorum.
-- Uzun vadede mühendislik icrasını ürün ve iş etkisiyle buluşturan teknik liderlik rollerine ilerlemeyi hedefliyorum.
-
-### Çalışma Alanlarım
-
-- **AI Platformları ve Otomasyon:** LLM entegrasyonu, RAG, ajan tabanlı akışlar, orkestrasyon ve otomasyon süreçleri
-- **Full-Stack Geliştirme:** React, React Native, Node.js, Express, REST API'ler, PostgreSQL ve Supabase
-- **Ürün ve Mimari:** uçtan uca sahiplenme, sistem tasarımı, geliştirici araçları ve performans odaklı kullanıcı deneyimi
-
-### Bu Portfolyo Hakkında
-
-Bu portfolyo klasik bir kişisel web sitesi yerine tarayıcı içinde çalışan bir masaüstü ortamı olarak tasarlandı. Sanal dosya sistemi, pencere yönetimi, yerleşik uygulamalar, PDF görüntüleme, markdown okuma, terminal etkileşimleri ve mobil uyumlu bir kabuk içeriyor. Amacım portfolyoyu yalnızca bir vitrin değil, aynı zamanda bir ürün ve mühendislik çıktısı haline getirmek.
-
-### Çalışma Yaklaşımım
-
-Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısından özenli yazılımlar üretmeyi seviyorum. Benim için güvenilirlik, bakım kolaylığı, iyi düşünülmüş arayüzler ve güçlü teslim kalitesi çok önemli.
-
-### İletişim
-
-- E-posta: [contact@yamacbezirgan.com](mailto:contact@yamacbezirgan.com)
-- Website: [yamacbezirgan.com](https://yamacbezirgan.com)
-- LinkedIn: [linkedin.com/in/yamacbezirgan](https://linkedin.com/in/yamacbezirgan)
-- GitHub: [github.com/ymcbzrgn](https://github.com/ymcbzrgn)`;
+  const aboutMeContentTR = aboutMeMarkdown('tr');
 
   const aboutMeFileTR: VFSNode = {
     id: 'about-me-tr-md',
@@ -607,29 +488,23 @@ Teknik olarak sağlam, gerçek kullanım değeri taşıyan ve deneyim açısınd
   };
 
   // README text file
-  const readmeContent = `Welcome to My Portfolio!
-========================
+  const readmeContent = `Hi, I'm Yamaç. This site is a desktop that runs in your browser.
 
-Thank you for visiting my interactive desktop portfolio.
+What's here
+- A virtual file system that remembers what you change
+- Windows you can drag and resize
+- Apps: PDF viewer, file explorer, terminal, music player, notes and more
+- My GitHub projects, loaded live
+- A Games folder with Snake, Tetris, 2048 and Minesweeper
 
-This is a fully functional desktop environment running in your browser, featuring:
+Getting around
+- Double-click an icon to open it.
+- Drag a window by its title bar.
+- The taskbar switches between open windows.
 
-- Virtual File System with persistent storage
-- Draggable and resizable windows
-- Multiple applications (PDF viewer, File Explorer, Games, and more)
-- GitHub integration for live project showcase
-
-Navigation Tips:
-- Double-click icons to open them
-- Drag windows to move them around
-- Use the taskbar to switch between open windows
-- Check out the Games folder for some fun!
-
-Feel free to explore and interact with everything.
-
-- Yamaç Bezirgan
-  GitHub: github.com/ymcbzrgn
-  LinkedIn: linkedin.com/in/yamacbezirgan`;
+Yamaç Bezirgan
+GitHub: github.com/ymcbzrgn
+LinkedIn: linkedin.com/in/yamacbezirgan`;
 
   const readmeFile: VFSNode = {
     id: 'readme-txt',

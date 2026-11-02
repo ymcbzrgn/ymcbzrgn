@@ -47,8 +47,8 @@ export default function Notes({ windowId }: NotesProps) {
       // Create default welcome note
       const welcomeNote: Note = {
         id: crypto.randomUUID(),
-        title: 'Welcome to Notes',
-        content: 'Start typing to create your first note!\n\nFeatures:\n- Auto-save to localStorage\n- Create/delete notes\n- Simple and fast\n\nEnjoy! 📝',
+        title: 'Notes',
+        content: 'Type anything here. Notes save to this browser (localStorage) as you type. Add or delete notes from the sidebar.',
         createdAt: Date.now(),
         modifiedAt: Date.now(),
       };
