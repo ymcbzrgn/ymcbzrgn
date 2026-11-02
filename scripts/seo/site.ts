@@ -9,6 +9,8 @@ import { PROFILE } from '../../src/os/content/profile';
 import { STRINGS } from '../../src/os/i18n/strings';
 import type { Lang } from '../../src/os/i18n/core';
 
+export { PROJECTS_PATH, WRITING_PATH, articlePath, projectPath } from '../../src/os/content/paths';
+
 export type { Lang };
 export const LANGS: Lang[] = ['en', 'tr'];
 export const SITE = PROFILE.site;
@@ -20,6 +22,9 @@ export const PATH: Record<PageId, Record<Lang, string>> = {
   home: { en: '/', tr: '/tr/' },
   resume: { en: '/resume/', tr: '/tr/ozgecmis/' },
 };
+
+/** The Atom feed of the writing */
+export const FEED_PATH = '/feed.xml';
 
 /** The same résumé as plain Markdown (for assistants and agents that prefer it to HTML) */
 export const MD_PATH: Record<Lang, string> = { en: '/resume.md', tr: '/tr/ozgecmis.md' };

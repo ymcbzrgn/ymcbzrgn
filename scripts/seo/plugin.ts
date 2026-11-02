@@ -16,10 +16,13 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { gzipSync } from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
+import { CASE_STUDIES } from '../../src/os/content/caseStudies';
 import { headBlock } from './head';
 import { BOOT_STYLE, bootBlock, notFoundPage, resumePage, type Repo } from './pages';
-import { MD_PATH, PATH } from './site';
+import { projectMarkdown, projectPage, projectsIndexPage, studyMdPath, studyPath, type BuildInfo } from './projects';
+import { FEED_PATH, LANGS, MD_PATH, PATH, PROJECTS_PATH, WRITING_PATH, articlePath } from './site';
 import { llmsFullTxt, llmsTxt, resumeMarkdown, sitemapXml } from './text';
+import { articleMarkdown, articleMdPath, articlePage, atomFeed, loadArticles, writingIndexPage } from './writing';
 
 const HEAD = /<!--seo:head:start-->[\s\S]*?<!--seo:head:end-->/;
 const BOOT = /<!--seo:boot:start-->[\s\S]*?<!--seo:boot:end-->/;
@@ -56,7 +59,7 @@ function readRepos(dist: string): Repo[] {
  * the gzip weight of everything index.html loads (the first screen), how many scripts there are in all,
  * how many browser test suites the repository has, and which commit this is.
  */
-function buildInfo(root: string, dist: string, html: string): Record<string, unknown> {
+function buildInfo(root: string, dist: string, html: string): BuildInfo {
   const refs = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1]);
   const gz = (rel: string) => gzipSync(readFileSync(join(dist, rel)), { level: 9 }).length;
   const firstScreenBytes = [...new Set(refs)].reduce((sum, ref) => sum + gz(ref.slice(1)), 0);
@@ -144,11 +147,31 @@ export function seoPlugin(): Plugin {
       write(dist, MD_PATH.en.slice(1), resumeMarkdown('en', content));
       write(dist, MD_PATH.tr.slice(1), resumeMarkdown('tr', content));
       write(dist, '404.html', notFoundPage());
-      write(dist, 'sitemap.xml', sitemapXml({ content, privacy }));
-      write(dist, 'llms.txt', llmsTxt());
-      write(dist, 'llms-full.txt', llmsFullTxt());
-      write(dist, 'data/build-info.json', JSON.stringify(buildInfo(root, dist, html)) + '\n');
-      console.log(`[seo] pages written: ${PATH.home.tr}, ${PATH.resume.en}, ${PATH.resume.tr}, ${MD_PATH.en}, ${MD_PATH.tr}, 404.html, sitemap.xml, llms.txt, llms-full.txt (${repos.length} repos in the snapshot)`);
+
+      // the projects (a case study each, in both languages) and the writing
+      const info = buildInfo(root, dist, html);
+      const articles = loadArticles(root, (file) => gitDate(root, [file], ''));
+      for (const lang of LANGS) {
+        write(dist, `${PROJECTS_PATH[lang]}index.html`.replace(/^\//, ''), projectsIndexPage(lang, content, info));
+        for (const study of CASE_STUDIES) {
+          write(dist, `${studyPath(study, lang)}index.html`.replace(/^\//, ''), projectPage(study, lang, content, info));
+          write(dist, studyMdPath(study, lang).replace(/^\//, ''), projectMarkdown(study, lang, content, info));
+        }
+      }
+      write(dist, `${WRITING_PATH}index.html`.replace(/^\//, ''), writingIndexPage(articles, content));
+      for (const a of articles) {
+        write(dist, `${articlePath(a.slug)}index.html`.replace(/^\//, ''), articlePage(a, info));
+        write(dist, articleMdPath(a).replace(/^\//, ''), articleMarkdown(a, info));
+      }
+      write(dist, FEED_PATH.replace(/^\//, ''), atomFeed(articles));
+
+      write(dist, 'sitemap.xml', sitemapXml({ content, privacy, articles }));
+      write(dist, 'llms.txt', llmsTxt(articles));
+      write(dist, 'llms-full.txt', llmsFullTxt(info, content));
+      write(dist, 'data/build-info.json', JSON.stringify(info) + '\n');
+      console.log(
+        `[seo] pages written: ${PATH.home.tr}, ${PATH.resume.en}, ${PATH.resume.tr}, ${MD_PATH.en}, ${MD_PATH.tr}, ${CASE_STUDIES.length * 2 + 2} project pages, ${articles.length} article(s), ${FEED_PATH}, 404.html, sitemap.xml, llms.txt, llms-full.txt (${repos.length} repos in the snapshot)`
+      );
     },
   };
 }

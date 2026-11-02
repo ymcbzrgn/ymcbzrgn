@@ -4,10 +4,13 @@
  */
 import { PROFILE } from '../../src/os/content/profile';
 import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, spanLabel } from '../../src/os/content/career';
+import { CASE_STUDIES } from '../../src/os/content/caseStudies';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
-import { LANGS, MD_PATH, PATH, abs, currentRole, roleLine, type Lang } from './site';
+import { FEED_PATH, LANGS, MD_PATH, PATH, PROJECTS_PATH, WRITING_PATH, abs, articlePath, currentRole, projectPath, roleLine, type Lang } from './site';
+import { heading, projectMarkdown, studyMdPath, studyPath, type BuildInfo } from './projects';
+import type { Article } from './writing';
 
-export function llmsTxt(): string {
+export function llmsTxt(articles: Article[]): string {
   return `# ${PROFILE.name}
 
 > ${currentRole('en')}: ${FOCUS.en}. Also written as Yamac Bezirgan; GitHub and X handle: ymcbzrgn. The site is an interactive desktop-OS portfolio, and the pages below hold the same facts as plain text.
@@ -21,6 +24,11 @@ export function llmsTxt(): string {
 - [CV (PDF)](${abs(PROFILE.cvUrl)}): the one-page CV
 - [Interactive desktop](${abs(PATH.home.en)}): the playful version of the portfolio (needs JavaScript)
 
+## Projects
+
+- [All projects](${abs(PROJECTS_PATH.en)}): case studies, also in Turkish at ${abs(PROJECTS_PATH.tr)}
+${CASE_STUDIES.map((s) => `- [${heading(s, 'en')}](${abs(studyPath(s, 'en'))}): ${s.tagline.en} (Markdown: ${abs(studyMdPath(s, 'en'))})`).join('\n')}
+${articles.length ? `\n## Writing\n\n${articles.map((a) => `- [${a.title}](${abs(articlePath(a.slug))}): ${a.description} (Markdown: ${abs(`${WRITING_PATH}${a.slug}.md`)})`).join('\n')}\n- [Atom feed](${abs(FEED_PATH)})\n` : ''}
 ## Profiles
 
 - [GitHub](${PROFILE.github}): source code and projects
@@ -48,7 +56,7 @@ function fullSection(lang: Lang): string {
     out.push('');
   }
   out.push(`## ${t ? 'Projects' : 'Projeler'}`, '');
-  for (const p of PROJECTS) out.push(`- **${p.name}** (${p.stack}): ${p.summary[lang]}`);
+  for (const p of PROJECTS) out.push(`- **${p.name}** (${p.stack}): ${p.summary[lang]} ${t ? 'Case study' : 'Vaka çalışması'}: ${abs(projectPath(p.slug, lang))}`);
   out.push('', `## ${t ? 'Education' : 'Eğitim'}`, '');
   for (const s of STUDIES) {
     out.push(`- **${s.degree[lang]}**, ${s.school[lang]} (${s.start}–${s.end}). ${s.focus ? `${s.focus[lang]}. ` : ''}${s.courses[lang]}.`);
@@ -71,12 +79,13 @@ export function resumeMarkdown(lang: Lang, modified: string): string {
   return `${fullSection(lang)}\n---\n\n${lang === 'tr' ? 'Kaynak sayfa' : 'Source page'}: ${abs(PATH.resume[lang])} · ${lang === 'tr' ? 'Güncelleme' : 'Updated'} ${modified}\n`;
 }
 
-export function llmsFullTxt(): string {
-  return `${fullSection('en')}\n---\n\n${fullSection('tr')}`;
+export function llmsFullTxt(info: BuildInfo, modified: string): string {
+  const studies = CASE_STUDIES.map((c) => projectMarkdown(c, 'en', modified, info).replace(/^# /m, '### ').replace(/^## /gm, '#### ')).join('\n');
+  return `${fullSection('en')}\n## Case studies\n\n${studies}\n---\n\n${fullSection('tr')}`;
 }
 
-/** lastmod per page id ('home' | 'resume' | 'privacy'), as YYYY-MM-DD */
-export function sitemapXml(mods: { content: string; privacy: string }): string {
+/** lastmod per page id ('home' | 'resume' | 'privacy'), as YYYY-MM-DD; articles carry their own */
+export function sitemapXml(mods: { content: string; privacy: string; articles: Article[] }): string {
   const alt = (page: 'home' | 'resume') =>
     [...LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${abs(PATH[page][l])}" />`), `    <xhtml:link rel="alternate" hreflang="x-default" href="${abs(PATH[page].en)}" />`].join('\n');
   const entry = (loc: string, lastmod: string, alternates = '') =>
@@ -84,6 +93,16 @@ export function sitemapXml(mods: { content: string; privacy: string }): string {
   const rows: string[] = [];
   for (const page of ['home', 'resume'] as const) {
     for (const l of LANGS) rows.push(entry(abs(PATH[page][l]), mods.content, alt(page)));
+  }
+  // the projects: the index and one page per project, each in both languages
+  const pair = (en: string, tr: string) =>
+    [`    <xhtml:link rel="alternate" hreflang="en" href="${abs(en)}" />`, `    <xhtml:link rel="alternate" hreflang="tr" href="${abs(tr)}" />`, `    <xhtml:link rel="alternate" hreflang="x-default" href="${abs(en)}" />`].join('\n');
+  for (const l of LANGS) rows.push(entry(abs(PROJECTS_PATH[l]), mods.content, pair(PROJECTS_PATH.en, PROJECTS_PATH.tr)));
+  for (const c of CASE_STUDIES) for (const l of LANGS) rows.push(entry(abs(studyPath(c, l)), mods.content, pair(studyPath(c, 'en'), studyPath(c, 'tr'))));
+  // the writing (English only)
+  if (mods.articles.length) {
+    rows.push(entry(abs(WRITING_PATH), mods.articles[0].modified));
+    for (const a of mods.articles) rows.push(entry(abs(articlePath(a.slug)), a.modified));
   }
   rows.push(entry(abs('/privacy'), mods.privacy));
   return `<?xml version="1.0" encoding="UTF-8"?>

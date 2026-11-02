@@ -168,6 +168,59 @@ async function text(base, path, init) {
     await ctx.close();
   }
 
+  console.log('\n[7] Project pages and the writing');
+  for (const [path, lang, h1] of [
+    ['/projects/', 'en', 'Projects'],
+    ['/tr/projeler/', 'tr', 'Projeler'],
+    ['/projects/hydraquant/', 'en', 'HydraQuant'],
+    ['/projects/desktop-os-portfolio/', 'en', 'A desktop OS in the browser'],
+    ['/tr/projeler/shiffy/', 'tr', 'Shiffy'],
+    ['/writing/', 'en', 'Writing'],
+    ['/writing/desktop-os-80kb/', 'en', 'A desktop OS in the browser, in under 80 KB'],
+  ]) {
+    const r = await text(base, path);
+    ok(r.status === 200 && r.type.startsWith('text/html'), `${path} is 200 html`);
+    ok(r.body.includes(`<html lang="${lang}"`) && r.body.includes(`<link rel="canonical" href="https://yamacbezirgan.com${path}"`), `${path}: lang and canonical`);
+    ok(new RegExp(`<h1[^>]*>${h1}</h1>`).test(r.body), `${path}: the <h1> is in the HTML itself`);
+  }
+  for (const path of ['/projects/hydraquant.md', '/tr/projeler/quirkllm.md', '/writing/desktop-os-80kb.md', '/feed.xml']) {
+    ok((await text(base, path)).status === 200, `${path} is served`);
+  }
+  ok((await text(base, '/projects/nope/')).status === 404, 'an unknown project is a real 404');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'en-US' });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await page.goto(base + '/projects/hydraquant/', { waitUntil: 'load' });
+    ok((await page.locator('.crumbs a').nth(1).getAttribute('href')) === '/projects/', 'the breadcrumb leads to the project index');
+    ok((await page.locator('.cta a.btn--primary').getAttribute('href')) === 'https://github.com/ymcbzrgn/HydraQuant', 'the source link goes to the repository');
+    ok((await page.locator('header.bar a.btn--ghost').getAttribute('href')) === '/', 'a link to the desktop');
+    ok((await page.locator('a.pill[hreflang="tr"]').getAttribute('href')) === '/tr/projeler/hydraquant/', 'a link to the Turkish page');
+    await page.locator('a.pill[hreflang="tr"]').click();
+    await page.waitForURL('**/tr/projeler/hydraquant/');
+    ok((await page.locator('html').getAttribute('lang')) === 'tr' && (await page.locator('h2').first().innerText()) === 'Nedir', 'the Turkish page is Turkish');
+    await page.goto(base + '/writing/desktop-os-80kb/', { waitUntil: 'load' });
+    ok((await page.locator('.prose pre').count()) >= 3 && (await page.locator('.prose table').count()) === 1, 'the article has code blocks and a table');
+    const info = JSON.parse((await text(base, '/data/build-info.json')).body);
+    ok((await page.locator('.prose').innerText()).includes(`${info.firstScreenKB} KB gzip`), 'the article quotes the first-screen weight measured by this build');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    ok((await page.evaluate(() => getComputedStyle(document.body).backgroundColor)) === 'rgb(15, 23, 42)', 'dark mode follows the system');
+    ok(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ ...devices['iPhone SE'], locale: 'en-US' });
+    const page = await ctx.newPage();
+    for (const path of ['/projects/', '/projects/shiffy/', '/tr/projeler/hydraquant/', '/writing/desktop-os-80kb/']) {
+      await page.goto(base + path, { waitUntil: 'load' });
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      ok(!overflow, `${path}: no horizontal scroll on a small phone`);
+    }
+    await ctx.close();
+  }
+
   await browser.close();
   server.close();
   process.exit(summary() ? 1 : 0);

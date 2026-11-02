@@ -11,6 +11,7 @@ import { join, resolve } from 'node:path';
 
 const DIST = resolve(process.env.DIST_DIR || 'dist');
 const SITE = 'https://yamacbezirgan.com';
+const STUDY_SLUGS = ['hydraquant', 'desktop-os-portfolio', 'quirkllm', 'shiffy', 'canny-edge-detection'];
 const PAGES = [
   { url: '/', file: 'index.html', lang: 'en', shell: true },
   { url: '/tr/', file: 'tr/index.html', lang: 'tr', shell: true },
@@ -116,6 +117,8 @@ for (const page of PAGES) {
     ok(/Altınbaş/.test(text) && /Milan|Milano/.test(text) && /Python/.test(text) && /Hackathon/i.test(text), 'education, skills and competitions are in the page');
     ok(text.length > 3000, `a full résumé, not a stub (${text.length} characters)`);
     ok(!/telephone|\+90/.test(html), 'no phone number in the page');
+    const projectsBase = page.lang === 'en' ? '/projects/' : '/tr/projeler/';
+    ok(STUDY_SLUGS.every((s) => html.includes(`href="${projectsBase}${s}/"`)) && html.includes(`href="${projectsBase}"`), 'every project card links to its case study, and the index is linked');
     // internal links must resolve
     const links = [...new Set(all(/href="(\/[^"#?]*)/g, html))].filter((l) => !l.startsWith('//'));
     const broken = links.filter((l) => !(has(fileOf(SITE + l)) || has(l.slice(1))));
@@ -149,6 +152,109 @@ for (const [file, url, lang] of [['resume.md', '/resume/', 'en'], ['tr/ozgecmis.
 }
 ok(has('privacy.html') && read('privacy.html').includes(`<link rel="canonical" href="${SITE}/privacy"`), 'privacy page has its canonical');
 ok(!has('og-image.jpg'), 'the old og-image.jpg (with typos) is gone');
+
+console.log('\nprojects and writing');
+const STUDIES = ['hydraquant', 'desktop-os-portfolio', 'quirkllm', 'shiffy', 'canny-edge-detection'];
+const ARTICLES = ['desktop-os-80kb'];
+const newPages = [];
+for (const [lang, base] of [['en', '/projects/'], ['tr', '/tr/projeler/']]) {
+  newPages.push({ url: base, lang, kind: 'projects', both: true });
+  for (const slug of STUDIES) newPages.push({ url: `${base}${slug}/`, lang, kind: 'project', both: true, md: `${base}${slug}.md` });
+}
+newPages.push({ url: '/writing/', lang: 'en', kind: 'writing' });
+for (const slug of ARTICLES) newPages.push({ url: `/writing/${slug}/`, lang: 'en', kind: 'article', md: `/writing/${slug}.md` });
+
+const tokens = /\{\{?(firstScreenKB|scripts|suites)\}?\}/;
+for (const page of newPages) {
+  const file = fileOf(SITE + page.url);
+  if (!has(file)) {
+    ok(false, `${page.url} exists`);
+    continue;
+  }
+  const html = read(file);
+  const titles = attr(html, /<title>([^<]*)<\/title>/g);
+  const desc = attr(html, /<meta name="description" content="([^"]*)"/g);
+  const canonical = attr(html, /<link rel="canonical" href="([^"]*)"/g);
+  const alternates = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/g)].map((m) => [m[1], m[2]]));
+  const body = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
+  const text = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const label = page.url;
+
+  ok(new RegExp(`<html lang="${page.lang}"`).test(html), `${label}: html lang is ${page.lang}`);
+  ok(titles.length === 1 && titles[0].length >= 20 && titles[0].length <= 65, `${label}: one title, 20-65 characters (${titles[0]?.length})`);
+  ok(desc.length === 1 && desc[0].length >= 70 && desc[0].length <= 165, `${label}: one description, 70-165 characters (${desc[0]?.length})`);
+  ok(canonical.length === 1 && canonical[0] === SITE + page.url, `${label}: canonical is itself`);
+  ok(!/www\.yamacbezirgan/i.test(html) && /name="robots" content="index, follow/.test(html), `${label}: no dead www link, indexable`);
+  ok(alternates[page.lang] === SITE + page.url && alternates['x-default'] && Object.values(alternates).every((u) => u.startsWith(SITE) && has(fileOf(u))), `${label}: hreflang points at pages of this build`);
+  if (page.both) ok(alternates.en && alternates.tr && alternates.en !== alternates.tr, `${label}: it has its Turkish and English twin`);
+  ok(attr(body, /<h1[^>]*>([\s\S]*?)<\/h1>/g).length === 1, `${label}: exactly one <h1>`);
+  ok(!tokens.test(html) && !/telephone|\+90/.test(html), `${label}: no unfilled {tokens}, no phone number`);
+  const links = [...new Set(all(/href="(\/[^"#?]*)/g, html))].filter((l) => !l.startsWith('//'));
+  const broken = links.filter((l) => !(has(fileOf(SITE + l)) || has(l.slice(1))));
+  ok(broken.length === 0, `${label}: internal links resolve (${links.length} checked${broken.length ? ', broken: ' + broken.join(', ') : ''})`);
+  ok(attr(html, /<meta property="og:image" content="([^"]*)"/g)[0]?.startsWith(SITE + '/'), `${label}: social preview image`);
+
+  // structured data
+  const ld = attr(html, /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
+  ok(ld.length === 1, `${label}: one JSON-LD block`);
+  try {
+    const graph = JSON.parse(ld[0])['@graph'];
+    const types = graph.map((n) => n['@type']);
+    const ids = new Set(graph.map((n) => n['@id']));
+    ok(types.includes('Person') && types.includes('BreadcrumbList') && types.includes('WebPage') || types.includes('CollectionPage'), `${label}: JSON-LD has the person, a breadcrumb and the page`);
+    ok(graph.every((n) => !n.breadcrumb || ids.has(n.breadcrumb['@id'])) && graph.every((n) => !n.mainEntity?.['@id'] || ids.has(n.mainEntity['@id'])), `${label}: JSON-LD @id references resolve`);
+    const crumbs = graph.find((n) => n['@type'] === 'BreadcrumbList');
+    ok(crumbs && crumbs.itemListElement.length >= 2 && crumbs.itemListElement.at(-1).item === SITE + page.url, `${label}: breadcrumb ends at this page`);
+    if (page.kind === 'project') {
+      const code = graph.find((n) => n['@type'] === 'SoftwareSourceCode');
+      ok(code && code.codeRepository?.startsWith('https://github.com/ymcbzrgn/') && code.author?.['@id'] && code.programmingLanguage?.length > 0, `${label}: SoftwareSourceCode with repository, language and author`);
+      ok(text.length > 1800, `${label}: a real case study, not a stub (${text.length} characters)`);
+    }
+    if (page.kind === 'projects') {
+      const list = graph.find((n) => n['@type'] === 'CollectionPage')?.mainEntity?.itemListElement ?? [];
+      ok(list.length === STUDIES.length && list.every((i) => has(fileOf(i.url))), `${label}: the item list names all ${STUDIES.length} projects`);
+    }
+    if (page.kind === 'article') {
+      const art = graph.find((n) => n['@type'] === 'TechArticle');
+      ok(art && /^\d{4}-\d{2}-\d{2}$/.test(art.datePublished) && art.wordCount > 600 && art.author?.['@id'], `${label}: TechArticle with date, word count and author`);
+      ok(attr(html, /<meta property="og:type" content="([^"]*)"/g)[0] === 'article' && /<meta property="article:published_time"/.test(html), `${label}: Open Graph article`);
+      ok(text.length > 5000 && (html.match(/<pre>/g) || []).length >= 3, `${label}: the whole article, with code blocks (${text.length} characters)`);
+    }
+  } catch (e) {
+    ok(false, `${label}: JSON-LD parses (${e.message})`);
+  }
+
+  // the Markdown copy
+  if (page.md) {
+    const md = has(page.md.slice(1)) ? read(page.md.slice(1)) : '';
+    const prose = md.replace(/```[\s\S]*?```/g, '').replace(/`[^`]*`/g, ''); // (code may show tags)
+    ok(md.startsWith('# ') && md.includes(SITE + page.url) && !/<\/?[a-z][^>]*>/i.test(prose) && !tokens.test(md), `${page.md}: plain Markdown that points back at its page`);
+    ok(html.includes(`<link rel="alternate" type="text/markdown" href="${SITE}${page.md}"`), `${label}: advertises ${page.md}`);
+    if (page.lang === 'en') ok(read('llms.txt').includes(SITE + page.md), `llms.txt links ${page.md}`);
+  }
+}
+// llms.txt names every English page, the sitemap every page
+for (const page of newPages) {
+  ok(locs.includes(SITE + page.url), `sitemap lists ${page.url}`);
+  if (page.lang === 'en' && page.kind !== 'writing') ok(read('llms.txt').includes(SITE + page.url), `llms.txt links ${page.url}`);
+}
+ok(read('llms-full.txt').includes('## Case studies') && STUDIES.every((s) => read('llms-full.txt').includes(`${SITE}/projects/${s}/`)), 'llms-full.txt carries the case studies');
+
+// the feed
+const feed = has('feed.xml') ? read('feed.xml') : '';
+ok(feed.startsWith('<?xml') && feed.includes('<feed xmlns="http://www.w3.org/2005/Atom"') && feed.trimEnd().endsWith('</feed>'), 'feed.xml is an Atom feed');
+ok((feed.match(/<entry>/g) || []).length === ARTICLES.length && (feed.match(/<\/entry>/g) || []).length === ARTICLES.length, `the feed has ${ARTICLES.length} entry`);
+ok(!/&(?!amp;|lt;|gt;|quot;|#39;)/.test(feed) && all(/<id>([^<]+)<\/id>/g, feed).every((u) => u.startsWith(SITE + '/')), 'the feed escapes its text and uses absolute ids');
+ok(all(/<link rel="alternate" type="text\/html" href="([^"]+)"/g, feed).every((u) => has(fileOf(u))), 'every link of the feed is a page of this build');
+ok(/<link rel="self" type="application\/atom\+xml" href="https:\/\/yamacbezirgan\.com\/feed\.xml"/.test(feed), 'the feed names itself');
+ok(read('index.html').includes('type="application/atom+xml"') && read('writing/index.html').includes('type="application/atom+xml"'), 'the desktop and the writing index advertise the feed');
+ok(read('llms.txt').includes(SITE + '/feed.xml'), 'llms.txt links the feed');
+
+// numbers the case study of this site quotes come from this build
+const info = has('data/build-info.json') ? JSON.parse(read('data/build-info.json')) : {};
+const self = read('projects/desktop-os-portfolio/index.html');
+ok(info.firstScreenKB > 40 && self.includes(`${info.firstScreenKB} KB gzip`) && self.includes(`${info.suites} Playwright suites`), `the case study of this site quotes the measured numbers (${info.firstScreenKB} KB, ${info.suites} suites)`);
+ok(read('writing/desktop-os-80kb/index.html').includes(`${info.firstScreenKB} KB gzip`), 'and so does the article');
 
 console.log('\nthe CV');
 /** the text strings of a PDF ("(...)" literals, octal escapes and UTF-16BE decoded) */

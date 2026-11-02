@@ -35,6 +35,8 @@ export interface Study {
 
 export interface Project {
   id: string;
+  /** the address of its page: /projects/<slug>/ (and /tr/projeler/<slug>/) */
+  slug: string;
   name: string;
   stack: string;
   summary: L10n;
@@ -170,6 +172,7 @@ export const PROGRAMS: { name: string; by: string }[] = [
 export const PROJECTS: Project[] = [
   {
     id: 'hydraquant',
+    slug: 'hydraquant',
     name: 'HydraQuant',
     stack: 'Python · Quant AI',
     summary: {
@@ -179,6 +182,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'portfolio',
+    slug: 'desktop-os-portfolio',
     name: 'Yamac-Bezirgan',
     stack: 'React · TypeScript',
     repo: 'https://github.com/ymcbzrgn/ymcbzrgn',
@@ -189,6 +193,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'quirkllm',
+    slug: 'quirkllm',
     name: 'QuirkLLM',
     stack: 'Python · Local LLMs',
     summary: {
@@ -198,6 +203,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'shiffy',
+    slug: 'shiffy',
     name: 'Shiffy',
     stack: 'React Native · Node.js · Llama',
     summary: {
@@ -207,6 +213,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: 'canny',
+    slug: 'canny-edge-detection',
     name: 'Canny Edge Detection GUI',
     stack: 'Python · OpenCV',
     summary: {

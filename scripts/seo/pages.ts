@@ -9,6 +9,7 @@
 import { PROFILE } from '../../src/os/content/profile';
 import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, monthLabel } from '../../src/os/content/career';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
+import { PROJECTS_PATH, projectPath } from '../../src/os/content/paths';
 import { PATH, currentRole, esc, roleLine, type Lang } from './site';
 import { headBlock } from './head';
 
@@ -95,6 +96,8 @@ const LABELS: Record<
     courses: string;
     focus: string;
     more: string;
+    caseStudy: string;
+    allProjects: string;
     updated: string;
     also: string;
     privacy: string;
@@ -118,6 +121,8 @@ const LABELS: Record<
     courses: 'Coursework',
     focus: 'Focus',
     more: 'More on GitHub',
+    caseStudy: 'Read the case study',
+    allProjects: 'All projects and case studies',
     updated: 'Updated',
     also: 'Also written as',
     privacy: 'Privacy',
@@ -140,6 +145,8 @@ const LABELS: Record<
     courses: 'Dersler',
     focus: 'Odak',
     more: "GitHub'da daha fazlası",
+    caseStudy: 'Vaka çalışmasını oku',
+    allProjects: 'Tüm projeler ve vaka çalışmaları',
     updated: 'Güncelleme',
     also: 'Şöyle de yazılır',
     privacy: 'Gizlilik',
@@ -149,7 +156,7 @@ const LABELS: Record<
   },
 };
 
-const RESUME_CSS = `:root{color-scheme:light dark;--bg:#f8fafc;--fg:#1e293b;--muted:#475569;--card:#fff;--line:#e2e8f0;--accent:#3730a3;--chip:#eef2ff}
+export const RESUME_CSS = `:root{color-scheme:light dark;--bg:#f8fafc;--fg:#1e293b;--muted:#475569;--card:#fff;--line:#e2e8f0;--accent:#3730a3;--chip:#eef2ff}
 @media (prefers-color-scheme:dark){:root{--bg:#0f172a;--fg:#e2e8f0;--muted:#94a3b8;--card:#1e293b;--line:#334155;--accent:#a5b4fc;--chip:#1e1b4b}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 'Ubuntu',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
@@ -210,7 +217,7 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
   const projects = PROJECTS.map((p) => {
     const link = p.repo ?? byName.get(norm(p.name))?.html_url;
     const name = link ? `<a href="${esc(link)}" rel="noopener">${esc(p.name)}</a>` : esc(p.name);
-    return `<article class="card"><h3>${name}</h3><div class="stack">${esc(p.stack)}</div><p>${esc(p.summary[lang])}</p></article>`;
+    return `<article class="card"><h3>${name}</h3><div class="stack">${esc(p.stack)}</div><p>${esc(p.summary[lang])}</p><p><a href="${projectPath(p.slug, lang)}">${L.caseStudy} →</a></p></article>`;
   }).join('\n          ');
 
   const more = repos
@@ -303,7 +310,8 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
 
       <section id="projects" aria-labelledby="h-proj">
         <h2 id="h-proj">${L.proj}</h2>
-          ${projects}${
+          ${projects}
+        <p><a href="${PROJECTS_PATH[lang]}">${L.allProjects} →</a></p>${
             more
               ? `
         <h3 style="margin-top:22px">${L.more}</h3>
