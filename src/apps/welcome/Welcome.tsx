@@ -112,7 +112,7 @@ export default function Welcome({ windowId }: WelcomeProps) {
             {t('role')} · {t('tagline')}
           </p>
           <p className="welcome__chip">{t('currentRole')}</p>
-          <p className="welcome__intro">{t('welcomeIntro')}</p>
+          <p className="welcome__intro">{t(isMobile ? 'welcomeIntroTouch' : 'welcomeIntro')}</p>
 
           <div className="welcome__cta">
             <button type="button" className="welcome__btn welcome__btn--primary" onClick={() => go('cv')}>

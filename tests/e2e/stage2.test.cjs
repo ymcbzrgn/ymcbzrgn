@@ -110,10 +110,12 @@ const openDesktopIcon = (page, name) =>
     await page.waitForSelector('.desktop-icon__label');
     await openDesktopIcon(page, 'CV.pdf');
     await page.waitForSelector('.pdf-error', { timeout: 15000 });
-    const msg = await page.locator('.pdf-error p').first().innerText();
-    console.log('  hata metni:', JSON.stringify(msg));
-    ok(/could not be loaded/i.test(msg), 'kullanıcıya anlaşılır hata mesajı gösteriliyor');
+    const msg = await page.locator('.pdf-error h3').first().innerText();
+    console.log('  hata başlığı:', JSON.stringify(msg));
+    ok(/didn't load/i.test(msg), 'kullanıcıya anlaşılır hata başlığı gösteriliyor');
     ok(cdn.hits.includes('pdf.min.js'), 'yükleme denendi');
+    ok((await page.locator('.pdf-error a.pdf-actions__btn--primary').getAttribute('href')) === '/YAMAC_BEZIRGAN_CURRENT_CV.pdf', 'PDF dosyasını doğrudan açma bağlantısı sunuluyor (ölü uç yok)');
+    ok((await page.locator('.pdf-error a[download]').count()) === 1, 'indirme bağlantısı da var');
 
     // ağ düzeldi: pencereyi kapat, CV'yi tekrar aç
     cdn.mode = 'fulfill';
@@ -151,23 +153,27 @@ const openDesktopIcon = (page, name) =>
     ok(assets.some((a) => a.startsWith('MobileOS') && a.endsWith('.js')), 'MobileOS chunk\'ı mobilde iniyor ve launcher açılıyor');
     ok(cdn.hits.length === 0, 'mobilde de açılışta CDN isteği yok');
 
-    // VFS asenkron yüklenir: dock (Home, Terminal, Projects, CV) dolana kadar bekle
-    await page.waitForFunction(() => document.querySelectorAll('.mobile-launcher__dock-app').length >= 4, null, { timeout: 15000 });
-    const names = await page.$$eval('.mobile-launcher__app-name', (els) => els.map((e) => e.textContent.trim()));
-    console.log('  launcher grid uygulamaları:', JSON.stringify(names));
+    // ana ekran: dört kısayollu dock ve uygulama karoları
+    await page.waitForSelector('.dock__item', { timeout: 15000 });
+    ok((await page.locator('.dock__item').count()) === 4, 'dock: CV, e-posta, LinkedIn, GitHub');
+    const names = await page.$$eval('.app__name', (els) => els.map((e) => e.textContent.trim()));
+    console.log('  ana ekran uygulamaları:', JSON.stringify(names));
+    ok(names.length === 12, 'ana ekranda 12 uygulama var');
 
-    // Terminal (dock, 🖥️) aç
-    await page.locator('.mobile-launcher__dock-app', { hasText: '🖥️' }).first().tap();
+    // Terminal aç
+    await page.locator('.app[data-app="terminal"]').tap();
     await page.waitForSelector('.mobile-app-shell .terminal-app', { timeout: 15000 });
     ok(true, 'Terminal mobilde açıldı (AppLoader + lazy uygulama)');
     await page.locator('.mobile-app-shell__close-btn').first().tap();
     await page.waitForSelector('.mobile-app-shell', { state: 'detached', timeout: 10000 });
 
-    // CV (dock, 📄) aç
-    await page.locator('.mobile-launcher__dock-app', { hasText: '📄' }).first().tap();
-    const s = await canvasStats(page);
-    console.log(`  CV (mobil) canvas: ${s.w}x${s.h}, mürekkep=${(s.inkRatio * 100).toFixed(2)}%`);
-    ok(s.inkRatio > 0.005, 'CV mobilde de çizildi');
+    // CV (dock): cihazın kendi PDF görüntüleyicisi, PDF.js değil
+    const pdfRequests = [];
+    ctx.on('request', (r) => /\.pdf$/.test(r.url()) && pdfRequests.push(base(r.url())));
+    await page.locator('.dock__item[data-dock="cv"]').tap();
+    await page.waitForTimeout(1500);
+    ok(pdfRequests.includes('YAMAC_BEZIRGAN_CURRENT_CV.pdf'), 'CV mobilde gerçek bir bağlantı olarak açıldı (cihazın PDF görüntüleyicisi)');
+    ok(cdn.hits.length === 0, 'mobilde CV için PDF.js CDN isteği yok');
     ok(errors.length === 0, 'mobilde konsol hatası / yakalanmamış istisna yok ' + (errors.length ? JSON.stringify(errors.slice(0, 3)) : ''));
     await ctx.close();
   }

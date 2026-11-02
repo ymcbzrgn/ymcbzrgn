@@ -153,9 +153,9 @@ async function openFromPalette(page, query = 'story') {
     page.__errors = [];
     page.on('pageerror', (e) => page.__errors.push(e.message));
     await page.goto(base + '/', { waitUntil: 'load' });
-    await page.waitForSelector('.welcome', { timeout: 15000 });
-    const button = page.getByRole('button', { name: /Yamaç in 30 seconds/ });
-    ok(await button.isVisible(), 'the welcome app offers "Yamaç in 30 seconds"');
+    await page.waitForSelector('.lock', { timeout: 15000 });
+    const button = page.locator('.lock-card[data-action="story"]');
+    ok(await button.isVisible(), 'the lock screen offers "Yamaç in 30 seconds"');
     await button.click();
     await page.waitForSelector('.story', { timeout: 5000 });
     const vp = page.viewportSize();

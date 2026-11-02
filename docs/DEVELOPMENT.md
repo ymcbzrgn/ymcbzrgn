@@ -25,6 +25,7 @@ The browser tests need Chromium once: `npx playwright install chromium`.
 | `npm run test:e2e` | all browser suites in `tests/e2e` against `dist/` (`node tests/e2e/run.cjs features pet` runs some) |
 | `npm run bench:drag` | window drag frame-time benchmark (needs a running server in `BASE`) |
 | `npm run build:sprites` | regenerates the pixel twin and the room scenery sheets from `scripts/sprites` (props are drawn in code in `scene.mjs`; `--preview out.png` writes an enlarged contact sheet) |
+| `npm run build:icons` | regenerates the phone's app icon sheet (`src/assets/sprites/icons.png`, drawn in code in `scripts/sprites/icons.mjs`; `--preview out.png` writes an enlarged contact sheet) |
 | `npm run gitlog` | refreshes `src/assets/gitlog.fallback.json` (what the terminal's `git log` shows when the build has no history) |
 
 ## Things worth knowing
@@ -43,6 +44,15 @@ The browser tests need Chromium once: `npx playwright install chromium`.
   at build time (git-ignored). The Projects window falls back to it when the live API refuses. It never fails a
   build; set `GITHUB_TOKEN` in the build environment to avoid the anonymous rate limit.
 - **Special days** (`src/ui/pet/specialDays.ts`): add `?day=MM-DD` to the address to see one.
+- **The phone UI** (`src/ui/mobile`, one lazy chunk with its animation library, so desktop visitors never get it):
+  a lock screen (`MobileLock`: clock, the twin and four "notifications" that open the story, the recruiter card,
+  the CV and the career timeline; shown once per visit and again for a personal `?for=` link, skipped by `/?story`),
+  then a home screen (`MobileLauncher`: profile, "Now" and story widgets, a swipeable project rail, twelve apps and a
+  dock with CV, email, LinkedIn and GitHub). The wallpaper is a sky per part of the day (`dayPart.ts`, `MobileOS.css`).
+  The app icons are drawn in code (`npm run build:icons`) and shown by `PixelIcon`.
+  Two things learnt the hard way: the phone is `position: fixed; inset: 0`, never `100vh` (on iOS that is taller than
+  the visible screen and hides the dock), and the CV opens in the device's own PDF viewer on a phone instead of PDF.js
+  from a CDN (on a desktop the viewer gives up after 8 s and offers the PDF itself).
 
 ## SEO and GEO
 
@@ -59,6 +69,13 @@ so a plain `vite build` is enough on any host) fixes that at build time:
   (`<link rel="alternate" type="text/markdown">`) and from `llms.txt`. `robots.txt` names the AI search and
   user-triggered bots (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User)
   so their welcome does not depend on a host's managed block; training crawlers are left to that block.
+- **Projects and writing.** `src/os/content/caseStudies.ts` holds one case study per project in both languages
+  (from the READMEs and the CV, nothing invented); the build writes `/projects/`, `/projects/<slug>/` and
+  `/tr/projeler/...` with `SoftwareSourceCode` structured data, a Markdown copy of each (`.md`) and sitemap and
+  `llms.txt` entries. Articles are Markdown files in `content/writing/` (front matter: `title`, `description`,
+  `date: YYYY-MM-DD`, `tags`), published at `/writing/<file name>/` with `TechArticle` data, a `.md` copy, and the
+  Atom feed `/feed.xml`. `{{firstScreenKB}}`, `{{scripts}}` and `{{suites}}` in an article (and
+  `{firstScreenKB}` etc. in a case study) are replaced by the numbers the build measured.
 - **One source of facts**: `src/os/content/career.ts` (from the CV). The pages, JSON-LD, llms.txt, the recruiter
   card and the story all read it. When the CV changes, change that file.
 - **The canonical host is the apex, `https://yamacbezirgan.com`.** `www` has no DNS record, so nothing may point
@@ -77,7 +94,7 @@ All lazy, none of it in the first paint:
 - **At a glance** (`src/apps/recruiter`): the whole profile on one screen, with the CV, a `.vcf` contact
   (`vcard.ts`, no phone number on purpose) and a copy-email button. `glance` in the terminal, `sudo hire-me`, the palette.
 - **Yamaç in 30 seconds** (`src/ui/story`): seven tap-through cards (tap, hold, swipe), full screen on a phone,
-  offered in the phone's welcome window and reachable at `/?story`, in the palette and as `story` in the terminal.
+  offered on the phone's lock screen and home screen and reachable at `/?story`, in the palette and as `story` in the terminal.
 - **Career** (`src/apps/career`, `src/ui/rooms/CareerRoom.tsx`): the timeline as a room for the twin, and as a list
   for phones and for anyone who has the twin switched off.
 - **How this site is built** (`src/apps/about-site`): numbers measured on the build (`dist/data/build-info.json`,

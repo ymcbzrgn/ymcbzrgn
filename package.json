@@ -12,6 +12,7 @@
     "postbuild:legacy": "node scripts/copy-legacy.cjs",
     "build:new": "node scripts/snapshot-github.mjs && vite build",
     "build:sprites": "node scripts/sprites/build-sprites.mjs",
+    "build:icons": "node scripts/sprites/build-icons.mjs",
     "gitlog": "node scripts/update-gitlog.mjs",
     "check:budgets": "node scripts/check-budgets.mjs",
     "check:behaviors": "node scripts/check-behaviors.mjs",

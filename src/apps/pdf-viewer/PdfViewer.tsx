@@ -7,6 +7,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { PdfViewerProps } from '../types';
+import { useT } from '../../os/i18n/full';
+import { useIsMobile } from '../../os/hooks/useDeviceType';
 import { loadPdfJs } from './loadPdfJs';
 import './PdfViewer.css';
 
@@ -14,15 +16,24 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 3.0;
 const SCALE_STEP = 0.25;
 
-export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
-  console.log('[PdfViewer] 🚀 MOUNTING', {
-    fileUrl,
-    windowId,
-    fileUrlProvided: !!fileUrl,
-    fileUrlLength: fileUrl?.length,
-    timestamp: new Date().toISOString(),
-  });
+/** The PDF itself: open it in the device's own viewer or save it. Needs no script, so it always works. */
+function PdfFileActions({ fileUrl }: { fileUrl: string }) {
+  const t = useT();
+  return (
+    <div className="pdf-actions">
+      <a className="pdf-actions__btn pdf-actions__btn--primary" href={fileUrl} target="_blank" rel="noopener noreferrer">
+        {t('pdfOpen')}
+      </a>
+      <a className="pdf-actions__btn" href={fileUrl} download>
+        {t('pdfDownload')}
+      </a>
+    </div>
+  );
+}
 
+export default function PdfViewer({ fileUrl }: PdfViewerProps) {
+  const t = useT();
+  const isMobile = useIsMobile();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [pdf, setPdf] = useState<any>(null);
@@ -33,22 +44,9 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
 
+  // Load PDF document (not on a phone: the device's own viewer does that better)
   useEffect(() => {
-    console.log('[PdfViewer] ✅ MOUNTED', {
-      fileUrl,
-      windowId,
-      timestamp: new Date().toISOString(),
-    });
-    return () => {
-      console.log('[PdfViewer] 💀 UNMOUNTED', {
-        windowId,
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }, [fileUrl, windowId]);
-
-  // Load PDF document
-  useEffect(() => {
+    if (isMobile) return;
     const loadPdf = async () => {
       // Validate fileUrl
       if (!fileUrl || fileUrl.trim() === '') {
@@ -70,14 +68,13 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
         setTotalPages(pdfDocument.numPages);
         setLoading(false);
       } catch (err) {
-        console.error('Failed to load PDF:', err);
-        setError(`Failed to load PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setError(`${err instanceof Error ? err.message : 'Unknown error'}`);
         setLoading(false);
       }
     };
 
     loadPdf();
-  }, [fileUrl]);
+  }, [fileUrl, isMobile]);
 
   // Render current page
   useEffect(() => {
@@ -118,7 +115,6 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
         await page.render(renderContext).promise;
         setRendering(false);
       } catch (err) {
-        console.error('Failed to render page:', err);
         setError(`Failed to render page: ${err instanceof Error ? err.message : 'Unknown error'}`);
         setRendering(false);
       }
@@ -171,24 +167,37 @@ export default function PdfViewer({ fileUrl, windowId }: PdfViewerProps) {
     setCurrentPage(validPage);
   };
 
+  // Phone: a file card. One tap opens the PDF in the device's viewer (zoom, search, share and save included).
+  if (isMobile && fileUrl) {
+    return (
+      <div className="pdf-error pdf-card">
+        <div className="pdf-error__icon">📄</div>
+        <h3>{fileUrl.split('/').pop()}</h3>
+        <p>{t('pdfNativeNote')}</p>
+        <PdfFileActions fileUrl={fileUrl} />
+      </div>
+    );
+  }
+
   // Loading state
   if (loading) {
     return (
       <div className="pdf-loading">
         <div className="pdf-loading__spinner" />
-        <p>Loading PDF...</p>
+        <p>{t('pdfLoading')}</p>
       </div>
     );
   }
 
-  // Error state
+  // The in-page viewer did not load (a CDN that is out of reach, a blocker...): the PDF itself still opens.
   if (error) {
     return (
       <div className="pdf-error">
-        <div className="pdf-error__icon">📄❌</div>
-        <h3>Error Loading PDF</h3>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Reload Page</button>
+        <div className="pdf-error__icon">📄</div>
+        <h3>{t('pdfFallbackTitle')}</h3>
+        <p>{t('pdfFallbackNote')}</p>
+        {fileUrl && <PdfFileActions fileUrl={fileUrl} />}
+        <button onClick={() => window.location.reload()}>{t('pdfReload')}</button>
       </div>
     );
   }

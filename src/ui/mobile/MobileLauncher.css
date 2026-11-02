@@ -1,185 +1,518 @@
 /**
- * Mobile Launcher Styles
- * iOS/Android style app launcher
+ * Phone home screen: widgets, apps and a dock over the sky drawn by .mobile-os. Glass cards on a
+ * wallpaper, white text; the dock stays put while the rest scrolls.
  */
 
 .mobile-launcher {
+  --gutter: max(14px, env(safe-area-inset-left, 0px));
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow: hidden;
-}
-
-/* Search Bar */
-.mobile-launcher__search {
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.mobile-launcher__search-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
+  color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  color: #333;
-  outline: none;
-  transition: background 0.2s;
 }
 
-.mobile-launcher__search-input:focus {
-  background: rgba(255, 255, 255, 1);
-}
-
-.mobile-launcher__search-input::placeholder {
-  color: #999;
-}
-
-/* App Grid */
-.mobile-launcher__grid {
+.home__scroll {
+  display: flex;
   flex: 1;
-  padding: 24px 16px;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 2px var(--gutter) calc(140px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 100px;
-  gap: 16px;
-  align-content: start;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* what scrolls under the dock fades out before it, so no icons peek out around it */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 132px - env(safe-area-inset-bottom, 0px)), transparent calc(100% - 98px - env(safe-area-inset-bottom, 0px)));
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 132px - env(safe-area-inset-bottom, 0px)), transparent calc(100% - 98px - env(safe-area-inset-bottom, 0px)));
 }
 
-.mobile-launcher__app {
+/* nothing in the column may shrink below its content (min-height on the widgets would let it) */
+.home__scroll > * {
+  flex: none;
+}
+
+/* greeting + language */
+.home__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.home__greet {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.92;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.home__lang {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* glass */
+.widget {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  color: #fff;
+}
+
+.widget__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #231300;
+}
+
+.btn--glass {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.btn:active {
+  filter: brightness(0.92);
+}
+
+/* profile */
+.widget--profile {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  min-height: 156px;
+  padding: 14px 6px 14px 16px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.1));
+}
+
+.profile__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.profile__text > * {
+  flex: none;
+}
+
+.profile__name {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.profile__role {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.profile__pitch {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  font-size: 12.5px;
+  line-height: 1.4;
+  opacity: 0.82;
+}
+
+.profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.profile__twin {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 4px 0 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.profile__sprite {
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.profile__sprite--s {
+  display: none;
+}
+
+.profile__bubble {
+  position: absolute;
+  right: 6px;
+  bottom: calc(100% - 6px);
+  z-index: 3;
+  width: max-content;
+  max-width: 190px;
+  padding: 8px 11px;
+  border-radius: 14px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  animation: home-pop 0.18s ease-out;
+}
+
+.profile__bubble::after {
+  content: '';
+  position: absolute;
+  right: 26px;
+  bottom: -6px;
+  border: 7px solid transparent;
+  border-top-color: #fff;
+  border-bottom: 0;
+}
+
+@keyframes home-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+
+/* two small widgets */
+.widget-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.widget--small {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 96px;
+  padding: 12px 14px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.widget--small:active,
+.project:active {
+  filter: brightness(0.92);
+}
+
+.widget__big {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.widget__small {
+  font-size: 12.5px;
+  line-height: 1.3;
+  opacity: 0.82;
+}
+
+.widget--story {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(145deg, rgba(219, 39, 119, 0.6), rgba(124, 58, 237, 0.5));
+}
+
+.widget__icon {
+  margin-bottom: 2px;
+  border-radius: 6px;
+}
+
+/* projects */
+.widget--projects {
+  padding: 12px 0;
+}
+
+.widget__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 8px;
+}
+
+.widget__link {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: #fde68a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.projects__rail {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 14px 4px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-padding-inline: 14px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.projects__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.projects__rail li {
+  flex: 0 0 min(240px, 74%);
+  scroll-snap-align: start;
+}
+
+.project {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.45);
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.project__name {
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.project__stack {
+  color: #c7d2fe;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.project__sum {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  font-size: 12.5px;
+  line-height: 1.4;
+  opacity: 0.86;
+}
+
+/* apps */
+.apps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
   background: none;
-  border: none;
+  color: #fff;
+  font: inherit;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 16px;
-  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-launcher__app:active {
-  background: rgba(255, 255, 255, 0.1);
+.app .pixel-icon {
+  border-radius: 14px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease;
 }
 
-.mobile-launcher__app-icon {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.app:active .pixel-icon {
+  transform: scale(0.92);
 }
 
-.mobile-launcher__app-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: #ffffff;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  word-break: break-word;
+.app__name {
+  display: -webkit-box;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-/* Empty State */
-.mobile-launcher__empty {
-  grid-column: 1 / -1;
-  padding: 40px 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.15;
   text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  overflow-wrap: anywhere;
 }
 
-/* Dock */
-.mobile-launcher__dock {
+.home__foot {
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 12px 24px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mobile-launcher__dock-app {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
+  gap: 12px;
+  padding: 2px 0;
+  font-size: 12px;
 }
 
-.mobile-launcher__dock-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s;
-}
-
-.mobile-launcher__dock-app:active .mobile-launcher__dock-icon {
-  transform: scale(0.9);
-}
-
-/* Scrollbar */
-.mobile-launcher__grid::-webkit-scrollbar {
-  width: 4px;
-}
-
-.mobile-launcher__grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.mobile-launcher__grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
-/* Privacy link */
 .mobile-launcher__privacy {
-  display: block;
-  text-align: center;
-  padding: 6px 0;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  letter-spacing: 0.5px;
-  background: rgba(0, 0, 0, 0.2);
 }
 
-/* iPad/Tablet adjustments */
-@media (min-width: 768px) {
-  .mobile-launcher__grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+/* dock */
+.dock {
+  position: absolute;
+  right: var(--gutter);
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  left: var(--gutter);
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: 10px 8px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 26px;
+  background: rgba(20, 24, 44, 0.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dock__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 64px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dock__item .pixel-icon {
+  border-radius: 14px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease;
+}
+
+.dock__item:active .pixel-icon {
+  transform: scale(0.92);
+}
+
+/* a narrow phone: a smaller twin */
+@media (max-width: 359px) {
+  .profile__sprite--l {
+    display: none;
+  }
+  .profile__sprite--s {
+    display: block;
+  }
+  .widget--profile {
+    min-height: 140px;
+  }
+}
+
+/* a tablet: the phone layout, centred and a little roomier */
+@media (min-width: 700px) {
+  .home__scroll {
+    align-items: center;
+  }
+  .home__scroll > * {
+    width: 100%;
+    max-width: 640px;
+  }
+  .apps {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .dock {
+    right: 0;
+    left: 0;
+    width: min(420px, calc(100% - 2 * var(--gutter)));
+    margin: 0 auto;
+  }
+}
+
+/* a landscape phone: the same column (see the tablet rule above), a slim dock without labels */
+@media (orientation: landscape) and (max-height: 520px) {
+  .home__scroll {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - env(safe-area-inset-bottom, 0px)), transparent calc(100% - 70px - env(safe-area-inset-bottom, 0px)));
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - env(safe-area-inset-bottom, 0px)), transparent calc(100% - 70px - env(safe-area-inset-bottom, 0px)));
+  }
+  .dock {
+    width: min(360px, calc(100% - 2 * var(--gutter)));
+    padding: 6px 8px;
+  }
+  .dock__item span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile__bubble {
+    animation: none;
   }
 }

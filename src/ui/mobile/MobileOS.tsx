@@ -1,31 +1,37 @@
 /**
  * MOBILE-ONLY Component
  *
- * Mobile OS Main Component - orchestrates mobile UI experience.
- * This component is never rendered on desktop (>=768px) - see Desktop instead.
+ * Mobile OS Main Component - orchestrates the phone experience. It is never rendered on a desktop
+ * (>= 1024 px wide): Desktop does that.
  *
- * Features:
- * - App Launcher (iOS-style home screen with grid layout)
- * - Fullscreen Apps (with MobileAppShell container)
- * - App Switcher (multitasking/recent apps view)
- * - Custom event bus for app opening (mobile:openApp)
- * - State management for mobile navigation (launcher/app/switcher)
+ * Views:
+ * - lock       the lock screen: clock, the pixel twin and the pitch as "notifications" (once per visit)
+ * - launcher   the home screen: widgets, apps, a dock with CV / email / LinkedIn / GitHub
+ * - app        a fullscreen app inside MobileAppShell
+ * - switcher   the recent apps (swipe up from the bottom edge)
+ *
+ * Apps are opened through the `mobile:openApp` event (useAppOpener / useLaunch), which keeps the apps
+ * themselves free of any knowledge about the phone.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useVFSActions, useVFSNodes, useStore } from '../../os/store';
 import { useLaunch } from '../../os/hooks/useLaunch';
+import { guest } from '../../os/personal';
+import { openStory } from '../../os/events';
 import type { VFSNode } from '../../os/types';
 import type { MobileOpenAppDetail } from '../../os/hooks/useAppOpener';
+import MobileLock, { type LockAction } from './MobileLock';
 import MobileLauncher from './MobileLauncher';
 import MobileAppShell from './MobileAppShell';
 import MobileAppSwitcher from './MobileAppSwitcher';
 import AppLoader from '../../apps/appLoader';
+import { dayPart } from './dayPart';
 import './MobileOS.css';
 import StoryHost from '../story/StoryHost';
 
-type MobileView = 'launcher' | 'app' | 'switcher';
+type MobileView = 'lock' | 'launcher' | 'app' | 'switcher';
 
 interface OpenApp {
   id: string;
@@ -34,87 +40,75 @@ interface OpenApp {
   appId: string;
 }
 
+const UNLOCKED_KEY = 'yb-unlocked';
+
+/**
+ * The lock screen greets a visitor once per visit: the first time ever, and again when the link was
+ * made for somebody (?for=). /?story goes straight to the story.
+ */
+function startsLocked(): boolean {
+  if (new URLSearchParams(window.location.search).has('story')) return false;
+  try {
+    if (sessionStorage.getItem(UNLOCKED_KEY)) return false;
+  } catch {
+    /* storage blocked: lock once per page load */
+  }
+  return !useStore.getState().settings.onboarded || guest !== null;
+}
+
 export default function MobileOS() {
-  const [currentView, setCurrentView] = useState<MobileView>('launcher');
+  const [currentView, setCurrentView] = useState<MobileView>(() => (startsLocked() ? 'lock' : 'launcher'));
   const [openApps, setOpenApps] = useState<OpenApp[]>([]);
   const [activeAppId, setActiveAppId] = useState<string | null>(null);
+  const [part, setPart] = useState(() => dayPart());
 
   const { loadVFS } = useVFSActions();
   const vfsNodes = useVFSNodes();
-
-  // DEBUG: Log MobileOS mount
-  useEffect(() => {
-    console.log('[MobileOS] 🚀 MOUNTED', {
-      initialView: currentView,
-      timestamp: new Date().toISOString(),
-    });
-    return () => {
-      console.log('[MobileOS] 💀 UNMOUNTED', {
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }, []);
-
-  // DEBUG: Log currentView changes
-  useEffect(() => {
-    console.log('[MobileOS] 👁️ currentView CHANGED', {
-      currentView,
-      activeAppId,
-      openAppsCount: openApps.length,
-      timestamp: new Date().toISOString(),
-    });
-  }, [currentView, activeAppId, openApps.length]);
+  const launch = useLaunch();
 
   // Load VFS on mount (same as Desktop.tsx for feature parity)
   useEffect(() => {
     loadVFS();
   }, [loadVFS]);
 
-  // First visit: greet the visitor with the welcome app (closing it marks them onboarded).
-  const launch = useLaunch();
-  const onboarded = useStore((state) => state.settings.onboarded);
+  // the sky follows the clock
   useEffect(() => {
-    if (onboarded) return;
-    const timer = window.setTimeout(() => launch('welcome'), 700);
-    return () => window.clearTimeout(timer);
-  }, [onboarded, launch]);
+    const timer = window.setInterval(() => setPart(dayPart()), 10 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Get active app
   const activeApp = openApps.find((app) => app.id === activeAppId);
 
-  // DEBUG: Log active app
-  useEffect(() => {
-    if (activeApp) {
-      console.log('[MobileOS] 🎯 activeApp SET', {
-        appId: activeApp.appId,
-        windowId: activeApp.windowId,
-        nodeName: activeApp.node.name,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      console.log('[MobileOS] ❌ activeApp is NULL', {
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }, [activeApp]);
+  const unlock = useCallback(
+    (action?: LockAction) => {
+      try {
+        sessionStorage.setItem(UNLOCKED_KEY, '1');
+      } catch {
+        /* storage blocked */
+      }
+      useStore.getState().updateSettings({ onboarded: true });
+      setCurrentView('launcher');
+      if (action === 'cv') {
+        launch('cv'); // right here, inside the tap: a PDF opened later may be taken for a pop-up
+      } else if (action) {
+        // once the lock screen has slid away
+        window.setTimeout(() => {
+          if (action === 'story') openStory();
+          else launch(action === 'glance' ? 'recruiter' : 'career');
+        }, 280);
+      }
+    },
+    [launch]
+  );
 
   // Open app from launcher
   const handleAppOpen = useCallback(
     (node: VFSNode) => {
-      console.log('[MobileOS] 📱 handleAppOpen CALLED', {
-        nodeName: node.name,
-        nodeId: node.id,
-        nodeType: node.type,
-        timestamp: new Date().toISOString(),
-      });
-
       // Check if app already open
       const existingApp = openApps.find((app) => app.node.id === node.id);
       if (existingApp) {
         // Focus existing app
-        console.log('[MobileOS] 🔄 App already open, focusing', {
-          appId: existingApp.id,
-        });
         setActiveAppId(existingApp.id);
         setCurrentView('app');
         return;
@@ -134,7 +128,6 @@ export default function MobileOS() {
 
       // Determine app ID (same logic as Desktop.tsx for feature parity)
       let appId = 'placeholder';
-      const meta: Record<string, any> = {};
 
       // IMPORTANT: Check special folders BEFORE generic folder check!
       if (node.id === 'projects') {
@@ -147,7 +140,6 @@ export default function MobileOS() {
         appId = 'pdf-viewer';
       } else if (node.type === 'file' && node.mimeType === 'application/x-browser-pdf') {
         appId = 'browser';
-        meta.url = node.targetUrl || '';
       } else if (node.type === 'file' && node.mimeType === 'text/plain') {
         appId = 'text-viewer';
       } else if (node.type === 'file' && node.mimeType === 'text/markdown') {
@@ -155,42 +147,18 @@ export default function MobileOS() {
       } else if (node.type === 'link') {
         // Internal links (same-origin) → Browser app
         appId = 'browser';
-        meta.url = node.targetUrl;
       } else if (node.type === 'app') {
         appId = node.appId || 'placeholder';
       } else if (node.mimeType === 'application/x-legacy-site') {
         // Legacy site easter egg
         appId = 'browser';
-        meta.url = node.targetUrl || '/legacy/index.html';
       }
 
-      // Add to open apps
-      const newApp: OpenApp = {
-        id: windowId,
-        node,
-        windowId,
-        appId, // Store calculated appId
-      };
-
-      console.log('[MobileOS] ✅ Creating new app instance', {
-        windowId,
-        appId,
-        nodeName: node.name,
-        newOpenAppsLength: openApps.length + 1,
-        timestamp: new Date().toISOString(),
-      });
-
-      setOpenApps([...openApps, newApp]);
+      setOpenApps((apps) => [...apps, { id: windowId, node, windowId, appId }]);
       setActiveAppId(windowId);
       setCurrentView('app');
-
-      console.log('[MobileOS] 🎬 State updates dispatched', {
-        willSetActiveAppId: windowId,
-        willSetCurrentView: 'app',
-        timestamp: new Date().toISOString(),
-      });
     },
-    [openApps, setOpenApps, setActiveAppId, setCurrentView]
+    [openApps]
   );
 
   // Close app
@@ -232,22 +200,10 @@ export default function MobileOS() {
     setCurrentView('launcher');
   };
 
-  // Listen for mobile:openApp events (from FileExplorer, etc.)
+  // Listen for mobile:openApp events (from FileExplorer, the launcher, the lock screen...)
   useEffect(() => {
     const handleMobileOpenApp = (event: Event) => {
-      console.log('[MobileOS] 📥 Received mobile:openApp event', {
-        event,
-        timestamp: new Date().toISOString(),
-      });
-
-      const customEvent = event as CustomEvent<MobileOpenAppDetail>;
-      const { nodeId, appId: requestedAppId, title, icon } = customEvent.detail;
-
-      console.log('[MobileOS] 🔍 Event detail', {
-        detail: customEvent.detail,
-        nodeId,
-        vfsNodesKeys: Object.keys(vfsNodes),
-      });
+      const { nodeId, appId: requestedAppId, title, icon, meta } = (event as CustomEvent<MobileOpenAppDetail>).detail;
 
       // Get node from VFS. Apps without a file/folder behind them (welcome, terminal, ...) are
       // launched by appId: wrap them in a virtual app node so the rest of the flow stays the same.
@@ -263,123 +219,67 @@ export default function MobileOS() {
           appId: requestedAppId,
           createdAt: now,
           modifiedAt: now,
+          ...(typeof meta?.fileUrl === 'string' ? { targetUrl: meta.fileUrl } : {}),
         };
       }
-      if (!node) {
-        console.error('[MobileOS] ❌ Cannot open app: node not found', {
-          nodeId,
-          availableNodes: Object.keys(vfsNodes),
-        });
-        return;
-      }
+      if (!node) return;
 
-      console.log('[MobileOS] ✅ Node found, calling handleAppOpen', {
-        node,
-      });
-
-      // Use existing handleAppOpen logic
       handleAppOpen(node);
     };
 
-    console.log('[MobileOS] 👂 Adding mobile:openApp event listener');
     window.addEventListener('mobile:openApp', handleMobileOpenApp);
-
-    return () => {
-      console.log('[MobileOS] 🗑️ Removing mobile:openApp event listener');
-      window.removeEventListener('mobile:openApp', handleMobileOpenApp);
-    };
+    return () => window.removeEventListener('mobile:openApp', handleMobileOpenApp);
   }, [vfsNodes, handleAppOpen]);
 
-  // DEBUG: Log before render
-  console.log('[MobileOS] 🎨 RENDERING', {
-    currentView,
-    activeAppId,
-    openAppsCount: openApps.length,
-    activeAppExists: !!activeApp,
-    activeAppDetails: activeApp
-      ? {
-          appId: activeApp.appId,
-          windowId: activeApp.windowId,
-          nodeName: activeApp.node.name,
-        }
-      : null,
-    timestamp: new Date().toISOString(),
-  });
-
   return (
-    <div className="mobile-os">
+    <div className="mobile-os" data-daypart={part} data-view={currentView}>
       <StoryHost />
       <AnimatePresence>
-        {/* Launcher */}
-        {currentView === 'launcher' &&
-          (() => {
-            console.log('[MobileOS] 🚀 Rendering MobileLauncher');
-            return <MobileLauncher key="launcher" onAppOpen={handleAppOpen} />;
-          })()}
+        {/* Lock screen */}
+        {currentView === 'lock' && <MobileLock key="lock" onUnlock={unlock} />}
+
+        {/* Home screen */}
+        {currentView === 'launcher' && (
+          <motion.div
+            key="launcher"
+            className="mobile-os__layer"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.22 }}
+          >
+            <MobileLauncher onAppOpen={handleAppOpen} />
+          </motion.div>
+        )}
 
         {/* Active App */}
-        {currentView === 'app' &&
-          activeApp &&
-          (() => {
-            console.log('[MobileOS] 📱 Rendering MobileAppShell + AppLoader', {
-              appId: activeApp.appId,
-              windowId: activeApp.windowId,
-              nodeName: activeApp.node.name,
-              nodeId: activeApp.node.id,
-            });
-            return (
-              <MobileAppShell
-                key={`app-${activeApp.id}`}
-                onClose={handleAppShellClose}
-                appTitle={activeApp.node.name}
-              >
-                <AppLoader
-                  appId={activeApp.appId}
-                  windowId={activeApp.windowId}
-                  nodeId={activeApp.node.id}
-                  {...(activeApp.appId === 'pdf-viewer'
-                    ? { fileUrl: activeApp.node.targetUrl || '' }
-                    : {})}
-                  {...(activeApp.appId === 'browser'
-                    ? { url: activeApp.node.targetUrl || '' }
-                    : {})}
-                />
-              </MobileAppShell>
-            );
-          })()}
-
-        {/* Active App - NULL CHECK */}
-        {currentView === 'app' &&
-          !activeApp &&
-          (() => {
-            console.error('[MobileOS] ❌❌❌ currentView is "app" but activeApp is NULL!', {
-              currentView,
-              activeAppId,
-              openApps,
-              timestamp: new Date().toISOString(),
-            });
-            return null;
-          })()}
+        {currentView === 'app' && activeApp && (
+          <MobileAppShell key={`app-${activeApp.id}`} onClose={handleAppShellClose} appTitle={activeApp.node.name}>
+            <AppLoader
+              appId={activeApp.appId}
+              windowId={activeApp.windowId}
+              nodeId={activeApp.node.id}
+              {...(activeApp.appId === 'pdf-viewer' ? { fileUrl: activeApp.node.targetUrl || '' } : {})}
+              {...(activeApp.appId === 'browser' ? { url: activeApp.node.targetUrl || '' } : {})}
+            />
+          </MobileAppShell>
+        )}
 
         {/* App Switcher */}
-        {currentView === 'switcher' &&
-          (() => {
-            console.log('[MobileOS] 🔄 Rendering MobileAppSwitcher');
-            return (
-              <MobileAppSwitcher
-                key="switcher"
-                openApps={openApps}
-                onAppFocus={handleAppFocus}
-                onAppClose={handleAppClose}
-                onCloseAll={handleCloseAll}
-                onDismiss={handleDismissSwitcher}
-              />
-            );
-          })()}
+        {currentView === 'switcher' && (
+          <MobileAppSwitcher
+            key="switcher"
+            openApps={openApps}
+            onAppFocus={handleAppFocus}
+            onAppClose={handleAppClose}
+            onCloseAll={handleCloseAll}
+            onDismiss={handleDismissSwitcher}
+          />
+        )}
       </AnimatePresence>
 
       {/* Swipe-up gesture trigger (invisible) */}
-      {currentView !== 'switcher' && (
+      {currentView !== 'switcher' && currentView !== 'lock' && (
         <div
           className="mobile-os__switcher-trigger"
           onTouchStart={(e) => {

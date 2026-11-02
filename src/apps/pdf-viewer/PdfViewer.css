@@ -232,3 +232,34 @@
 .pdf-canvas-container::-webkit-scrollbar-thumb:hover {
   background: #808080;
 }
+
+/* The PDF itself: open / download (phones, and when the in-page viewer cannot load) */
+.pdf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.pdf-actions__btn {
+  padding: 12px 20px;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pdf-actions__btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #231300;
+}
+
+.pdf-card h3 {
+  color: #333333;
+  word-break: break-all;
+}

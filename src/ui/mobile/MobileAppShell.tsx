@@ -7,7 +7,7 @@
  * - Blur backdrop when closing
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import StatusBar from './StatusBar';
@@ -19,34 +19,8 @@ interface MobileAppShellProps {
   appTitle?: string;
 }
 
-export default function MobileAppShell({
-  children,
-  onClose,
-  appTitle,
-}: MobileAppShellProps) {
+export default function MobileAppShell({ children, onClose, appTitle }: MobileAppShellProps) {
   const [isClosing, setIsClosing] = useState(false);
-
-  // DEBUG: Log MobileAppShell lifecycle
-  useState(() => {
-    console.log('[MobileAppShell] 🚀 MOUNTING', {
-      appTitle,
-      hasChildren: !!children,
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  useEffect(() => {
-    console.log('[MobileAppShell] ✅ MOUNTED', {
-      appTitle,
-      timestamp: new Date().toISOString(),
-    });
-    return () => {
-      console.log('[MobileAppShell] 💀 UNMOUNTED', {
-        appTitle,
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }, [appTitle]);
 
   // Swipe handlers (no drag system, only swipeable)
   const handlers = useSwipeable({
@@ -60,19 +34,8 @@ export default function MobileAppShell({
   });
 
   const handleClose = () => {
-    console.log('[MobileAppShell] ✖️ X BUTTON CLICKED / handleClose CALLED', {
-      appTitle,
-      isClosing,
-      timestamp: new Date().toISOString(),
-    });
     setIsClosing(true);
-    setTimeout(() => {
-      console.log('[MobileAppShell] ✖️ Calling onClose callback - INSTANT', {
-        appTitle,
-        timestamp: new Date().toISOString(),
-      });
-      onClose();
-    }, 0); // Instant close (Option A)
+    setTimeout(onClose, 0); // Instant close
   };
 
   return (
@@ -99,10 +62,6 @@ export default function MobileAppShell({
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              console.log('[MobileAppShell] ✖️ X BUTTON CLICKED', {
-                appTitle,
-                timestamp: new Date().toISOString(),
-              });
               handleClose();
             }}
             aria-label="Close"

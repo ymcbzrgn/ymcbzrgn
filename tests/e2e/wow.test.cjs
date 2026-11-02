@@ -178,8 +178,8 @@ const CI_ROUTE = 'https://api.github.com/repos/ymcbzrgn/ymcbzrgn/actions/runs**'
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base + '/', { waitUntil: 'load' });
-    await page.waitForSelector('.welcome', { timeout: 15000 });
-    await page.getByRole('button', { name: /At a glance/ }).click();
+    await page.waitForSelector('.lock', { timeout: 15000 });
+    await page.locator('.lock-card[data-action="glance"]').click();
     await page.waitForSelector('.glance');
     await page.getByRole('button', { name: /Career timeline/ }).click();
     await page.waitForSelector('.career', { timeout: 8000 });

@@ -11,7 +11,9 @@ import { useStore } from '../store';
 import { getLang } from '../i18n';
 import { PROFILE } from '../content/profile';
 import { getInitialBounds } from '../utils/windowBounds';
+import { openCvNative } from '../view';
 import { useAppOpener } from './useAppOpener';
+import { useIsMobile } from './useDeviceType';
 
 export type LaunchTarget = 'welcome' | 'cv' | 'projects' | 'terminal' | 'settings' | 'achievements' | 'recruiter' | 'career' | 'aboutsite';
 
@@ -55,8 +57,16 @@ export function useLaunch() {
   // callback below stays stable and can safely be used in effects.
   const openRef = useRef(openApp);
   openRef.current = openApp;
+  const isMobile = useIsMobile();
+  const phone = useRef(isMobile);
+  phone.current = isMobile;
 
   return useCallback((target: LaunchTarget) => {
+    // On a phone the CV is a one-tap affair: the device's own PDF viewer, no script-driven viewer.
+    if (target === 'cv' && phone.current) {
+      openCvNative();
+      return;
+    }
     const spec = specFor(target);
     const state = useStore.getState();
 

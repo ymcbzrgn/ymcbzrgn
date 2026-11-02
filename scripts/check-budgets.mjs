@@ -29,6 +29,8 @@ const BUDGETS = {
     { name: 'RecruiterCard', re: /^RecruiterCard-.*\.js$/, max: 4, now: 1.7 },
     { name: 'AboutSite', re: /^AboutSite-.*\.js$/, max: 5, now: 3.6 },
     { name: 'Career', re: /^Career-.*\.js$/, max: 3, now: 1.1 },
+    // the phone UI: lock screen, home screen, app shell, framer-motion, and the app icon sheet (inlined)
+    { name: 'MobileOS', re: /^MobileOS-.*\.js$/, max: 50, now: 45.1 },
   ],
   /** raw KB (images are already compressed) */
   files: [

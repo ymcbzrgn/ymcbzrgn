@@ -48,6 +48,12 @@ export async function seedDefaultDesktop(): Promise<void> {
       });
     }
 
+    // the share image was renamed (og-image.jpg -> og-en.jpg) when the English and Turkish previews were split
+    const existingOg = await getNode('og-image-jpg');
+    if (existingOg && existingOg.targetUrl !== '/og-en.jpg') {
+      await updateNode('og-image-jpg', { name: 'og-en.jpg', targetUrl: '/og-en.jpg' });
+    }
+
     const existingOldCv = await getNode('old-cv-pdf');
     if (existingOldCv) {
       await updateNode('old-cv-pdf', {
@@ -664,7 +670,7 @@ Feel free to explore and interact with everything.
   const ogImage: VFSNode = {
     id: 'og-image-jpg',
     type: 'file',
-    name: 'og-image.jpg',
+    name: 'og-en.jpg',
     parentId: 'pictures',
     createdAt: now,
     modifiedAt: now,
@@ -672,7 +678,7 @@ Feel free to explore and interact with everything.
     color: '#FF9800',
     size: 0,
     mimeType: 'image/jpeg',
-    targetUrl: '/og-image.jpg',
+    targetUrl: '/og-en.jpg',
     readonly: true,
     hidden: false,
     starred: false,

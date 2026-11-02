@@ -65,7 +65,7 @@ const GROUPS = [
     await page.waitForTimeout(150);
   }
 
-  // Dosya görüntüleyiciler: Home > Documents > About-Me.md (Markdown), Home > Pictures > og-image.jpg (Görüntü)
+  // Dosya görüntüleyiciler: Home > Documents > About-Me.md (Markdown), Home > Pictures > og-en.jpg (Görüntü)
   console.log('\n[Dosyalar] Home içinden Markdown ve görüntü görüntüleyici');
   await page
     .locator('.desktop-icon', { has: page.locator('.desktop-icon__label', { hasText: /^Home$/ }) })
@@ -75,7 +75,7 @@ const GROUPS = [
   const goBack = () => page.locator('.window .file-explorer__back, .window [aria-label="Back"], .window button[title*="Back" i]').first().click();
   const item = (name) =>
     page.locator('.window .file-explorer__item', { has: page.locator('.file-explorer__item-name', { hasText: new RegExp('^' + name.replace('.', '\\.') + '$') }) }).first();
-  for (const [folder, file] of [['Documents', 'About-Me.md'], ['Pictures', 'og-image.jpg']]) {
+  for (const [folder, file] of [['Documents', 'About-Me.md'], ['Pictures', 'og-en.jpg']]) {
     await item(folder).dblclick();
     await page.waitForTimeout(500);
     await item(file).dblclick();

@@ -14,7 +14,7 @@ async function visitor(browser, base, query, { locale = 'en-US', device } = {}) 
   page.__errors = [];
   page.on('pageerror', (e) => page.__errors.push(e.message));
   await page.goto(base + '/' + query, { waitUntil: 'load' });
-  await page.waitForSelector('.welcome', { timeout: 15000 });
+  await page.waitForSelector(device ? '.lock' : '.welcome', { timeout: 15000 });
   return { ctx, page };
 }
 
@@ -149,14 +149,17 @@ async function visitor(browser, base, query, { locale = 'en-US', device } = {}) 
   console.log('\n[4] On a phone');
   {
     const { ctx, page } = await visitor(browser, base, '?for=Acme', { device: devices['iPhone 13'] });
-    ok((await page.locator('.welcome__title').innerText()) === "Hi Acme, I'm Yamaç", 'the personal greeting works on a phone');
-    await page.getByRole('button', { name: /At a glance/ }).click();
+    ok((await page.locator('.lock__bubble').innerText()) === "Hi Acme! I'm Yamaç's pixel twin.", 'the personal greeting works on a phone (the twin on the lock screen)');
+    await page.locator('.lock-card[data-action="glance"]').click();
     await page.waitForSelector('.glance');
     await page.waitForTimeout(500);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     ok(!overflow, 'no horizontal scroll');
     ok(await page.getByRole('button', { name: /Save contact/ }).isVisible(), 'the actions are reachable');
     await page.screenshot({ path: `${process.env.SHOT_DIR || '/tmp'}/glance-mobile.png` });
+    await page.locator('.mobile-app-shell__close-btn').first().click();
+    await page.waitForSelector('.mobile-launcher');
+    ok(/, Acme$/.test(await page.locator('.home__greet').innerText()), 'and the home screen greets by name too');
     ok(page.__errors.length === 0, 'no errors' + (page.__errors.length ? ': ' + page.__errors.join(' | ') : ''));
     await ctx.close();
   }
