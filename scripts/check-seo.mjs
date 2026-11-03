@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 const DIST = resolve(process.env.DIST_DIR || 'dist');
 const SITE = 'https://yamacbezirgan.com';
 const STUDY_SLUGS = ['hydraquant', 'desktop-os-portfolio', 'quirkllm', 'shiffy', 'canny-edge-detection'];
+const RESUME = { en: '/resume/', tr: '/tr/ozgecmis/' };
 const PAGES = [
   { url: '/', file: 'index.html', lang: 'en', shell: true },
   { url: '/tr/', file: 'tr/index.html', lang: 'tr', shell: true },
@@ -112,6 +113,19 @@ for (const page of PAGES) {
   if (page.shell) {
     ok(/id="boot"/.test(html) && /id="root"/.test(html), 'boot block and #root are both there');
     ok(text.length > 250, `plain HTML says something (${text.length} characters)`);
+
+    // The desktop is client-rendered. A crawler that runs no script (most AI crawlers) reads this block and
+    // nothing else of the home page, so it has to say enough and lead to every other page.
+    const boot = (html.match(/<!--seo:boot:start-->([\s\S]*?)<!--seo:boot:end-->/) || [])[1] || '';
+    const words = boot.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    ok(words >= 120, `boot block: enough words for a crawler that runs no script (${words}, at least 120)`);
+    const base = page.lang === 'en' ? '/projects/' : '/tr/projeler/';
+    const wanted = [RESUME[page.lang], base, ...STUDY_SLUGS.map((s) => `${base}${s}/`), '/writing/', page.lang === 'en' ? '/tr/' : '/', '/llms.txt'];
+    const hrefs = all(/href="(\/[^"]*)"/g, boot);
+    const absent = wanted.filter((w) => !hrefs.includes(w));
+    ok(absent.length === 0, `boot block: links the resume, the project index, every case study, the writing, the other language and llms.txt${absent.length ? ', missing: ' + absent.join(', ') : ''}`);
+    ok(hrefs.every((h) => has(fileOf(SITE + h))), 'boot block: every link on this site is a file of this build');
+    ok((boot.match(/<noscript>/g) || []).length === 1 && /<details class="boot__more">/.test(boot), 'boot block: one <noscript> note, and the projects sit in a <details> (the card stays small while the page loads)');
   } else {
     ok((body.match(/<h2[ >]/g) || []).length >= 6, 'at least six sections (h2)');
     ok(/Altınbaş/.test(text) && /Milan|Milano/.test(text) && /Python/.test(text) && /Hackathon/i.test(text), 'education, skills and competitions are in the page');
@@ -142,6 +156,30 @@ for (const bot of ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-
 }
 ok(has('llms.txt') && read('llms.txt').startsWith('# Yamaç Bezirgan') && read('llms.txt').includes(SITE + '/resume/'), 'llms.txt names the person and links the resume');
 ok(has('llms-full.txt') && read('llms-full.txt').includes('Arketic AI') && read('llms-full.txt').includes('(Türkçe)'), 'llms-full.txt has both languages');
+// every address of this site that llms.txt and llms-full.txt hand to an assistant has to be a file of this build
+for (const file of ['llms.txt', 'llms-full.txt']) {
+  const urls = [...new Set([...read(file).matchAll(/https:\/\/yamacbezirgan\.com[^\s)\]>"',]*/g)].map((m) => m[0].replace(/[.:;*]+$/, '')))];
+  const dead = urls.filter((u) => !has(fileOf(u)));
+  ok(urls.length >= 10 && dead.length === 0, `${file}: all ${urls.length} addresses of this site are files of this build${dead.length ? ', missing: ' + dead.join(', ') : ''}`);
+}
+
+// _headers: the file the host reads. A rule is only worth having if it can match an address that is served.
+const headerRules = [];
+for (const line of (has('_headers') ? read('_headers') : '').split('\n')) {
+  if (/^\s*(#|$)/.test(line)) continue;
+  if (/^\S/.test(line)) headerRules.push({ path: line.trim(), headers: new Map() });
+  else {
+    const m = line.trim().match(/^([A-Za-z0-9-]+):\s*(.+)$/);
+    if (m && headerRules.length) headerRules.at(-1).headers.set(m[1].toLowerCase(), m[2]);
+  }
+}
+const rule = (path) => headerRules.find((r) => r.path === path);
+ok(headerRules.length > 0, `_headers has ${headerRules.length} rules`);
+ok(!headerRules.some((r) => /\/index\.html$/.test(r.path)), '_headers: no rule for an /index.html address (Pages redirects it to the folder address, so the rule would never apply)');
+ok(rule('/*')?.headers.has('strict-transport-security') && rule('/*')?.headers.has('permissions-policy'), '_headers: HSTS and Permissions-Policy on every response');
+ok(rule('/')?.headers.get('x-frame-options') === 'SAMEORIGIN' && rule('/*/')?.headers.get('x-frame-options') === 'SAMEORIGIN', '_headers: X-Frame-Options SAMEORIGIN on the home page and on every page address');
+const repeated = [...(rule('/*')?.headers.keys() ?? [])].filter((h) => headerRules.some((r) => r.path !== '/*' && r.headers.has(h)));
+ok(repeated.length === 0, `_headers: no other rule repeats a header of /* (Pages would join the two values)${repeated.length ? ': ' + repeated.join(', ') : ''}`);
 ok(has('404.html') && /name="robots" content="noindex"/.test(read('404.html')), '404.html exists and is noindex');
 for (const [file, url, lang] of [['resume.md', '/resume/', 'en'], ['tr/ozgecmis.md', '/tr/ozgecmis/', 'tr']]) {
   const md = has(file) ? read(file) : '';

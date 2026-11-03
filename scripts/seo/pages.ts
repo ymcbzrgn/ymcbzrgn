@@ -1,7 +1,7 @@
 /**
  * Build-time SEO, part 3: the HTML that is not the React app.
- *   - bootBlock: what is in the page the moment it arrives (name, role, one sentence, links). Crawlers
- *     and visitors without JavaScript read it; once the desktop is up, main.tsx removes it.
+ *   - bootBlock: what is in the page the moment it arrives (name, role, one sentence, links, the projects).
+ *     Crawlers and visitors without JavaScript read it; once the desktop is up, main.tsx removes it.
  *   - resumePage: the whole career as one static, fast, printable page (/resume/, /tr/ozgecmis/).
  *   - notFoundPage: the 404.
  * All the facts come from src/os/content/career.ts, so the page, the CV card, JSON-LD and llms.txt agree.
@@ -9,7 +9,7 @@
 import { PROFILE } from '../../src/os/content/profile';
 import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, monthLabel } from '../../src/os/content/career';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
-import { PROJECTS_PATH, projectPath } from '../../src/os/content/paths';
+import { PROJECTS_PATH, WRITING_PATH, projectPath } from '../../src/os/content/paths';
 import { PATH, currentRole, esc, roleLine, type Lang } from './site';
 import { headBlock } from './head';
 
@@ -23,30 +23,51 @@ export interface Repo {
   updated_at: string;
 }
 
+/** A project as the boot block lists it: its name, its address and one sentence. */
+export interface BootProject {
+  name: string;
+  href: string;
+  about: string;
+}
+
 /* ------------------------------------------------------------------ boot */
 
 export const BOOT_STYLE = `<style id="boot-css">
 #boot{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:24px;overflow:auto;background:radial-gradient(900px 480px at 15% 0,rgba(99,102,241,.28),transparent),linear-gradient(160deg,#0f172a,#1e1b4b);color:#e2e8f0;font:16px/1.55 'Ubuntu',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;transition:opacity .35s ease}
 #boot.boot--done{opacity:0;pointer-events:none}
-.boot__card{max-width:34rem;text-align:center}
+.boot__card{max-width:34rem;margin:auto;text-align:center}
 .boot__card h1{margin:0 0 .25rem;color:#fff;font-size:clamp(1.9rem,6vw,2.6rem);line-height:1.1;letter-spacing:-.02em}
 .boot__role{margin:0;color:#a5b4fc;font-weight:600}
 .boot__sum{margin:1rem 0 0;color:#cbd5e1}
 .boot__links{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;justify-content:center;margin:1.2rem 0 0}
 .boot__links a{color:#c7d2fe}
+.boot__more{margin:1.2rem 0;text-align:left}
+.boot__more summary{display:block;cursor:pointer;color:#c7d2fe;text-align:center;list-style:none}
+.boot__more summary::-webkit-details-marker{display:none}
+.boot__more summary::after{content:' \\25BE'}
+.boot__more[open] summary::after{content:' \\25B4'}
+.boot__list{display:grid;gap:.7rem;margin:.9rem 0 0;padding:0;list-style:none;color:#cbd5e1;font-size:.9rem;line-height:1.45}
+.boot__list a{display:block;color:#c7d2fe;font-weight:600}
 .boot__hint{margin:1.5rem 0 0;color:#94a3b8;font-size:.8rem;animation:boot-pulse 1.4s ease-in-out infinite}
 @keyframes boot-pulse{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){#boot{transition:none}.boot__hint{animation:none}}
 </style>
 <noscript><style>.boot__hint{display:none}</style></noscript>`;
 
-const BOOT_TEXT: Record<Lang, { loading: string; noscript: string; resume: string; cv: string; mail: string }> = {
+const BOOT_TEXT: Record<
+  Lang,
+  { loading: string; noscript: string; resume: string; cv: string; mail: string; more: string; allProjects: string; writing: string; other: string }
+> = {
   en: {
     loading: 'Loading the interactive desktop…',
     noscript: 'The interactive desktop needs JavaScript. The resume page works without it.',
     resume: 'Resume',
     cv: 'CV (PDF)',
     mail: 'Email',
+    more: 'Projects and writing',
+    allProjects: 'All projects',
+    writing: 'Writing',
+    other: 'Türkçe',
   },
   tr: {
     loading: 'Etkileşimli masaüstü yükleniyor…',
@@ -54,11 +75,22 @@ const BOOT_TEXT: Record<Lang, { loading: string; noscript: string; resume: strin
     resume: 'Özgeçmiş',
     cv: 'CV (PDF)',
     mail: 'E-posta',
+    more: 'Projeler ve yazılar',
+    allProjects: 'Tüm projeler',
+    writing: 'Yazılar (İngilizce)',
+    other: 'English',
   },
 };
 
-export function bootBlock(lang: Lang): string {
+/**
+ * The desktop is the home page, and a crawler that runs no script reads only this block of it. So besides
+ * the name and the links it carries the projects, one sentence each, in a closed <details>: the card stays
+ * as small as it was while the page loads, and every case study is one click (or one crawl) away.
+ */
+export function bootBlock(lang: Lang, projects: BootProject[]): string {
   const b = BOOT_TEXT[lang];
+  const other: Lang = lang === 'en' ? 'tr' : 'en';
+  const items = projects.map((p) => `<li><a href="${p.href}">${esc(p.name)}</a> ${esc(p.about)}</li>`).join('\n            ');
   return `<div id="boot">
       <main class="boot__card">
         <h1>${esc(PROFILE.name)}</h1>
@@ -71,6 +103,18 @@ export function bootBlock(lang: Lang): string {
           <a href="${PROFILE.linkedin}">LinkedIn</a>
           <a href="mailto:${PROFILE.email}">${b.mail}</a>
         </p>
+        <details class="boot__more">
+          <summary>${b.more}</summary>
+          <ul class="boot__list">
+            ${items}
+          </ul>
+          <p class="boot__links">
+            <a href="${PROJECTS_PATH[lang]}">${b.allProjects}</a>
+            <a href="${WRITING_PATH}">${b.writing}</a>
+            <a href="${PATH.home[other]}" lang="${other}" hreflang="${other}">${b.other}</a>
+            <a href="/llms.txt">llms.txt</a>
+          </p>
+        </details>
         <p class="boot__hint">${b.loading}</p>
         <noscript><p>${b.noscript}</p></noscript>
       </main>

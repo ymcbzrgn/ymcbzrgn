@@ -20,7 +20,7 @@ The browser tests need Chromium once: `npx playwright install chromium`.
 | `npm run build` | `build:new` plus the legacy site: the full production build |
 | `npm run check:budgets` | fails when the first paint (gzip) or a lazy chunk gets heavier than its budget (`scripts/check-budgets.mjs`) |
 | `npm run check:behaviors` | sanity check of the pixel twin's generated behaviour table |
-| `npm run check:seo` | checks the built pages: canonical, hreflang, JSON-LD, sitemap, no link to the dead `www` host, the CV's links and title (`scripts/check-seo.mjs`) |
+| `npm run check:seo` | checks the built pages: canonical, hreflang, JSON-LD, sitemap, the boot block, every address in `llms.txt`, `_headers`, no link to the dead `www` host, the CV's links and title (`scripts/check-seo.mjs`) |
 | `npm run seo:assets` | redraws `og-en.jpg`, `og-tr.jpg` and `avatar.png` (the share images) with the pixel twin; commit the result |
 | `npm run test:e2e` | all browser suites in `tests/e2e` against `dist/` (`node tests/e2e/run.cjs features pet` runs some) |
 | `npm run bench:drag` | window drag frame-time benchmark (needs a running server in `BASE`) |
@@ -60,8 +60,12 @@ The desktop is client-rendered, so the HTML on its own would be an empty `<div>`
 so a plain `vite build` is enough on any host) fixes that at build time:
 
 - `index.html` only holds two markers. The plugin fills them with the title, description, canonical, hreflang,
-  Open Graph, Twitter and JSON-LD (WebSite, ProfilePage, Person), and a small "boot" block (name, role, links).
-  `src/main.tsx` removes the boot block once the desktop or the phone UI is on screen.
+  Open Graph, Twitter and JSON-LD (WebSite, ProfilePage, Person), and a "boot" block: name, role, links, and the
+  five projects with one sentence each in a closed `<details>` (150 to 180 words in all). It is everything of the
+  home page that a crawler without JavaScript reads, so it links every case study, the writing, the other language
+  and `llms.txt`; `check:seo` fails below 120 words or when one of those links is missing. The card stays small
+  while the page loads because the projects are folded away. `src/main.tsx` removes the boot block once the
+  desktop or the phone UI is on screen.
 - After the bundle is written it derives `/tr/` (the same shell in Turkish; opening it selects Turkish),
   the static resume pages `/resume/` and `/tr/ozgecmis/`, `404.html`, `sitemap.xml`, `llms.txt` and `llms-full.txt`.
   Old `/#simple` links are redirected to the resume by a script in `index.html`.
@@ -83,7 +87,18 @@ so a plain `vite build` is enough on any host) fixes that at build time:
 - **The CV PDF** comes out of Canva with the file name as its title and a link to the dead `www` host. After
   every new export run `pip install pypdf && python3 scripts/seo/fix-cv-pdf.py`; the rendering does not change.
 - Cloudflare's "AI crawlers" setting adds its own block to `robots.txt` and can answer 403 to training crawlers;
-  that is a dashboard setting, not something in this repo.
+  that is a dashboard setting, not something in this repo. The result is the intended one: the search and
+  user-triggered bots named in `robots.txt` are welcome, the training bots (GPTBot, ClaudeBot, Google-Extended) are not.
+- **`public/_headers`.** Pages answers `/index.html` with a redirect to `/`, so a rule for `/index.html` never
+  applies; `check:seo` fails on one. HSTS and Permissions-Policy are on `/*`, X-Frame-Options (SAMEORIGIN, the app
+  frames `/legacy/` and PDFs from this origin) on the page addresses only. Pages joins the values of every matching
+  rule, so a header goes in one rule. There is no Content-Security-Policy yet (inline script in `index.html`, PDF.js
+  from a CDN); try it as report-only first.
+- **A changed `_headers` does not reach files that have not changed.** The edge keeps a cached file for as long as
+  its old `Cache-Control` said. The CV PDF was once served as `immutable` (one year) and stayed that way at the
+  edge for days, with an older file than the one in the repository. After a header change that touches such files,
+  purge them (dashboard, Caching, Configuration, Purge Cache, by URL) and compare
+  `curl -sD - -o /dev/null https://yamacbezirgan.com/<file>` with the same address plus `?x=1`.
 
 ## For visitors who have ten seconds
 

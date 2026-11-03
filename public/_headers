@@ -60,10 +60,25 @@
   Content-Type: text/html; charset=utf-8
   Cache-Control: public, max-age=0, must-revalidate
 
-# Root HTML - Critical SPA entry point
-/index.html
-  Content-Type: text/html; charset=utf-8
-  Cache-Control: public, max-age=0, must-revalidate
-  X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
-  Referrer-Policy: strict-origin-when-cross-origin
+# Security headers.
+#   - The pages are served at "/", "/resume/" and so on. Pages answers /index.html with a redirect to "/",
+#     so a rule written for /index.html never applies (the old one here never did).
+#   - Pages joins the values of every rule that matches, so each header below is set by one rule, or by
+#     rules that cannot match the same address. Pages already adds X-Content-Type-Options and Referrer-Policy.
+#   - No Content-Security-Policy yet: index.html has an inline script and the CV viewer loads PDF.js from a
+#     CDN, so a policy needs its own testing (report-only first).
+/*
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# X-Frame-Options only means something for HTML pages, so it sits on the page addresses (the home page,
+# every address that ends in a slash, /privacy) and not on PDFs and images. SAMEORIGIN, because the app
+# frames the old site (/legacy/) and PDFs from this origin.
+/
+  X-Frame-Options: SAMEORIGIN
+
+/*/
+  X-Frame-Options: SAMEORIGIN
+
+/privacy
+  X-Frame-Options: SAMEORIGIN

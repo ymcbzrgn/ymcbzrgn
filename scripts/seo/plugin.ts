@@ -4,7 +4,7 @@
  * The desktop is client-rendered, so on its own the HTML a crawler downloads is an empty <div>. This
  * plugin makes sure the first bytes already say who this is:
  *   - index.html gets the title, description, canonical, hreflang, Open Graph and JSON-LD, plus a
- *     small "boot" block with the name, role and links (main.tsx removes it when the desktop is up);
+ *     "boot" block with the name, role, links and the projects (main.tsx removes it when the desktop is up);
  *   - after the bundle is written it derives /tr/ (the same shell in Turkish), the static résumé
  *     pages (/resume/, /tr/ozgecmis/), 404.html, sitemap.xml, llms.txt and llms-full.txt.
  *
@@ -19,7 +19,7 @@ import type { Plugin } from 'vite';
 import { CASE_STUDIES } from '../../src/os/content/caseStudies';
 import { headBlock } from './head';
 import { BOOT_STYLE, bootBlock, notFoundPage, resumePage, type Repo } from './pages';
-import { projectMarkdown, projectPage, projectsIndexPage, studyMdPath, studyPath, type BuildInfo } from './projects';
+import { bootProjects, projectMarkdown, projectPage, projectsIndexPage, studyMdPath, studyPath, type BuildInfo } from './projects';
 import { FEED_PATH, LANGS, MD_PATH, PATH, PROJECTS_PATH, WRITING_PATH, articlePath } from './site';
 import { llmsFullTxt, llmsTxt, resumeMarkdown, sitemapXml } from './text';
 import { articleMarkdown, articleMdPath, articlePage, atomFeed, loadArticles, writingIndexPage } from './writing';
@@ -99,7 +99,7 @@ export function seoPlugin(): Plugin {
 
   const shell = (lang: 'en' | 'tr', modified: string) => ({
     head: `<!--seo:head:start-->\n    ${headBlock('home', lang, modified)}\n    ${BOOT_STYLE}\n    <!--seo:head:end-->`,
-    boot: `<!--seo:boot:start-->${bootBlock(lang)}<!--seo:boot:end-->`,
+    boot: `<!--seo:boot:start-->${bootBlock(lang, bootProjects(lang))}<!--seo:boot:end-->`,
   });
 
   return {

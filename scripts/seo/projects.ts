@@ -11,6 +11,7 @@ import { PROJECTS_PATH, projectPath } from '../../src/os/content/paths';
 import { META, OG_IMAGE, OG_SIZE, PATH, abs, currentRole, esc, type Lang } from './site';
 import { PERSON_ID, SITE_ID, pageHead, person } from './head';
 import { renderPage } from './layout';
+import type { BootProject } from './pages';
 
 /** What the build measured about itself (dist/data/build-info.json); the case study of this site quotes it. */
 export interface BuildInfo {
@@ -89,6 +90,11 @@ const pageTitle = (study: CaseStudy, lang: Lang) => `${study.title[lang]} | ${PR
 export const studyPath = (study: CaseStudy, lang: Lang): string => projectPath(byId(study.id).slug, lang);
 const studyMd = (study: CaseStudy, lang: Lang): string => `${PROJECTS_PATH[lang]}${byId(study.id).slug}.md`;
 export const studyMdPath = studyMd;
+
+/** The projects as the boot block of the home page lists them: name, address, one sentence (the tagline). */
+export function bootProjects(lang: Lang): BootProject[] {
+  return CASE_STUDIES.map((s) => ({ name: heading(s, lang), href: studyPath(s, lang), about: s.tagline[lang] }));
+}
 
 /** the structured data of a project page */
 function studyGraph(study: CaseStudy, lang: Lang, modified: string) {

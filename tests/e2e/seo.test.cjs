@@ -56,6 +56,17 @@ async function text(base, path, init) {
     ok(await page.locator('#boot a[href="/resume/"]').isVisible(), '... with a link to the resume');
     ok(!(await page.locator('.boot__hint').isVisible()), '... and no "loading" hint that would never finish');
     ok((await page.locator('#boot noscript').count()) === 1, '... and a note that the desktop needs JavaScript');
+    const bootWords = await page.locator('#boot').evaluate((el) => el.textContent.split(/\s+/).filter(Boolean).length);
+    ok(bootWords >= 120, `... with enough text for a crawler that runs no script (${bootWords} words)`);
+    ok(await page.locator('#boot details summary').isVisible(), '... and the projects folded into a summary');
+    ok(!(await page.locator('#boot a[href="/projects/hydraquant/"]').isVisible()), '... closed, so the card stays small while the page loads');
+    await page.locator('#boot details summary').click();
+    ok(await page.locator('#boot a[href="/projects/hydraquant/"]').isVisible(), '... and one click opens the case studies');
+    await page.goto(base + '/tr/', { waitUntil: 'load' });
+    ok(
+      (await page.locator('#boot a[href="/tr/projeler/hydraquant/"]').count()) === 1 && (await page.locator('#boot a[href="/"][hreflang="en"]').count()) === 1,
+      'the Turkish entry lists the Turkish case studies and links back to English'
+    );
     await page.goto(base + '/resume/', { waitUntil: 'load' });
     ok(await page.locator('#experience').isVisible(), 'the resume works without JavaScript');
     await ctx.close();
