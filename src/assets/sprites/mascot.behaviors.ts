@@ -64,7 +64,7 @@ export const BEHAVIORS: readonly Behavior[] = [
   {"id":"jump","anim":"jump","weight":[2,3,0],"duration":[900,900],"fx":"hop","lines":{"chance":0.4,"en":["Wheee!"],"tr":["Yaşasın!"]}},
   {"id":"bug","anim":"bug","weight":[2,3,0],"duration":[2000,3000],"lines":{"chance":0.5,"en":["Found a bug. Fixed it."],"tr":["Bir bug buldum. Düzelttim."]}},
   {"id":"jacks","anim":"jacks","weight":[2,5,0],"duration":[3000,5000],"lines":{"chance":0.35,"en":["Daily exercise: done. Daily standup: next."],"tr":["Günlük egzersiz tamam. Sırada günlük toplantı."]}},
-  {"id":"juggle","anim":"juggle","weight":[2,4,0],"duration":[3500,6000],"lines":{"chance":0.4,"en":["Juggling three side projects."],"tr":["Üç yan projeyi aynı anda çeviriyorum."]}},
+  {"id":"juggle","anim":"juggle","weight":[2,4,0],"duration":[3500,6000],"lines":{"chance":0.4,"en":["Juggling side projects."],"tr":["Yan projeleri aynı anda çeviriyorum."]}},
   {"id":"balance","anim":"balance","weight":[2,4,0],"duration":[3500,5500],"fx":"wobble","lines":{"chance":0.4,"en":["Work-life balance. Plus a book."],"tr":["İş-yaşam dengesi. Bir de kitap dengesi."]}},
   {"id":"guitar","anim":"guitar","weight":[2,4,0],"duration":[3000,5000],"lines":{"chance":0.35,"en":["Air guitar solo!"],"tr":["Hava gitarı solosu!"]}},
   {"id":"drums","anim":"drums","weight":[2,4,0],"duration":[3000,4500],"lines":{"chance":0.35,"en":["Ba-dum-tss!"],"tr":["Ba-dum-tıss!"]}},

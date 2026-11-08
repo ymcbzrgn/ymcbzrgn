@@ -110,7 +110,7 @@ export const BEHAVIORS = [
   { id: 'jacks', anim: 'jacks', weight: [2, 5, 0], duration: [3000, 5000],
     lines: say(0.35, ['Daily exercise: done. Daily standup: next.'], ['Günlük egzersiz tamam. Sırada günlük toplantı.']) },
   { id: 'juggle', anim: 'juggle', weight: [2, 4, 0], duration: [3500, 6000],
-    lines: say(0.4, ['Juggling three side projects.'], ['Üç yan projeyi aynı anda çeviriyorum.']) },
+    lines: say(0.4, ['Juggling side projects.'], ['Yan projeleri aynı anda çeviriyorum.']) },
   { id: 'balance', anim: 'balance', weight: [2, 4, 0], duration: [3500, 5500], fx: 'wobble',
     lines: say(0.4, ['Work-life balance. Plus a book.'], ['İş-yaşam dengesi. Bir de kitap dengesi.']) },
   { id: 'guitar', anim: 'guitar', weight: [2, 4, 0], duration: [3000, 5000],
