@@ -3,7 +3,7 @@
  * llms-full.txt (the whole career as Markdown) and sitemap.xml (with hreflang pairs and lastmod).
  */
 import { PROFILE } from '../../src/os/content/profile';
-import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, spanLabel } from '../../src/os/content/career';
+import { FOCUS, MEDALS, PRODUCTS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, dateLabel, medalResult, monthLabel, spanLabel, studySpan } from '../../src/os/content/career';
 import { CASE_STUDIES } from '../../src/os/content/caseStudies';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
 import { FEED_PATH, LANGS, MD_PATH, PATH, PROJECTS_PATH, WRITING_PATH, abs, articlePath, currentRole, projectPath, roleLine, type Lang } from './site';
@@ -28,6 +28,12 @@ export function llmsTxt(articles: Article[]): string {
 
 - [All projects](${abs(PROJECTS_PATH.en)}): case studies, also in Turkish at ${abs(PROJECTS_PATH.tr)}
 ${CASE_STUDIES.map((s) => `- [${heading(s, 'en')}](${abs(studyPath(s, 'en'))}): ${s.tagline.en} (Markdown: ${abs(studyMdPath(s, 'en'))})`).join('\n')}
+
+## Products
+
+Built and run alone.
+
+${PRODUCTS.map((p) => `- [${p.name}](${p.url}): ${p.summary.en}`).join('\n')}
 ${articles.length ? `\n## Writing\n\n${articles.map((a) => `- [${a.title}](${abs(articlePath(a.slug))}): ${a.description} (Markdown: ${abs(`${WRITING_PATH}${a.slug}.md`)})`).join('\n')}\n- [Atom feed](${abs(FEED_PATH)})\n` : ''}
 ## Profiles
 
@@ -51,22 +57,24 @@ function fullSection(lang: Lang): string {
   out.push(`# ${PROFILE.name}${t ? '' : ' (Türkçe)'}`, '', `${roleLine(lang)}. ${currentRole(lang)}.`, '', text.summary, '');
   out.push(`## ${t ? 'Experience' : 'Deneyim'}`, '');
   for (const r of ROLES) {
-    out.push(`### ${r.title[lang]}, ${r.org} (${spanLabel(r, lang)})`, '');
+    out.push(`### ${r.title[lang]}${r.note ? ` (${r.note[lang].charAt(0).toLocaleLowerCase(lang)}${r.note[lang].slice(1)})` : ''}, ${r.org} (${spanLabel(r, lang)})`, '');
     for (const p of r.points) out.push(`- ${p[lang]}`);
     out.push('');
   }
-  out.push(`## ${t ? 'Projects' : 'Projeler'}`, '');
+  out.push(`## ${t ? 'Products' : 'Ürünler'}`, '', t ? 'Built and run alone.' : 'Tek başıma geliştirdim ve yürütüyorum.', '');
+  for (const p of PRODUCTS) out.push(`- **${p.name}** (${p.kind[lang]}, ${monthLabel(p.since, lang)} – ${t ? 'Present' : 'Günümüz'}): ${p.summary[lang]} ${p.url}`);
+  out.push('', `## ${t ? 'Projects' : 'Projeler'}`, '');
   for (const p of PROJECTS) out.push(`- **${p.name}** (${p.stack}): ${p.summary[lang]} ${t ? 'Case study' : 'Vaka çalışması'}: ${abs(projectPath(p.slug, lang))}`);
   out.push('', `## ${t ? 'Education' : 'Eğitim'}`, '');
   for (const s of STUDIES) {
-    out.push(`- **${s.degree[lang]}**, ${s.school[lang]} (${s.start}–${s.end}). ${s.focus ? `${s.focus[lang]}. ` : ''}${s.courses[lang]}.`);
+    out.push(`- **${s.degree[lang]}**, ${s.school[lang]} (${studySpan(s, lang)}). ${s.focus ? `${s.focus[lang]}. ` : ''}${s.courses[lang]}.`);
   }
   out.push('', `## ${t ? 'Skills' : 'Yetenekler'}`, '');
   for (const g of SKILLS) out.push(`- ${g.group[lang]}: ${g.items.join(', ')}`);
   out.push('', `## ${t ? 'Languages' : 'Diller'}`, '');
   for (const s of SPOKEN) out.push(`- ${s.name[lang]}: ${s.level[lang]}`);
   out.push('', `## ${t ? 'Hackathons and competitions' : 'Hackathon ve yarışmalar'}`, '');
-  for (const m of MEDALS) out.push(`- ${m.name}: ${m.result[lang]}`);
+  for (const m of MEDALS) out.push(`- ${m.name}: ${medalResult(m, lang)} (${dateLabel(m.when, lang)})`);
   out.push('', `## ${t ? 'Certificates and programs' : 'Sertifika ve programlar'}`, '');
   for (const p of PROGRAMS) out.push(`- ${p.name} (${p.by})`);
   out.push('', `## ${t ? 'Contact' : 'İletişim'}`, '');

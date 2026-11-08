@@ -74,7 +74,8 @@ async function visitor(browser, base, query, { locale = 'en-US', device } = {}) 
     ok(true, 'the command palette opens it ("glance")');
     ok((await page.locator('.window[data-app-id="recruiter-app"] .window__title').innerText()) === 'At a glance', 'window title: At a glance');
     const text = await page.locator('.glance').innerText();
-    ok(/Arketic AI/.test(text) && /Jun 2025/.test(text), 'the current job');
+    ok(/Arketic AI/.test(text) && /Jan 2026/.test(text) && /intern in June 2025/.test(text), 'the current job, and that it began as an internship');
+    ok(/Swipflix/.test(text) && /5,400\+ downloads by Nov 2026/.test(text), 'the products, with the download count dated');
     ok(/Python/.test(text) && /TypeScript/.test(text) && /RAG/.test(text) && /AI Agents/.test(text), 'the stack');
     ok(/2nd/.test(text) && /6th/.test(text), 'the competition results');
     ok(/TR · EN · IT · DE/.test(text), 'the languages');
@@ -116,7 +117,7 @@ async function visitor(browser, base, query, { locale = 'en-US', device } = {}) 
     await page.keyboard.press('Enter');
     await page.waitForSelector('.glance');
     const text = await page.locator('.glance').textContent(); // (innerText would be the upper-cased headings)
-    ok(/Haz 2025/.test(text) && /Teknolojiler/.test(text) && /Rehbere kaydet/.test(text), 'Turkish card');
+    ok(/Oca 2026/.test(text) && /Teknolojiler/.test(text) && /Rehbere kaydet/.test(text), 'Turkish card');
     await ctx.close();
   }
 

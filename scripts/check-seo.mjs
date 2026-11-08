@@ -12,6 +12,14 @@ import { join, resolve } from 'node:path';
 const DIST = resolve(process.env.DIST_DIR || 'dist');
 const SITE = 'https://yamacbezirgan.com';
 const STUDY_SLUGS = ['hydraquant', 'desktop-os-portfolio', 'quirkllm', 'shiffy', 'canny-edge-detection'];
+// the products he built and runs alone (career.ts, PRODUCTS): they have their own addresses
+const PRODUCTS = [
+  ['Swipflix', 'https://swipflix.yamacbezirgan.com'],
+  ['Engineering Corpus', 'https://engineeringcorpus.com'],
+  ['Meenikai', 'https://meenik.ai'],
+  ['LingoSwap', 'https://lingoswap.xyz'],
+  ['SelfFork', 'https://github.com/ymcbzrgn/SelfFork'],
+];
 const RESUME = { en: '/resume/', tr: '/tr/ozgecmis/' };
 const PAGES = [
   { url: '/', file: 'index.html', lang: 'en', shell: true },
@@ -125,6 +133,7 @@ for (const page of PAGES) {
     const absent = wanted.filter((w) => !hrefs.includes(w));
     ok(absent.length === 0, `boot block: links the resume, the project index, every case study, the writing, the other language and llms.txt${absent.length ? ', missing: ' + absent.join(', ') : ''}`);
     ok(hrefs.every((h) => has(fileOf(SITE + h))), 'boot block: every link on this site is a file of this build');
+    ok(PRODUCTS.every(([, url]) => boot.includes(`<a href="${url}">`)), 'boot block: links every product');
     ok((boot.match(/<noscript>/g) || []).length === 1 && /<details class="boot__more">/.test(boot), 'boot block: one <noscript> note, and the projects sit in a <details> (the card stays small while the page loads)');
   } else {
     ok((body.match(/<h2[ >]/g) || []).length >= 6, 'at least six sections (h2)');
@@ -133,6 +142,7 @@ for (const page of PAGES) {
     ok(!/telephone|\+90/.test(html), 'no phone number in the page');
     const projectsBase = page.lang === 'en' ? '/projects/' : '/tr/projeler/';
     ok(STUDY_SLUGS.every((s) => html.includes(`href="${projectsBase}${s}/"`)) && html.includes(`href="${projectsBase}"`), 'every project card links to its case study, and the index is linked');
+    ok(PRODUCTS.every(([name, url]) => html.includes(`<a href="${url}" rel="noopener">${name}</a>`)) && /id="products"/.test(html), 'a Products section links every product at its own address');
     // internal links must resolve
     const links = [...new Set(all(/href="(\/[^"#?]*)/g, html))].filter((l) => !l.startsWith('//'));
     const broken = links.filter((l) => !(has(fileOf(SITE + l)) || has(l.slice(1))));
@@ -156,6 +166,7 @@ for (const bot of ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-
 }
 ok(has('llms.txt') && read('llms.txt').startsWith('# Yamaç Bezirgan') && read('llms.txt').includes(SITE + '/resume/'), 'llms.txt names the person and links the resume');
 ok(has('llms-full.txt') && read('llms-full.txt').includes('Arketic AI') && read('llms-full.txt').includes('(Türkçe)'), 'llms-full.txt has both languages');
+ok(PRODUCTS.every(([, url]) => read('llms.txt').includes(url) && read('llms-full.txt').includes(url) && read('resume.md').includes(url) && read('tr/ozgecmis.md').includes(url)), 'llms.txt, llms-full.txt and both Markdown résumés link every product');
 // every address of this site that llms.txt and llms-full.txt hand to an assistant has to be a file of this build
 for (const file of ['llms.txt', 'llms-full.txt']) {
   const urls = [...new Set([...read(file).matchAll(/https:\/\/yamacbezirgan\.com[^\s)\]>"',]*/g)].map((m) => m[0].replace(/[.:;*]+$/, '')))];

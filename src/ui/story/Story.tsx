@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useLang, type Lang } from '../../os/i18n/full';
 import { PROFILE } from '../../os/content/profile';
-import { MEDALS, PROJECTS, ROLES, SKILLS, SPOKEN } from '../../os/content/career';
+import { MEDALS, PROJECTS, ROLES, SPOKEN, TOOLS } from '../../os/content/career';
 import { PROFILE_TEXT } from '../../os/content/profileText';
 import { guest } from '../../os/personal';
 import { openSimpleView } from '../../os/view';
@@ -25,7 +25,7 @@ const TEXT: Record<Lang, Record<string, string>> = {
     hiTail: "I'm Yamaç",
     role: 'Software Engineer · AI platforms · backend · full-stack',
     now: 'Right now',
-    nowSub: 'Arketic AI · since Jun 2025',
+    nowSub: 'Arketic AI · Software Engineer since Jan 2026',
     build: 'What I build',
     proof: 'Highlights',
     made: 'Things I made',
@@ -50,7 +50,7 @@ const TEXT: Record<Lang, Record<string, string>> = {
     hiTail: 'ben Yamaç',
     role: 'Yazılım Mühendisi · Yapay zeka platformları · backend · full-stack',
     now: 'Şu an',
-    nowSub: "Arketic AI · Haz 2025'ten beri",
+    nowSub: "Arketic AI · Ocak 2026'dan beri yazılım mühendisi",
     build: 'Ne geliştiriyorum',
     proof: 'Öne çıkanlar',
     made: 'Yaptıklarım',
@@ -155,8 +155,9 @@ export default function Story({ onClose }: Props) {
         <h2>{L.now}</h2>
         <p className="story__lead">{L.nowSub}</p>
         <ul className="story__bullets">
-          {[0, 3, 5].map((i) => (
-            <li key={i}>{arketic.points[i][lang]}</li>
+          {[0, 4, 5].map((i) => (
+            // (a non-breaking hyphen keeps "Ar-Ge" in one piece when the line wraps)
+            <li key={i}>{arketic.points[i][lang].replace('Ar-Ge', 'Ar‑Ge')}</li>
           ))}
         </ul>
       </>,
@@ -203,7 +204,7 @@ export default function Story({ onClose }: Props) {
         {art(['toolbox', 'book_stack'], big)}
         <h2>{L.stack}</h2>
         <ul className="story__chips">
-          {SKILLS.flatMap((g) => g.items).map((s) => (
+          {TOOLS.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>

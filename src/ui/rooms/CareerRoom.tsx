@@ -12,6 +12,7 @@ const SPRITE: Record<string, string> = {
   milan: 'suitcase', // (with an Italian flag)
   exagate: 'toolbox',
   ideathon: 'trophy', // second place: a silver cup with a 2 on it
+  'arketic-intern': 'computer',
   graduate: 'grad_cap',
   arketic: 'server_rack', // its lights blink
 };

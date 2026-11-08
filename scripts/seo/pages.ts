@@ -7,7 +7,7 @@
  * All the facts come from src/os/content/career.ts, so the page, the CV card, JSON-LD and llms.txt agree.
  */
 import { PROFILE } from '../../src/os/content/profile';
-import { FOCUS, MEDALS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, monthLabel } from '../../src/os/content/career';
+import { FOCUS, MEDALS, PRODUCTS, PROGRAMS, PROJECTS, ROLES, SKILLS, SPOKEN, STUDIES, dateLabel, medalResult, monthLabel } from '../../src/os/content/career';
 import { PROFILE_TEXT } from '../../src/os/content/profileText';
 import { PROJECTS_PATH, WRITING_PATH, projectPath } from '../../src/os/content/paths';
 import { PATH, currentRole, esc, roleLine, type Lang } from './site';
@@ -48,6 +48,7 @@ export const BOOT_STYLE = `<style id="boot-css">
 .boot__more[open] summary::after{content:' \\25B4'}
 .boot__list{display:grid;gap:.7rem;margin:.9rem 0 0;padding:0;list-style:none;color:#cbd5e1;font-size:.9rem;line-height:1.45}
 .boot__list a{display:block;color:#c7d2fe;font-weight:600}
+.boot__sub{margin:1.3rem 0 0;color:#a5b4fc;font-size:.9rem;font-weight:600;text-align:center}
 .boot__hint{margin:1.5rem 0 0;color:#94a3b8;font-size:.8rem;animation:boot-pulse 1.4s ease-in-out infinite}
 @keyframes boot-pulse{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){#boot{transition:none}.boot__hint{animation:none}}
@@ -56,7 +57,7 @@ export const BOOT_STYLE = `<style id="boot-css">
 
 const BOOT_TEXT: Record<
   Lang,
-  { loading: string; noscript: string; resume: string; cv: string; mail: string; more: string; allProjects: string; writing: string; other: string }
+  { loading: string; noscript: string; resume: string; cv: string; mail: string; more: string; products: string; allProjects: string; writing: string; other: string }
 > = {
   en: {
     loading: 'Loading the interactive desktop…',
@@ -64,7 +65,8 @@ const BOOT_TEXT: Record<
     resume: 'Resume',
     cv: 'CV (PDF)',
     mail: 'Email',
-    more: 'Projects and writing',
+    more: 'Projects, products and writing',
+    products: 'Products built and run alone',
     allProjects: 'All projects',
     writing: 'Writing',
     other: 'Türkçe',
@@ -75,7 +77,8 @@ const BOOT_TEXT: Record<
     resume: 'Özgeçmiş',
     cv: 'CV (PDF)',
     mail: 'E-posta',
-    more: 'Projeler ve yazılar',
+    more: 'Projeler, ürünler ve yazılar',
+    products: 'Tek başıma geliştirip yürüttüğüm ürünler',
     allProjects: 'Tüm projeler',
     writing: 'Yazılar (İngilizce)',
     other: 'English',
@@ -91,6 +94,7 @@ export function bootBlock(lang: Lang, projects: BootProject[]): string {
   const b = BOOT_TEXT[lang];
   const other: Lang = lang === 'en' ? 'tr' : 'en';
   const items = projects.map((p) => `<li><a href="${p.href}">${esc(p.name)}</a> ${esc(p.about)}</li>`).join('\n            ');
+  const products = PRODUCTS.map((p) => `<li><a href="${esc(p.url)}">${esc(p.name)}</a> ${esc(p.summary[lang])}</li>`).join('\n            ');
   return `<div id="boot">
       <main class="boot__card">
         <h1>${esc(PROFILE.name)}</h1>
@@ -107,6 +111,10 @@ export function bootBlock(lang: Lang, projects: BootProject[]): string {
           <summary>${b.more}</summary>
           <ul class="boot__list">
             ${items}
+          </ul>
+          <p class="boot__sub">${b.products}</p>
+          <ul class="boot__list">
+            ${products}
           </ul>
           <p class="boot__links">
             <a href="${PROJECTS_PATH[lang]}">${b.allProjects}</a>
@@ -127,6 +135,8 @@ const LABELS: Record<
   Lang,
   {
     exp: string;
+    products: string;
+    productsNote: string;
     proj: string;
     edu: string;
     skills: string;
@@ -152,6 +162,8 @@ const LABELS: Record<
 > = {
   en: {
     exp: 'Experience',
+    products: 'Products',
+    productsNote: 'Built and run alone.',
     proj: 'Projects',
     edu: 'Education',
     skills: 'Skills',
@@ -176,6 +188,8 @@ const LABELS: Record<
   },
   tr: {
     exp: 'Deneyim',
+    products: 'Ürünler',
+    productsNote: 'Tek başıma geliştirdim ve yürütüyorum.',
     proj: 'Projeler',
     edu: 'Eğitim',
     skills: 'Yetenekler',
@@ -230,6 +244,7 @@ h3{margin:0;font-size:16.5px}
 .job header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px}
 .when{color:var(--muted);font-size:13.5px}
 .org{margin:2px 0 0;color:var(--muted)}
+.note{margin:0;color:var(--muted)}
 .card p{margin:6px 0 0}
 .stack{color:var(--muted);font-size:13.5px}
 ul{margin:10px 0 0;padding-left:20px}
@@ -274,14 +289,23 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
     })
     .join('\n            ');
 
+  const present = lang === 'tr' ? 'Günümüz' : 'Present';
+  // a month that is both the start and the end is one month (an internship of a month)
+  const span = (from: string, to: string | null) => (to === from ? time(from, lang) : `${time(from, lang)} – ${to ? time(to, lang) : present}`);
+
+  const products = PRODUCTS.map(
+    (p) =>
+      `<article class="card"><h3><a href="${esc(p.url)}" rel="noopener">${esc(p.name)}</a></h3><div class="stack">${esc(p.kind[lang])} · ${span(p.since, null)} · ${esc(p.url.replace(/^https:\/\//, ''))}</div><p>${esc(p.summary[lang])}</p></article>`
+  ).join('\n          ');
+
   const jobs = ROLES.map(
     (r) => `<article class="job">
             <header>
               <div>
                 <h3>${esc(r.title[lang])}</h3>
-                <p class="org">${esc(r.org)}</p>
+                <p class="org">${esc(r.org)}${r.note ? ` · ${esc(r.note[lang])}` : ''}</p>
               </div>
-              <span class="when">${time(r.start, lang)} – ${r.end ? time(r.end, lang) : lang === 'tr' ? 'Günümüz' : 'Present'}</span>
+              <span class="when">${span(r.start, r.end)}</span>
             </header>
             <ul>
               ${r.points.map((p) => `<li>${esc(p[lang])}</li>`).join('\n              ')}
@@ -289,6 +313,7 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
           </article>`
   ).join('\n          ');
 
+  const when = (v: string) => (v.length > 4 ? time(v, lang) : v);
   const studies = STUDIES.map(
     (s) => `<article class="job">
             <header>
@@ -296,7 +321,7 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
                 <h3>${esc(s.degree[lang])}</h3>
                 <p class="org">${esc(s.school[lang])}</p>
               </div>
-              <span class="when">${s.start} – ${s.end}</span>
+              <span class="when">${when(s.start)} – ${when(s.end)}</span>
             </header>
             ${s.focus ? `<p>${L.focus}: ${esc(s.focus[lang])}</p>` : ''}
             <p>${L.courses}: ${esc(s.courses[lang])}</p>
@@ -352,6 +377,12 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
           ${jobs}
       </section>
 
+      <section id="products" aria-labelledby="h-prod">
+        <h2 id="h-prod">${L.products}</h2>
+        <p class="note">${L.productsNote}</p>
+          ${products}
+      </section>
+
       <section id="projects" aria-labelledby="h-proj">
         <h2 id="h-proj">${L.proj}</h2>
           ${projects}
@@ -386,7 +417,7 @@ export function resumePage(lang: Lang, modified: string, repos: Repo[]): string 
         <section id="competitions" aria-labelledby="h-awards">
           <h2 id="h-awards">${L.awards}</h2>
           <dl>
-            ${MEDALS.map((m) => `<dt>${esc(m.name)}</dt><dd>${esc(m.result[lang])}</dd>`).join('\n            ')}
+            ${MEDALS.map((m) => `<dt>${esc(m.name)}</dt><dd>${esc(medalResult(m, lang))} · ${esc(dateLabel(m.when, lang))}</dd>`).join('\n            ')}
           </dl>
         </section>
         <section id="programs" aria-labelledby="h-prog">

@@ -30,6 +30,15 @@ async function text(base, path, init) {
   }
   const resume = await text(base, '/resume/');
   ok(/Altınbaş/.test(resume.body) && /Python/.test(resume.body) && /Ideathon/.test(resume.body), '/resume/ carries education, skills and competitions as text');
+  ok(
+    resume.body.includes('<a href="https://swipflix.yamacbezirgan.com" rel="noopener">Swipflix</a>') &&
+      resume.body.includes('Software Engineer Intern') &&
+      resume.body.includes('<time datetime="2026-01">Jan 2026</time>') &&
+      resume.body.includes('<time datetime="2020-09">Sep 2020</time>'),
+    '/resume/ lists the products, both Arketic roles and the dates with their months'
+  );
+  const resumeTr = await text(base, '/tr/ozgecmis/');
+  ok(resumeTr.body.includes('Ürünler') && resumeTr.body.includes('Yazılım Mühendisi Stajyeri') && resumeTr.body.includes('Oca 2026') && resumeTr.body.includes('Mesleki çalışma yeterliliği'), '/tr/ozgecmis/ has the same facts in Turkish');
   const sitemap = await text(base, '/sitemap.xml');
   ok(sitemap.status === 200 && /xml/.test(sitemap.type) && sitemap.body.includes('<loc>https://yamacbezirgan.com/resume/</loc>'), 'sitemap.xml is served');
   const llms = await text(base, '/llms.txt');
@@ -62,6 +71,7 @@ async function text(base, path, init) {
     ok(!(await page.locator('#boot a[href="/projects/hydraquant/"]').isVisible()), '... closed, so the card stays small while the page loads');
     await page.locator('#boot details summary').click();
     ok(await page.locator('#boot a[href="/projects/hydraquant/"]').isVisible(), '... and one click opens the case studies');
+    ok(await page.locator('#boot a[href="https://swipflix.yamacbezirgan.com"]').isVisible(), '... and the products');
     await page.goto(base + '/tr/', { waitUntil: 'load' });
     ok(
       (await page.locator('#boot a[href="/tr/projeler/hydraquant/"]').count()) === 1 && (await page.locator('#boot a[href="/"][hreflang="en"]').count()) === 1,
@@ -154,7 +164,8 @@ async function text(base, path, init) {
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await page.goto(base + '/resume/', { waitUntil: 'load' });
-    ok((await page.locator('#experience article.job').count()) === 2, 'two jobs');
+    ok((await page.locator('#experience article.job').count()) === 3, 'three jobs: the engineer and the intern at Arketic AI, and Exagate');
+    ok((await page.locator('#products article.card').count()) === 5, 'five products');
     ok((await page.locator('#projects article.card').count()) >= 5, 'the projects');
     ok((await page.locator('a[href="/YAMAC_BEZIRGAN_CURRENT_CV.pdf"][download]').count()) === 1, 'the CV download link');
     ok((await page.locator('a.pill[hreflang="tr"]').getAttribute('href')) === '/tr/ozgecmis/', 'a link to the Turkish page');

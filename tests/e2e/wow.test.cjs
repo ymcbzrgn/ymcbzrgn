@@ -44,9 +44,9 @@ const CI_ROUTE = 'https://api.github.com/repos/ymcbzrgn/ymcbzrgn/actions/runs**'
     ok((await page.locator('.window[data-app-id="career-app"] .window__title').innerText()) === 'Career', 'window title: Career');
     await page.waitForSelector('.career .room', { timeout: 8000 });
     ok((await page.locator('.career .room').getAttribute('data-room-theme')) === 'documents', 'the twin is invited into a room');
-    ok((await page.locator('.career .room__prop[data-prop-id^="ms-"]').count()) === 6, 'six stations, one per milestone');
+    ok((await page.locator('.career .room__prop[data-prop-id^="ms-"]').count()) === 7, 'seven stations, one per milestone');
     ok((await page.locator('.career__card h2').innerText()) === 'Arketic AI', 'the card starts on the present: Arketic AI');
-    ok((await page.locator('.career__list li').count()) === 6, 'the same milestones as a list');
+    ok((await page.locator('.career__list li').count()) === 7, 'the same milestones as a list');
     await page.screenshot({ path: `${SHOTS}/career-room.png` });
 
     // the list works without the twin
@@ -75,7 +75,7 @@ const CI_ROUTE = 'https://api.github.com/repos/ymcbzrgn/ymcbzrgn/actions/runs**'
     await palette(page, 'career');
     await page.waitForSelector('.career');
     ok((await page.locator('.career .room, .career .room-toggle').count()) === 0, 'without the twin there is no room and no toggle, only the list');
-    ok((await page.locator('.career__list li').count()) === 6, '... and the list is all there');
+    ok((await page.locator('.career__list li').count()) === 7, '... and the list is all there');
     await ctx.close();
   }
   {

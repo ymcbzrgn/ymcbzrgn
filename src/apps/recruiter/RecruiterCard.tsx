@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../../os/store';
 import { useLang, useT } from '../../os/i18n/full';
 import { PROFILE } from '../../os/content/profile';
-import { HIGHLIGHTS, ROLES, SKILLS, SPOKEN } from '../../os/content/career';
+import { HIGHLIGHTS, ROLES, SPOKEN, STUDIES, TOOLS, monthLabel } from '../../os/content/career';
 import { guest } from '../../os/personal';
 import { useLaunch } from '../../os/hooks/useLaunch';
 import { openSimpleView } from '../../os/view';
@@ -21,8 +21,8 @@ interface Props {
 }
 
 const LABEL = {
-  en: { forYou: 'Prepared for', stack: 'Stack', facts: 'The short version', cv: 'Download CV', save: 'Save contact', saved: 'Saved', copy: 'Copy email', copied: 'Copied!', page: 'Resume page', career: 'Career timeline', medals: "Ideathon'25 · Llama Hackathon", edu: 'Computer Eng. · Erasmus+ Milan', since: 'Jun 2025 →', degree: 'B.Sc. 2025', langs: 'languages', rank: ['2nd', '6th'] },
-  tr: { forYou: 'Şunun için hazırlandı:', stack: 'Teknolojiler', facts: 'Kısaca', cv: "CV'yi indir", save: 'Rehbere kaydet', saved: 'Kaydedildi', copy: 'E-postayı kopyala', copied: 'Kopyalandı!', page: 'Özgeçmiş sayfası', career: 'Kariyer zaman çizelgesi', medals: "Ideathon'25 · Llama Hackathon", edu: 'Bilgisayar Müh. · Erasmus+ Milano', since: 'Haz 2025 →', degree: 'Lisans 2025', langs: 'dil', rank: ['2.', '6.'] },
+  en: { forYou: 'Prepared for', stack: 'Stack', facts: 'The short version', cv: 'Download CV', save: 'Save contact', saved: 'Saved', copy: 'Copy email', copied: 'Copied!', page: 'Resume page', career: 'Career timeline', medals: "Ideathon'25 · Llama Hackathon", edu: 'Computer Eng. · Erasmus+ Milan', degree: 'B.Sc.', langs: 'languages', rank: ['2nd', '6th'] },
+  tr: { forYou: 'Şunun için hazırlandı:', stack: 'Teknolojiler', facts: 'Kısaca', cv: "CV'yi indir", save: 'Rehbere kaydet', saved: 'Kaydedildi', copy: 'E-postayı kopyala', copied: 'Kopyalandı!', page: 'Özgeçmiş sayfası', career: 'Kariyer zaman çizelgesi', medals: "Ideathon'25 · Llama Hackathon", edu: 'Bilgisayar Müh. · Erasmus+ Milano', degree: 'Lisans', langs: 'dil', rank: ['2.', '6.'] },
 } as const;
 
 export default function RecruiterCard({ windowId }: Props) {
@@ -40,8 +40,8 @@ export default function RecruiterCard({ windowId }: Props) {
 
   const now = ROLES[0];
   const tiles = [
-    { icon: '🏢', value: L.since, label: `${now.title[lang]}, ${now.org}` },
-    { icon: '🎓', value: L.degree, label: L.edu },
+    { icon: '🏢', value: `${monthLabel(now.start, lang)} →`, label: `${now.title[lang]}, ${now.org}` },
+    { icon: '🎓', value: `${L.degree} ${STUDIES[0].end.slice(0, 4)}`, label: L.edu },
     { icon: '🏆', value: `${L.rank[0]} · ${L.rank[1]}`, label: L.medals },
     { icon: '🌍', value: `${SPOKEN.length} ${L.langs}`, label: SPOKEN.map((s) => s.code.toUpperCase()).join(' · ') },
   ];
@@ -119,7 +119,7 @@ export default function RecruiterCard({ windowId }: Props) {
       <section className="glance__sec">
         <h2>{L.stack}</h2>
         <ul className="glance__chips">
-          {SKILLS.flatMap((g) => g.items).map((s) => (
+          {TOOLS.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>

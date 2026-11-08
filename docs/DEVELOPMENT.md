@@ -61,11 +61,11 @@ so a plain `vite build` is enough on any host) fixes that at build time:
 
 - `index.html` only holds two markers. The plugin fills them with the title, description, canonical, hreflang,
   Open Graph, Twitter and JSON-LD (WebSite, ProfilePage, Person), and a "boot" block: name, role, links, and the
-  five projects with one sentence each in a closed `<details>` (150 to 180 words in all). It is everything of the
-  home page that a crawler without JavaScript reads, so it links every case study, the writing, the other language
-  and `llms.txt`; `check:seo` fails below 120 words or when one of those links is missing. The card stays small
-  while the page loads because the projects are folded away. `src/main.tsx` removes the boot block once the
-  desktop or the phone UI is on screen.
+  five projects and the products with one sentence each in a closed `<details>` (230 to 270 words in all). It is
+  everything of the home page that a crawler without JavaScript reads, so it links every case study, every product,
+  the writing, the other language and `llms.txt`; `check:seo` fails below 120 words or when one of those links is
+  missing. The card stays small while the page loads because the lists are folded away. `src/main.tsx` removes the
+  boot block once the desktop or the phone UI is on screen.
 - After the bundle is written it derives `/tr/` (the same shell in Turkish; opening it selects Turkish),
   the static resume pages `/resume/` and `/tr/ozgecmis/`, `404.html`, `sitemap.xml`, `llms.txt` and `llms-full.txt`.
   Old `/#simple` links are redirected to the resume by a script in `index.html`.
@@ -81,7 +81,9 @@ so a plain `vite build` is enough on any host) fixes that at build time:
   Atom feed `/feed.xml`. `{{firstScreenKB}}`, `{{scripts}}` and `{{suites}}` in an article (and
   `{firstScreenKB}` etc. in a case study) are replaced by the numbers the build measured.
 - **One source of facts**: `src/os/content/career.ts` (from the CV). The pages, JSON-LD, llms.txt, the recruiter
-  card and the story all read it. When the CV changes, change that file.
+  card and the story all read it. When the CV changes, change that file. It also holds the products he built and
+  runs alone (`PRODUCTS`): they have their own addresses, so the résumé pages, `llms.txt` and the boot block link
+  out to them instead of having a case study here.
 - **The canonical host is the apex, `https://yamacbezirgan.com`.** `www` has no DNS record, so nothing may point
   at it (`check:seo` fails if something does). If you add a `www` record in Cloudflare, redirect it to the apex.
 - **The CV PDF** comes out of Canva with the file name as its title and a link to the dead `www` host. After

@@ -194,6 +194,15 @@
   padding: 9px 12px;
 }
 
+.story[data-compact] .story__chips {
+  gap: 6px;
+}
+
+.story[data-compact] .story__chips li {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
 .story__rows li {
   display: flex;
   flex-direction: column;

@@ -19,8 +19,9 @@ export const PROFILE_TEXT: Record<Lang, ProfileText> = {
     summary:
       "I'm a software engineer focused on AI platforms, backend architecture and full-stack product development. I work mostly in Python and TypeScript and own systems from design to delivery: LLM workflows, automation and the products on top of them.",
     focus: [
-      'At Arketic AI I built the core enterprise platform end to end and own its backend and LLM flows. I designed its assistant and agent workflows for HR, Finance, IT and R&D. I also built its VPC and on-prem deployments, with RBAC, audit trails and encrypted logging.',
-      "I'm growing toward technical leadership and learning the product and business side along the way.",
+      "At Arketic AI I'm the main builder of the core enterprise platform and own its backend and LLM flows. It runs AI assistants, agents and no-code workflows for HR, Finance, IT and R&D, on-premise or in a private cloud, with role-based access and audit trails.",
+      'I lead a team of three and act as the de facto product owner. I run planning, review code, set the roadmap and approve releases.',
+      'On my own I build and run products. Swipflix, a group movie picker, has been on the App Store since Dec 2025 and had 5,400+ downloads by Nov 2026.',
     ],
     work: [
       {
@@ -45,8 +46,9 @@ export const PROFILE_TEXT: Record<Lang, ProfileText> = {
     summary:
       'Yapay zeka platformları, backend mimarisi ve uçtan uca ürün geliştirme odağında çalışan bir yazılım mühendisiyim. Çoğunlukla Python ve TypeScript yazıyorum. LLM akışları, otomasyon ve üstüne kurulan ürünler dahil, bir sistemin tasarımından teslimine kadar sorumluluk alıyorum.',
     focus: [
-      "Arketic AI'da kurumsal platformun çekirdeğini uçtan uca kurdum, backend'in ve LLM akışlarının sahibiyim. İK, Finans, BT ve Ar-Ge için asistan ve ajan iş akışları tasarladım. VPC ve on-prem kurulumlarını da RBAC, denetim izi ve şifreli loglamayla birlikte geliştirdim.",
-      'Teknik liderliğe doğru ilerliyorum, yolda ürün ve iş tarafını da öğreniyorum.',
+      "Arketic AI'da kurumsal platformun çekirdeğinin ana geliştiricisiyim, backend'in ve LLM akışlarının sahibiyim. Platform İK, Finans, BT ve Ar-Ge için yapay zeka asistanları, ajanlar ve no-code iş akışları çalıştırıyor. On-premise ya da özel bulutta, rol tabanlı erişim ve denetim iziyle çalışıyor.",
+      'Üç kişilik bir ekibi yönetiyorum, fiilen ürün sahibiyim. Planlamayı yürütüyorum, kodu inceliyorum, yol haritasını belirliyorum ve sürümleri onaylıyorum.',
+      "Kendi başıma ürün geliştirip yürütüyorum. Grup halinde film seçme uygulaması Swipflix Aralık 2025'ten beri App Store'da, Kasım 2026 itibarıyla 5.400+ indirme aldı.",
     ],
     work: [
       {
